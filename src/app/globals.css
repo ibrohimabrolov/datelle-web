@@ -1,26 +1,147 @@
 @import "tailwindcss";
 
+/* ───────────────────────────────────────────────
+   Chaman DS — tokens exported from Figma (Colors / Light)
+   App panels switch to `.theme-app` (Colors / Light · App)
+   ─────────────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-primary: #faf8f7;
+  --bg-surface: #ffffff;
+  --bg-surface-subtle: #f2efed;
+  --bg-brand: #1e5a45;
+  --bg-inverse: #0f1a15;
+
+  --text-primary: #1e1b19;
+  --text-secondary: #675f5b;
+  --text-muted: #766d68;
+  --text-white: #ffffff;
+  --text-brand: #1e5a45;
+  --text-inverse-muted: #a8d0b9;
+  --text-success: #25814a;
+  --text-warning: #b9831a;
+  --text-error: #d14343;
+  --text-info: #2f66a0;
+
+  --border-default: #e6e1dd;
+  --border-strong: #d4cdc8;
+  --border-brand: #1e5a45;
+
+  --brand-solid: #1e5a45;
+  --brand-hover: #1f4533;
+  --brand-pressed: #173425;
+  --brand-subtle: #edf6f0;
+  --brand-subtle-text: #1f4533;
+
+  --accent-solid: #b58424;
+  --accent-subtle: #fdf6e5;
+  --accent-subtle-text: #6b4c13;
+
+  --success-solid: #2e9e5b;
+  --success-subtle: #e8f6ee;
+  --success-subtle-text: #1c6339;
+  --warning-solid: #e0a325;
+  --warning-subtle: #fcf2dd;
+  --warning-subtle-text: #8a6213;
+  --error-solid: #d14343;
+  --error-subtle: #fbeaea;
+  --error-subtle-text: #8c2424;
+  --info-solid: #3b7fc4;
+  --info-subtle: #e9f1fa;
+  --info-subtle-text: #244e7a;
+  --neutral-subtle-text: #4b4542;
+
+  --black: #141110;
+  --white: #ffffff;
+
+  --shadow-01: 0 1px 2px 0 rgb(20 18 15 / 0.05), 0 2px 6px -1px rgb(20 18 15 / 0.05);
+  --shadow-02: 0 2px 4px 0 rgb(20 18 15 / 0.06), 0 6px 14px -2px rgb(20 18 15 / 0.08);
+  --shadow-03: 0 4px 8px -1px rgb(20 18 15 / 0.08), 0 12px 28px -4px rgb(20 18 15 / 0.12);
+  --shadow-04: 0 -2px 10px 0 rgb(20 18 15 / 0.06), 0 -8px 32px -6px rgb(20 18 15 / 0.1);
+}
+
+.theme-app {
+  --bg-primary: #f9fafb;
+  --bg-surface-subtle: #f2f4f7;
+  --text-primary: #101828;
+  --text-secondary: #475467;
+  --text-muted: #667085;
+  --border-default: #eaecf0;
+  --border-strong: #d0d5dd;
+  --neutral-subtle-text: #344054;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --color-bg-primary: var(--bg-primary);
+  --color-surface: var(--bg-surface);
+  --color-surface-subtle: var(--bg-surface-subtle);
+  --color-inverse: var(--bg-inverse);
+  --color-ink: var(--text-primary);
+  --color-ink-2: var(--text-secondary);
+  --color-ink-3: var(--text-muted);
+  --color-ink-inverse-muted: var(--text-inverse-muted);
+  --color-line: var(--border-default);
+  --color-line-strong: var(--border-strong);
+  --color-brand: var(--brand-solid);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-pressed: var(--brand-pressed);
+  --color-brand-subtle: var(--brand-subtle);
+  --color-brand-subtle-text: var(--brand-subtle-text);
+  --color-accent: var(--accent-solid);
+  --color-accent-subtle: var(--accent-subtle);
+  --color-accent-subtle-text: var(--accent-subtle-text);
+  --color-success: var(--success-solid);
+  --color-success-subtle: var(--success-subtle);
+  --color-success-subtle-text: var(--success-subtle-text);
+  --color-warning: var(--warning-solid);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-warning-subtle-text: var(--warning-subtle-text);
+  --color-error: var(--error-solid);
+  --color-error-subtle: var(--error-subtle);
+  --color-error-subtle-text: var(--error-subtle-text);
+  --color-info: var(--info-solid);
+  --color-info-subtle: var(--info-subtle);
+  --color-info-subtle-text: var(--info-subtle-text);
+
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 14px;
+  --radius-2xl: 20px;
+  --radius-3xl: 28px;
+
+  --shadow-01: var(--shadow-01);
+  --shadow-02: var(--shadow-02);
+  --shadow-03: var(--shadow-03);
+  --shadow-04: var(--shadow-04);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* Type scale — 1:1 with Figma Web/* text styles */
+@utility t-display-xl { font-size: 80px; line-height: 84px; font-weight: 700; letter-spacing: -0.035em; }
+@utility t-display    { font-size: 64px; line-height: 68px; font-weight: 700; letter-spacing: -0.03em; }
+@utility t-h1         { font-size: 48px; line-height: 52px; font-weight: 700; letter-spacing: -0.025em; }
+@utility t-h2         { font-size: 32px; line-height: 40px; font-weight: 600; letter-spacing: -0.015em; }
+@utility t-h3         { font-size: 24px; line-height: 32px; font-weight: 600; letter-spacing: -0.01em; }
+@utility t-title      { font-size: 18px; line-height: 24px; font-weight: 600; letter-spacing: -0.005em; }
+@utility t-kpi        { font-size: 32px; line-height: 40px; font-weight: 700; letter-spacing: -0.02em; }
+@utility t-body-l     { font-size: 18px; line-height: 28px; font-weight: 400; }
+@utility t-body-m     { font-size: 16px; line-height: 24px; font-weight: 400; }
+@utility t-body-mm    { font-size: 16px; line-height: 24px; font-weight: 500; }
+@utility t-body-s     { font-size: 14px; line-height: 20px; font-weight: 400; }
+@utility t-body-sm    { font-size: 14px; line-height: 20px; font-weight: 500; }
+@utility t-body-sb    { font-size: 14px; line-height: 20px; font-weight: 600; }
+@utility t-cap        { font-size: 12px; line-height: 16px; font-weight: 400; letter-spacing: 0.1px; }
+@utility t-cap-m      { font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: 0.1px; }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+html { background: var(--bg-primary); color: var(--text-primary); }
+body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+/* Multi-line headings: explicit Figma line breaks on ≥640, natural wrap on mobile */
+.lines > span { display: inline; }
+.lines > span + span::before { content: " "; }
+@media (min-width: 640px) {
+  .lines > span { display: block; }
+  .lines > span + span::before { content: none; }
 }
