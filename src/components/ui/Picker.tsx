@@ -1,24 +1,35 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Icon, type IconName } from "./Icon";
 import { MONTH, WD_SHORT, weekdayIdx, type Status } from "@/data/catalog";
 
 /* ── Popover: anchored on ≥sm, bottom sheet on mobile ── */
-export function useDismiss(open: boolean, close: () => void, ref: React.RefObject<HTMLElement | null>) {
+export function useDismiss(open: boolean, close: () => void, ref: React.RefObject<HTMLElement | null>, onEscape: () => void = close) {
   useEffect(() => {
     if (!open) return;
     const onDown = (e: PointerEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) close();
     };
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onEscape();
     document.addEventListener("pointerdown", onDown);
     document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("pointerdown", onDown);
       document.removeEventListener("keydown", onKey);
     };
-  }, [open, close, ref]);
+  }, [open, close, ref, onEscape]);
+}
+
+/* Move focus into a freshly opened panel: selected option first, else first control */
+export function useFocusFirst(open: boolean, panel: React.RefObject<HTMLElement | null>) {
+  useEffect(() => {
+    if (!open || !panel.current) return;
+    const el =
+      panel.current.querySelector<HTMLElement>('[aria-selected="true"], [aria-pressed="true"]') ??
+      panel.current.querySelector<HTMLElement>("button:not([disabled]), a, input");
+    el?.focus({ preventScroll: true });
+  }, [open, panel]);
 }
 
 type FieldProps = {
@@ -36,13 +47,23 @@ type FieldProps = {
 export function FilterField({ icon, label, value, emphasis, className = "", align = "left", panelWidth = 320, children }: FieldProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const panel = useRef<HTMLDivElement>(null);
   const id = useId();
-  const close = () => setOpen(false);
-  useDismiss(open, close, ref);
+  const tid = `${id}-t`;
+  // Esc / selection: close and hand focus back to the trigger
+  const close = useCallback(() => {
+    setOpen(false);
+    document.getElementById(tid)?.focus();
+  }, [tid]);
+  // outside click: just close, the user's click decides focus
+  const dismiss = useCallback(() => setOpen(false), []);
+  useDismiss(open, dismiss, ref, close);
+  useFocusFirst(open, panel);
 
   return (
     <div ref={ref} className={`relative ${className}`}>
       <button
+        id={tid}
         type="button"
         aria-haspopup="dialog"
         aria-expanded={open}
@@ -61,8 +82,9 @@ export function FilterField({ icon, label, value, emphasis, className = "", alig
       </button>
       {open && (
         <>
-          <div className="fixed inset-0 z-40 bg-black/30 sm:hidden" aria-hidden />
+          <div className="fixed inset-0 z-40 bg-black/30 sm:hidden" aria-hidden onClick={close} />
           <div
+            ref={panel}
             id={id}
             role="dialog"
             aria-label={label}

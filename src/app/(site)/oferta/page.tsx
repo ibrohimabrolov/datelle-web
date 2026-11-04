@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { BRAND } from "@/config/brand";
 import { TextPage } from "@/components/content/TextPage";
 
-export const metadata: Metadata = { title: `Ommaviy oferta — ${BRAND.name}` };
+export const metadata: Metadata = { title: "Ommaviy oferta", description: "Platformadan foydalanish shartlari.", alternates: { canonical: "/oferta" } };
 
 export default function OfertaPage() {
   return (

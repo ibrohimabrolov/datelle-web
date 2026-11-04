@@ -1,5 +1,5 @@
 import Image from "next/image";
-import florist from "@/assets/img/florist.png";
+import florist from "@/assets/img/florist.jpg";
 import { ButtonLink, TextLink } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Primitives";
 

@@ -37,7 +37,12 @@ export function VendorView({ slug, initialDay = DEFAULT_DAY, fromCatalog }: { sl
     }
     return d;
   };
-  const [day, setDay] = useState(() => (statusOf(v, initialDay) === "busy" ? firstFree(initialDay) : initialDay));
+  const [day, setDayRaw] = useState(() => (statusOf(v, initialDay) === "busy" ? firstFree(initialDay) : initialDay));
+  const [busyNotice, setBusyNotice] = useState(statusOf(v, initialDay) === "busy" && fromCatalog ? initialDay : null);
+  const setDay = (d: number) => {
+    setDayRaw(d);
+    setBusyNotice(null);
+  };
   const [pkg, setPkg] = useState<Package>(v.packages[0]);
   const [photo, setPhoto] = useState<number | null>(null);
   const [saved, toggleSaved] = useSaved(v.slug);
@@ -270,7 +275,7 @@ export function VendorView({ slug, initialDay = DEFAULT_DAY, fromCatalog }: { sl
                         <span className="t-cap text-ink-3">{r.meta}</span>
                       </span>
                     </div>
-                    <span className="flex gap-0.5 text-accent" aria-label="5 yulduz">
+                    <span role="img" className="flex gap-0.5 text-accent" aria-label="5 yulduz">
                       {Array.from({ length: 5 }).map((_, i) => (
                         <Icon key={i} name="star" size={16} />
                       ))}
@@ -296,6 +301,11 @@ export function VendorView({ slug, initialDay = DEFAULT_DAY, fromCatalog }: { sl
                   Zadatok 30% · {fmtSum(deposit(pkg.price))}. Qolgani tadbir oldidan.
                 </span>
               </div>
+              {busyNotice && (
+                <p role="status" className="rounded-lg bg-accent-subtle px-3 py-2 t-cap-m text-accent-subtle-text">
+                  {busyNotice}-iyun band. Eng yaqin boʻsh kun tanlandi — {dayLabel(day)}.
+                </p>
+              )}
               <FilterField icon="calendar" label="Sana" value={dayLabel(day)} panelWidth={380} align="right">
                 {(close) => (
                   <div className="p-1">

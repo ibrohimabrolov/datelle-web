@@ -1,4 +1,4 @@
-import hero from "@/assets/img/hero.png";
+import hero from "@/assets/img/hero-fill.webp";
 import { BRAND } from "@/config/brand";
 import { ButtonLink } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Primitives";

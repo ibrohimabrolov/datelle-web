@@ -111,7 +111,7 @@ export function PartnerForm() {
             Ariza yuborish
           </Button>
           <span className="t-body-s text-ink-2">
-            Bepul. Yuborish orqali <Link href="/oferta" className="text-brand hover:underline">ofertaga</Link> rozilik bildirasiz.
+            Bepul. Yuborish orqali <Link href="/oferta" className="font-semibold text-brand underline underline-offset-2">ofertaga</Link> rozilik bildirasiz.
           </span>
         </div>
       </form>

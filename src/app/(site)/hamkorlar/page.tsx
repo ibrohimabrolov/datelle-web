@@ -7,7 +7,8 @@ import { Container, Eyebrow, FeatureItem } from "@/components/ui/Primitives";
 import { VendorCard } from "@/components/ui/VendorCard";
 
 export const metadata: Metadata = {
-  title: `Hamkorlar uchun — ${BRAND.name}`,
+  title: "Hamkorlar uchun",
+  alternates: { canonical: "/hamkorlar" },
   description: "Bepul kalendar, Instagram bio uchun bron havolasi va onlayn zadatok. Oʻz mijozlaringizdan 0% komissiya.",
 };
 

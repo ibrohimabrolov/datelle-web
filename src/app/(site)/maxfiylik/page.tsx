@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { BRAND } from "@/config/brand";
 import { TextPage } from "@/components/content/TextPage";
 
-export const metadata: Metadata = { title: `Maxfiylik siyosati — ${BRAND.name}` };
+export const metadata: Metadata = { title: "Maxfiylik siyosati", description: "Qanday maʼlumot yigʻamiz va undan qanday foydalanamiz.", alternates: { canonical: "/maxfiylik" } };
 
 export default function PrivacyPage() {
   return (

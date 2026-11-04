@@ -3,7 +3,7 @@ import Link from "next/link";
 import { BRAND } from "@/config/brand";
 import { TextPage } from "@/components/content/TextPage";
 
-export const metadata: Metadata = { title: `Biz haqimizda — ${BRAND.name}` };
+export const metadata: Metadata = { title: "Biz haqimizda", description: "Tadbir sanasidan boshlanadigan dekor marketplace.", alternates: { canonical: "/biz-haqimizda" } };
 
 export default function AboutPage() {
   return (

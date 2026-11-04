@@ -1,18 +1,18 @@
 import type { StaticImageData } from "next/image";
 
-import gulnoza from "@/assets/img/vendor-gulnoza.png";
-import oqsaroy from "@/assets/img/vendor-oqsaroy.png";
-import lola from "@/assets/img/vendor-lola.png";
-import navroz from "@/assets/img/vendor-navroz.png";
-import zarafshon from "@/assets/img/vendor-zarafshon.png";
-import bahor from "@/assets/img/vendor-bahor.png";
-import evToy from "@/assets/img/event-toy.png";
-import evQiz from "@/assets/img/event-qiz-uzatar.png";
-import evTk from "@/assets/img/event-tugilgan-kun.png";
-import evYub from "@/assets/img/event-yubiley.png";
-import evKorp from "@/assets/img/event-korporativ.png";
-import florist from "@/assets/img/florist.png";
-import hero from "@/assets/img/hero.png";
+import gulnoza from "@/assets/img/vendor-gulnoza.jpg";
+import oqsaroy from "@/assets/img/vendor-oqsaroy.jpg";
+import lola from "@/assets/img/vendor-lola.jpg";
+import navroz from "@/assets/img/vendor-navroz.jpg";
+import zarafshon from "@/assets/img/vendor-zarafshon.jpg";
+import bahor from "@/assets/img/vendor-bahor.jpg";
+import evToy from "@/assets/img/event-toy.jpg";
+import evQiz from "@/assets/img/event-qiz-uzatar.jpg";
+import evTk from "@/assets/img/event-tugilgan-kun.jpg";
+import evYub from "@/assets/img/event-yubiley.jpg";
+import evKorp from "@/assets/img/event-korporativ.jpg";
+import florist from "@/assets/img/florist.jpg";
+import hero from "@/assets/img/hero.jpg";
 
 /* ─────────────────────────────────────────────────────────────
    Mock catalog. Deterministic — every page (home, katalog, studiya)

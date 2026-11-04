@@ -23,7 +23,7 @@ export function Catalog() {
   const results = search(f);
 
   const update = (patch: Partial<Filters>) =>
-    router.replace(`${pathname}?${toQuery({ ...f, ...patch })}`, { scroll: false });
+    router.push(`${pathname}?${toQuery({ ...f, ...patch })}`, { scroll: false });
 
   const districtName = f.tuman === "all" ? "Butun Toshkent" : (districtBySlug(f.tuman) ?? "Butun Toshkent");
   const noun = f.tur === "dekor" ? "dekor studiyasi" : "florist";

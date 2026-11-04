@@ -1,5 +1,5 @@
 import Image from "next/image";
-import hero from "@/assets/img/hero.png";
+import hero from "@/assets/img/hero.jpg";
 import { BRAND } from "@/config/brand";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { Eyebrow } from "@/components/ui/Primitives";

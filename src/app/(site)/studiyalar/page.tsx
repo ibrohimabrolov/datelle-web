@@ -5,6 +5,7 @@ import { CatalogSkeleton } from "@/components/catalog/CatalogSkeleton";
 
 export const metadata: Metadata = {
   title: "Boʻsh studiyalar — sana boʻyicha",
+  alternates: { canonical: "/studiyalar" },
   description: "Tanlangan kunda boʻsh dekor studiyalari va floristlar: narx, reyting va tuman boʻyicha filtr.",
 };
 

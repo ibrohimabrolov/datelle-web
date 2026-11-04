@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { DEFAULT_DAY, catalogHref, dayLabel, eventLabel, fmtSum, vendorBySlug } from "@/data/catalog";
+import { DEFAULT_DAY, MONTH, catalogHref, dayLabel, eventLabel, fmtSum, vendorBySlug } from "@/data/catalog";
 import { Icon } from "@/components/ui/Icon";
 import { buttonClass } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Primitives";
@@ -18,7 +18,8 @@ function code(seed: string) {
 export function SentView() {
   const sp = useSearchParams();
   const v = vendorBySlug(sp.get("studio") ?? "");
-  const day = Number(sp.get("sana")) || DEFAULT_DAY;
+  const n = Number(sp.get("sana"));
+  const day = n >= 1 && n <= MONTH.days ? n : DEFAULT_DAY;
   const isBrief = sp.get("turi") === "taklif";
 
   if (!v) {

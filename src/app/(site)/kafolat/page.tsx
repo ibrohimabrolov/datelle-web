@@ -4,7 +4,8 @@ import { Icon } from "@/components/ui/Icon";
 import { Container, Eyebrow, FeatureItem } from "@/components/ui/Primitives";
 
 export const metadata: Metadata = {
-  title: `${BRAND.name} kafolati — studiya kelmasa, zadatok 100% qaytadi`,
+  title: { absolute: `${BRAND.name} kafolati — studiya kelmasa, zadatok 100% qaytadi` },
+  alternates: { canonical: "/kafolat" },
   description: "Zadatok qaytarish qoidalari, 24 soatda muqobil studiya va bekor qilish siyosatlari jadvali.",
 };
 

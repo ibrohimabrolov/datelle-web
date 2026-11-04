@@ -1,11 +1,11 @@
 import { BRAND } from "@/config/brand";
 import type { EventSlug } from "@/data/catalog";
 
-import evToy from "@/assets/img/event-toy.png";
-import evQiz from "@/assets/img/event-qiz-uzatar.png";
-import evTk from "@/assets/img/event-tugilgan-kun.png";
-import evYub from "@/assets/img/event-yubiley.png";
-import evKorp from "@/assets/img/event-korporativ.png";
+import evToy from "@/assets/img/event-toy.jpg";
+import evQiz from "@/assets/img/event-qiz-uzatar.jpg";
+import evTk from "@/assets/img/event-tugilgan-kun.jpg";
+import evYub from "@/assets/img/event-yubiley.jpg";
+import evKorp from "@/assets/img/event-korporativ.jpg";
 
 /* Home "Shu kuni boʻsh" grid — Figma order */
 export const HOME_FEATURED = ["gulnoza-decor", "oq-saroy-event", "lola-studio", "navroz-dekor", "zarafshon-decor", "bahor-studio"];

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { BRAND } from "@/config/brand";
 import { TextPage } from "@/components/content/TextPage";
 
-export const metadata: Metadata = { title: `Yordam — ${BRAND.name}` };
+export const metadata: Metadata = { title: "Yordam", description: "Bron, zadatok va hamkorlik boʻyicha javoblar.", alternates: { canonical: "/yordam" } };
 
 const a = "font-semibold text-brand hover:underline";
 

@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BRAND } from "@/config/brand";
 import { Icon } from "@/components/ui/Icon";
 import { Container } from "@/components/ui/Primitives";
 import { PartnerForm } from "@/components/partner/PartnerForm";
 
-export const metadata: Metadata = { title: `Hamkor boʻlish — ${BRAND.name}` };
+export const metadata: Metadata = { title: "Hamkor boʻlish", alternates: { canonical: "/hamkorlar/royxat" } };
 
 export default function RoyxatPage() {
   return (

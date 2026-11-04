@@ -6,7 +6,7 @@ import {
   DEFAULT_DAY, DISTRICTS, EVENT_TYPES, catalogHref, dayLabel, districtBySlug, districtSlug, eventLabel, freeCount, type EventSlug,
 } from "@/data/catalog";
 import { Icon, type IconName } from "@/components/ui/Icon";
-import { MonthCalendar, OptionList, useDismiss } from "@/components/ui/Picker";
+import { MonthCalendar, OptionList, useDismiss, useFocusFirst } from "@/components/ui/Picker";
 
 type Key = "sana" | "tadbir" | "tuman" | null;
 
@@ -15,6 +15,8 @@ function Field({
 }: {
   icon: IconName; label: string; value: string; active?: boolean; open: boolean; onToggle: () => void; children: ReactNode; panelClass?: string;
 }) {
+  const panel = useRef<HTMLDivElement>(null);
+  useFocusFirst(open, panel);
   return (
     <div className="relative min-w-0 flex-1">
       <button
@@ -33,8 +35,9 @@ function Field({
       </button>
       {open && (
         <>
-          <div className="fixed inset-0 z-40 bg-black/30 md:hidden" aria-hidden />
+          <div className="fixed inset-0 z-40 bg-black/30 md:hidden" aria-hidden onClick={onToggle} />
           <div
+            ref={panel}
             role="dialog"
             aria-label={label}
             className={`fixed inset-x-0 bottom-0 z-50 max-h-[80vh] overflow-y-auto rounded-t-3xl border border-line bg-surface p-4 text-left shadow-03 md:absolute md:inset-x-auto md:bottom-auto md:top-full md:mt-3 md:rounded-2xl ${panelClass}`}

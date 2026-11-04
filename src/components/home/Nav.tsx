@@ -23,8 +23,10 @@ function LangSwitch() {
           key={l}
           role="radio"
           aria-checked={lang === l}
+          disabled={l === "RU"}
+          title={l === "RU" ? "Rus tili tez orada" : undefined}
           onClick={() => setLang(l)}
-          className={`grid h-10 w-11 place-items-center rounded-full t-cap-m transition-colors ${lang === l ? "bg-surface-subtle text-ink" : "text-ink-2 hover:text-ink"}`}
+          className={`grid h-10 w-11 place-items-center rounded-full t-cap-m transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${lang === l ? "bg-surface-subtle text-ink" : "text-ink-2 enabled:hover:text-ink"}`}
         >
           {l}
         </button>
@@ -61,9 +63,11 @@ export function Nav() {
           <div className="hidden sm:block">
             <LangSwitch />
           </div>
-          <ButtonLink href="/hamkorlar" variant="secondary" size="md" className="hidden sm:inline-flex">
-            Hamkorlar uchun
-          </ButtonLink>
+          <span className="hidden sm:block">
+            <ButtonLink href="/hamkorlar" variant="secondary" size="md">
+              Hamkorlar uchun
+            </ButtonLink>
+          </span>
           <button
             type="button"
             aria-label="Menyu"
