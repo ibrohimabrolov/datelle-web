@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { EVENTS } from "@/data/home";
+import { catalogHref } from "@/data/catalog";
 import { TextLink } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Primitives";
 
@@ -13,13 +14,13 @@ export function EventTypes() {
             <span>Har bir tadbir uchun</span>
             <span>oʻz ustasi.</span>
           </h2>
-          <TextLink href="/studiyalar">Barcha studiyalar</TextLink>
+          <TextLink href={catalogHref()}>Barcha studiyalar</TextLink>
         </div>
         <div className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0">
           {EVENTS.map((e) => (
             <Link
               key={e.label}
-              href={`/studiyalar?tadbir=${encodeURIComponent(e.label)}`}
+              href={catalogHref({ tadbir: e.slug })}
               className="group relative flex h-[320px] min-w-[220px] flex-1 snap-start items-end overflow-hidden rounded-2xl p-4 lg:h-[360px] lg:min-w-0"
             >
               <Image

@@ -1,4 +1,6 @@
-import { DAYS } from "@/data/home";
+import { dayInfo } from "@/data/catalog";
+
+const DAYS = [11, 12, 13, 14, 15].map((d) => dayInfo("dekor", d));
 import { DateTile } from "@/components/ui/DateTile";
 import { Container } from "@/components/ui/Primitives";
 
@@ -42,7 +44,7 @@ export function WhyBento() {
                 <p className="t-body-m text-ink-inverse-muted">Studiyalar kalendarni shu yerda yuritadi — siz faqat boʻsh kunlarni koʻrasiz.</p>
               </div>
               <div className="-mx-6 flex gap-2.5 overflow-x-auto px-6 [scrollbar-width:none] sm:mx-0 sm:px-0">
-                {DAYS.slice(3, 8).map((d) => (
+                {DAYS.map((d) => (
                   <DateTile key={d.d} day={d} selected={d.d === 12} />
                 ))}
               </div>

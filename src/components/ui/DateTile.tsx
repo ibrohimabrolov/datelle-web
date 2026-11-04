@@ -1,4 +1,4 @@
-import type { Day } from "@/data/home";
+export type Day = { wd: string; d: number; free: number; few?: boolean };
 
 /* Date tile — Figma "Date tile" (Default / Few / Selected) · lg 128h · dark for inverse surfaces */
 export function DateTile({

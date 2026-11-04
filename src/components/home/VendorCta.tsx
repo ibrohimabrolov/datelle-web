@@ -35,7 +35,7 @@ export function VendorCta() {
                 ))}
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <ButtonLink href="/hamkorlar" variant="secondary" size="lg">
+                <ButtonLink href="/hamkorlar/royxat" variant="secondary" size="lg">
                   Hamkor boʻlish
                 </ButtonLink>
                 <span className="px-3">

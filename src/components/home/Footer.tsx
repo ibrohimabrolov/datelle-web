@@ -3,9 +3,31 @@ import { BRAND } from "@/config/brand";
 import { Lockup } from "@/components/ui/Logo";
 
 const COLS = [
-  { h: "Mijozlar", links: ["Dekor", "Floristika", "Qanday ishlaydi", "Kafolat"] },
-  { h: "Hamkorlar", links: ["Hamkor boʻlish", "Narxlar", "Yordam"] },
-  { h: BRAND.name, links: ["Biz haqimizda", "Oferta", "Maxfiylik"] },
+  {
+    h: "Mijozlar",
+    links: [
+      { l: "Dekor", href: "/studiyalar" },
+      { l: "Floristika", href: "/studiyalar?tur=floristika" },
+      { l: "Qanday ishlaydi", href: "/#qanday-ishlaydi" },
+      { l: "Kafolat", href: "/kafolat" },
+    ],
+  },
+  {
+    h: "Hamkorlar",
+    links: [
+      { l: "Hamkor boʻlish", href: "/hamkorlar" },
+      { l: "Narxlar", href: "/hamkorlar#narx" },
+      { l: "Yordam", href: "/yordam" },
+    ],
+  },
+  {
+    h: BRAND.name,
+    links: [
+      { l: "Biz haqimizda", href: "/biz-haqimizda" },
+      { l: "Oferta", href: "/oferta" },
+      { l: "Maxfiylik", href: "/maxfiylik" },
+    ],
+  },
 ];
 
 export function Footer() {
@@ -22,8 +44,8 @@ export function Footer() {
               <div key={c.h} className="flex flex-col gap-1">
                 <span className="t-body-sb">{c.h}</span>
                 {c.links.map((l) => (
-                  <Link key={l} href="#" className="py-2.5 t-body-s text-ink-inverse-muted transition-colors hover:text-white">
-                    {l}
+                  <Link key={l.l} href={l.href} className="py-2.5 t-body-s text-ink-inverse-muted transition-colors hover:text-white">
+                    {l.l}
                   </Link>
                 ))}
               </div>
@@ -35,8 +57,8 @@ export function Footer() {
             © 2026 {BRAND.name} · {BRAND.city}
           </span>
           <span className="flex gap-1">
-            <Link href="https://t.me/" className="hover:text-white">Telegram</Link> ·{" "}
-            <Link href="https://instagram.com/" className="hover:text-white">Instagram</Link>
+            <a href={BRAND.telegramUrl} target="_blank" rel="noopener noreferrer" className="hover:text-white">Telegram</a> ·{" "}
+            <a href={BRAND.instagramUrl} target="_blank" rel="noopener noreferrer" className="hover:text-white">Instagram</a>
           </span>
         </div>
         <div

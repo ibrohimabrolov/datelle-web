@@ -1,16 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Lockup } from "@/components/ui/Logo";
 import { ButtonLink } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 
 const LINKS = [
-  { label: "Dekor", href: "#studiyalar" },
-  { label: "Floristika", href: "#studiyalar" },
-  { label: "Qanday ishlaydi", href: "#qanday-ishlaydi" },
-  { label: "Kafolat", href: "#kafolat" },
+  { label: "Dekor", href: "/studiyalar" },
+  { label: "Floristika", href: "/studiyalar?tur=floristika" },
+  { label: "Qanday ishlaydi", href: "/#qanday-ishlaydi" },
+  { label: "Kafolat", href: "/kafolat" },
 ];
 
 function LangSwitch() {
@@ -34,6 +35,8 @@ function LangSwitch() {
 
 export function Nav() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const isActive = (href: string) => href.startsWith("/") && !href.includes("#") && !href.includes("?") && pathname === href;
   return (
     <header className="relative z-20 bg-bg-primary">
       <div className="mx-auto flex max-w-[1440px] items-center justify-between px-4 py-3 sm:px-8 lg:px-20 lg:py-5">
@@ -43,7 +46,12 @@ export function Nav() {
           </Link>
           <nav className="hidden items-center gap-8 lg:flex">
             {LINKS.map((l) => (
-              <Link key={l.label} href={l.href} className="px-0.5 pt-3 pb-2.5 t-body-sm text-ink-2 transition-colors hover:text-ink">
+              <Link
+                key={l.label}
+                href={l.href}
+                aria-current={isActive(l.href) ? "page" : undefined}
+                className={`px-0.5 pt-3 pb-2.5 t-body-sm transition-colors hover:text-ink ${isActive(l.href) ? "text-ink" : "text-ink-2"}`}
+              >
                 {l.label}
               </Link>
             ))}

@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { BRAND } from "@/config/brand";
-import { DAYS } from "@/data/home";
+import { dayInfo } from "@/data/catalog";
+
+const DAYS = [11, 12, 13, 14].map((d) => dayInfo("dekor", d));
 import { Icon } from "@/components/ui/Icon";
 import { Container } from "@/components/ui/Primitives";
 
@@ -25,7 +27,7 @@ const STEPS: { title: string; text: string; visual: ReactNode }[] = [
     visual: (
       <div className="flex flex-col items-center gap-4">
         <div className="flex gap-2">
-          {DAYS.slice(3, 7).map((d) => (
+          {DAYS.map((d) => (
             <MiniTile key={d.d} wd={d.wd} d={d.d} n={d.free} selected={d.d === 12} />
           ))}
         </div>

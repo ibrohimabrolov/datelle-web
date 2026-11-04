@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { FAQ } from "@/data/home";
 import { Icon } from "@/components/ui/Icon";
-import { ButtonLink } from "@/components/ui/Button";
+import Link from "next/link";
+import { BRAND } from "@/config/brand";
 import { Container } from "@/components/ui/Primitives";
 
 export function Faq() {
@@ -36,7 +37,17 @@ export function Faq() {
                   className={`grid transition-[grid-template-rows] duration-300 ease-[cubic-bezier(0.2,0,0,1)] ${isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
                 >
                   <div className="overflow-hidden">
-                    <p className="max-w-[720px] pb-6 t-body-m text-ink-2">{f.a}</p>
+                    <p className="max-w-[720px] pb-6 t-body-m text-ink-2">
+                      {f.a}
+                      {f.link && (
+                        <>
+                          {" "}
+                          <Link href={f.link.href} className="font-semibold text-brand underline-offset-4 hover:underline">
+                            {f.link.label} →
+                          </Link>
+                        </>
+                      )}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -49,9 +60,14 @@ export function Faq() {
             <span className="t-title text-white">Savolingiz qoldimi?</span>
             <span className="t-body-s text-ink-inverse-muted">Telegram’da yozing — jamoamiz javob beradi.</span>
           </div>
-          <ButtonLink href="https://t.me/" variant="secondary" size="md">
+          <a
+            href={BRAND.telegramUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex h-11 shrink-0 items-center justify-center rounded-lg border border-line bg-surface px-4 text-[14px] leading-[18px] font-semibold text-ink transition-colors hover:bg-surface-subtle"
+          >
             Telegram’ga yozish
-          </ButtonLink>
+          </a>
         </div>
       </Container>
     </section>
