@@ -10,6 +10,7 @@ import type { SessionUser } from "./auth";
 import { EVENT_TYPES } from "@/data/catalog";
 import { isBookable, isISODate, todayISO } from "@/lib/dates";
 import { addWorkingHours } from "@/lib/workhours";
+import { adjustSlot } from "./admin";
 
 const { requests: r, requestEvents: ev, vendors: v, packages: p } = schema;
 export const createSchema = z
@@ -136,9 +137,10 @@ export async function cancelRequest(userId: string, id: string) {
     .update(r)
     .set({ status: "cancelled", updatedAt: new Date() })
     .where(and(eq(r.id, id), eq(r.userId, userId), inArray(r.status, ["pending", "confirmed"])))
-    .returning({ id: r.id });
+    .returning({ id: r.id, vendorId: r.vendorId });
   if (!row) throw new HttpError(409, "not_cancellable", "Bu soʻrovni bekor qilib boʻlmaydi");
   await db.insert(ev).values({ requestId: id, fromStatus: cur.status, toStatus: "cancelled", actor: "client" });
+  if (cur.status === "confirmed") await adjustSlot(db, row.vendorId, cur.eventDate, -1); // give the vendor's slot back
   return getRequest(userId, id);
 }
 

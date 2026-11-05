@@ -19,7 +19,7 @@ Tests:
 ```bash
 npm test                          # unit: dates, working hours, phone parsing
 npm run build && npm start &      # API tests hit a running server
-npm run test:api                  # 19 integration tests (auth, requests, security edges)
+npm run test:api                  # 25 integration tests (auth, requests, admin, security edges)
 ```
 
 ## Environment
@@ -31,8 +31,25 @@ npm run test:api                  # 19 integration tests (auth, requests, securi
 | `SMS_PROVIDER` | `console` (dev — code in server log), `demo` (preview — code shown on the page), `eskiz` (production) |
 | `ESKIZ_EMAIL` / `ESKIZ_PASSWORD` / `ESKIZ_FROM` | Eskiz.uz credentials |
 | `OTP_PEPPER` | long random secret mixed into OTP hashes — **required in production** |
+| `ADMIN_PASSWORD` | password for `/admin`; empty = admin disabled (API answers 404). Changing it logs every admin out |
 
 `demo` must never be used once real users arrive: it echoes the login code to the browser.
+
+## Deploy (Vercel + Neon)
+
+`package.json → vercel-build` runs `scripts/predeploy.ts` before `next build`: applies `drizzle/*.sql` (using `DATABASE_URL_UNPOOLED` when Neon provides it) and seeds **only when the `vendors` table is empty**, so admin edits survive redeploys. Without `DATABASE_URL` it skips and the site still builds. Locally: `npm run db:deploy`.
+
+## Admin panel (`/admin`)
+
+Password login (`ADMIN_PASSWORD`), stateless HMAC cookie `dt_admin` (httpOnly, 7 days), 5 attempts per IP per 15 min. Sections:
+
+- **Umumiy** — counters + requests waiting for an answer
+- **Soʻrovlar** — filter/search; `pending → confirmed | declined`, `confirmed → paid | declined | cancelled`, `paid → completed | cancelled`. Confirming takes one of the vendor's daily slots (`vendor_days.booked + 1`); leaving confirmed/paid (or a client cancelling a confirmed request) gives it back. Every move is written to `request_events` with `actor = admin`
+- **Studiyalar** — hide/show, daily capacity, "verified" badge, close/reopen days for the next 8 weeks
+- **Hamkor arizalari** — new → reviewing → approved / rejected
+- **Lidlar** — mark as contacted
+
+Shared password is a v1 shortcut. Before real users: per-person admin accounts (`users.role = admin` + OTP) and an audit of who did what.
 
 ## Data model (`src/server/db/schema.ts`)
 
@@ -65,6 +82,9 @@ Request lifecycle: `pending → confirmed → paid → completed`, side exits `d
 | POST | `/api/requests/:id/cancel` | owner | pending/confirmed only |
 | POST | `/api/partners` | — | 5/h per IP |
 | POST | `/api/leads` | — | 10/h per IP |
+| POST | `/api/admin/login` `{password}` · `/api/admin/logout` | — | 5 tries / 15 min per IP |
+| GET | `/api/admin/{me,stats,requests,vendors,applications,leads}` | admin | |
+| POST | `/api/admin/requests/:id` `{to}` · `/api/admin/vendors/:id` · `/api/admin/vendors/:id/days` · `/api/admin/applications/:id` · `/api/admin/leads/:id` | admin | |
 
 Errors: `{ error: { code, message, fields? } }` — messages are user-facing Uzbek. Mutations require `content-type: application/json` and a same-site `Origin` (CSRF).
 
@@ -73,5 +93,5 @@ Errors: `{ error: { code, message, fields? } }` — messages are user-facing Uzb
 1. **Production database location.** Uzbekistan's personal-data law requires citizens' personal data to be stored on servers in Uzbekistan. Vercel and most managed Postgres run abroad. Plan: Postgres (and ideally the app) on an Uzbek provider; a foreign DB (e.g. Neon) is acceptable only for a demo with test data.
 2. **SMS contract** with Eskiz (or Play Mobile): sender name and approved message template. Eskiz endpoints in `src/server/sms.ts` must be checked against their current docs when the contract is signed.
 3. **Payments** — Payme / Click merchant accounts; deposit flow (`confirmed → paid`) is not built yet.
-4. **Vendor side** — confirm / decline / block days. Planned as a Telegram bot + vendor panel; until then requests can only expire or be cancelled.
+4. **Vendor side** — confirm / decline / block days by the studio itself. Planned as a Telegram bot + vendor panel; until then the admin panel does it.
 5. **Photo uploads** for quotes and vendor galleries — needs object storage (S3-compatible, in Uzbekistan).

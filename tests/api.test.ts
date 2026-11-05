@@ -207,4 +207,97 @@ describe("forms", () => {
   });
 });
 
+describe("admin", () => {
+  const admin = new Client();
+  const client = new Client();
+  const pw = process.env.ADMIN_PASSWORD ?? "";
+  const pool = () => new Pool({ connectionString: process.env.DATABASE_URL });
+  const booked = async (slug: string, day: string) => {
+    const p = pool();
+    const { rows } = await p.query("select coalesce((select booked from vendor_days d join vendors v on v.id = d.vendor_id where v.slug = $1 and d.day = $2), 0) as n", [slug, day]);
+    await p.end();
+    return Number(rows[0].n);
+  };
+
+  test("closed without the cookie; wrong password 401; forged cookie 401", async () => {
+    assert.ok(pw, "ADMIN_PASSWORD must be set for admin tests");
+    assert.equal((await new Client().req("/api/admin/stats")).status, 401);
+    assert.equal((await new Client().req("/api/admin/login", { body: { password: "wrong" } })).status, 401);
+    const forged = new Client();
+    forged.cookie = `dt_admin=${Date.now() + 86_400_000}.${"a".repeat(64)}`;
+    assert.equal((await forged.req("/api/admin/stats")).status, 401);
+    assert.equal((await new Client().req("/api/admin/login", { body: { password: pw }, headers: { origin: "https://evil.example" } })).status, 403);
+  });
+
+  test("login → stats", async () => {
+    const r = await admin.req("/api/admin/login", { body: { password: pw } });
+    assert.equal(r.status, 200);
+    assert.match(r.headers.get("set-cookie") ?? "", /HttpOnly/i);
+    const s = await admin.req("/api/admin/stats");
+    assert.equal(s.status, 200);
+    assert.equal(typeof s.json.pending, "number");
+    assert.equal(s.headers.get("cache-control"), "no-store");
+  });
+
+  test("confirm takes a slot; client cancel gives it back; illegal moves 409", async () => {
+    await client.login(`+99890${String(Math.floor(Math.random() * 1e7)).padStart(7, "0")}`, "Admin Test");
+    const day = plus(200 + Math.floor(Math.random() * 30));
+    const created = await client.req("/api/requests", { body: { type: "booking", vendor: "lola-studio", date: day, packageId: "lola-studio-standart", name: "Admin Test" } });
+    if (created.status === 409) return; // random day happened to be busy — skip rather than flake
+    assert.equal(created.status, 201, JSON.stringify(created.json));
+    const id = created.json.request.id;
+    const list = await admin.req(`/api/admin/requests?holat=pending&q=${encodeURIComponent("Admin Test")}`);
+    assert.ok(list.json.requests.some((x: { id: string }) => x.id === id));
+
+    const before = await booked("lola-studio", day);
+    assert.equal((await admin.req(`/api/admin/requests/${id}`, { body: { to: "completed" } })).status, 409);
+    const c = await admin.req(`/api/admin/requests/${id}`, { body: { to: "confirmed" } });
+    assert.equal(c.status, 200);
+    assert.equal(await booked("lola-studio", day), before + 1);
+    const mine = await client.req(`/api/requests/${id}`);
+    assert.equal(mine.json.request.status, "confirmed");
+
+    assert.equal((await client.req(`/api/requests/${id}/cancel`, { body: {} })).status, 200);
+    assert.equal(await booked("lola-studio", day), before);
+    assert.equal((await admin.req(`/api/admin/requests/${id}`, { body: { to: "confirmed" } })).status, 409);
+    assert.equal((await admin.req(`/api/admin/requests/not-a-uuid`, { body: { to: "confirmed" } })).status, 404);
+  });
+
+  test("hide vendor removes it from search; block day makes it busy", async () => {
+    const vs = await admin.req("/api/admin/vendors");
+    const v = vs.json.vendors.find((x: { slug: string }) => x.slug === "navroz-decor") ?? vs.json.vendors[0];
+    const sana = plus(15);
+    const inSearch = async () => {
+      const r = await new Client().req(`/api/vendors/search?sana=${sana}&tadbir=all&byudjet=0&f=&limit=60&tur=${v.category}&_=${Math.random()}`);
+      return r.json.vendors?.some((x: { slug: string }) => x.slug === v.slug) ?? false;
+    };
+    assert.equal((await admin.req(`/api/admin/vendors/${v.id}`, { body: { status: "hidden" } })).status, 200);
+    assert.equal(await inSearch(), false);
+    assert.equal((await admin.req(`/api/admin/vendors/${v.id}`, { body: { status: "active" } })).status, 200);
+
+    const day = plus(150);
+    assert.equal((await admin.req(`/api/admin/vendors/${v.id}/days`, { body: { day, blocked: true } })).status, 200);
+    const cal = await new Client().req(`/api/vendors/${v.slug}/calendar?month=${day.slice(0, 7)}&_=${Math.random()}`);
+    assert.equal(cal.json.days.find((d: { date: string }) => d.date === day).status, "busy");
+    assert.equal((await admin.req(`/api/admin/vendors/${v.id}/days`, { body: { day, blocked: false } })).status, 200);
+    assert.equal((await admin.req(`/api/admin/vendors/${v.id}/days`, { body: { day: plus(-2), blocked: true } })).status, 422);
+    assert.equal((await admin.req(`/api/admin/vendors/${v.id}`, { body: { dailyCapacity: 0 } })).status, 422);
+  });
+
+  test("applications and leads change state", async () => {
+    const apps = await admin.req("/api/admin/applications");
+    assert.equal(apps.status, 200);
+    const a = apps.json.applications[0];
+    if (a) assert.equal((await admin.req(`/api/admin/applications/${a.id}`, { body: { status: "reviewing" } })).json.status, "reviewing");
+    const leads = await admin.req("/api/admin/leads");
+    const l = leads.json.leads[0];
+    if (l) assert.equal((await admin.req(`/api/admin/leads/${l.id}`, { body: { handled: true } })).json.handled, true);
+  });
+
+  test("logout", async () => {
+    await admin.req("/api/admin/logout", { body: {} });
+    assert.equal((await admin.req("/api/admin/stats")).status, 401);
+  });
+});
+
 void host;
