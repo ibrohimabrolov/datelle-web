@@ -4,9 +4,12 @@ Next.js 16 · React 19 · Tailwind v4 · TypeScript. A1 Home sahifasi Figma `240
 
 ```bash
 npm install
+cp .env.example .env.local   # DATABASE_URL va boshqalar
+npm run db:migrate && npm run db:seed
 npm run dev     # http://localhost:3000
-npm run build && npm start
 ```
+
+Backend (Postgres, API, auth): **[BACKEND.md](./BACKEND.md)**
 
 - `src/app/globals.css` — tokenlar (Figma Colors · Light / Light · App) va type scale (`t-*` utility)
 - `src/config/brand.ts` — brend nomi (bir joyda)

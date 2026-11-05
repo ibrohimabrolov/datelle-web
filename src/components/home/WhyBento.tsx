@@ -1,6 +1,11 @@
-import { dayInfo } from "@/data/catalog";
-
-const DAYS = [11, 12, 13, 14, 15].map((d) => dayInfo("dekor", d));
+/* Illustration (Figma) — not live data */
+const DAYS = [
+  { wd: "Pa", d: 11, free: 35 },
+  { wd: "Ju", d: 12, free: 34 },
+  { wd: "Sh", d: 13, free: 6, few: true },
+  { wd: "Ya", d: 14, free: 4, few: true },
+  { wd: "Du", d: 15, free: 44 },
+];
 import { DateTile } from "@/components/ui/DateTile";
 import { Container } from "@/components/ui/Primitives";
 

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { BRAND } from "@/config/brand";
-import { DEFAULT_DAY, vendorBySlug } from "@/data/catalog";
+import { toHit, vendorBySlug } from "@/data/catalog";
 import { ButtonLink } from "@/components/ui/Button";
 import { Accordion } from "@/components/ui/Accordion";
 import { Container, Eyebrow, FeatureItem } from "@/components/ui/Primitives";
@@ -59,7 +59,7 @@ export default function HamkorlarPage() {
             </span>
             <span className="t-cap">· Instagram bio</span>
           </div>
-          <VendorCard v={gulnoza} day={DEFAULT_DAY} />
+          <VendorCard v={toHit(gulnoza, "free")} />
         </div>
       </Container>
 

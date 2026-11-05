@@ -4,21 +4,22 @@ import Image from "next/image";
 import Link from "next/link";
 import { Icon } from "./Icon";
 import { useSaved } from "./useSaved";
-import { dayShort, fmtSum, statusOf, type Vendor } from "@/data/catalog";
+import { dayShort, fmtSum, type VendorHit } from "@/data/catalog";
+import { imageFor } from "@/data/images";
 
 /* Vendor card — Figma 239:68 (image 304 · r20 · Save 44) */
-export function VendorCard({ v, day, priority }: { v: Vendor; day: number; priority?: boolean }) {
+export function VendorCard({ v, day, priority }: { v: VendorHit; day?: string; priority?: boolean }) {
   const [saved, toggle] = useSaved(v.slug);
-  const status = statusOf(v, day);
-  const href = `/studio/${v.slug}?sana=${day}`;
-  const label = status === "few" ? `${dayShort(day)} · 1 joy qoldi` : `${dayShort(day)} boʻsh`;
+  const status = v.status;
+  const href = day ? `/studio/${v.slug}?sana=${day}` : `/studio/${v.slug}`;
+  const label = !day ? "" : status === "few" ? `${dayShort(day)} · 1 joy qoldi` : `${dayShort(day)} boʻsh`;
 
   return (
     <article className="group flex flex-col gap-4">
       <div className="relative h-[260px] overflow-hidden rounded-2xl sm:h-[304px]">
         <Link href={href} aria-label={v.name} className="absolute inset-0">
           <Image
-            src={v.img}
+            src={imageFor(v.imageKey)}
             alt=""
             fill
             priority={priority}
@@ -59,7 +60,7 @@ export function VendorCard({ v, day, priority }: { v: Vendor; day: number; prior
         </span>
         <div className="flex items-center justify-between pt-1">
           <span className="t-body-sb">{fmtSum(v.priceFrom)}dan</span>
-          {status !== "busy" && (
+          {day && status !== "busy" && (
             <span className="flex items-center gap-1.5 t-cap-m text-brand">
               <span className="size-2 rounded-full bg-brand" />
               {label}
@@ -68,5 +69,17 @@ export function VendorCard({ v, day, priority }: { v: Vendor; day: number; prior
         </div>
       </div>
     </article>
+  );
+}
+
+export function VendorCardSkeleton() {
+  const bar = "animate-pulse rounded-lg bg-surface-subtle";
+  return (
+    <div className="flex flex-col gap-4" aria-hidden>
+      <div className={`h-[260px] rounded-2xl sm:h-[304px] ${bar}`} />
+      <div className={`h-5 w-2/3 ${bar}`} />
+      <div className={`h-4 w-1/2 ${bar}`} />
+      <div className={`h-4 w-1/3 ${bar}`} />
+    </div>
   );
 }

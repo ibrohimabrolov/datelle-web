@@ -1,8 +1,12 @@
 import type { ReactNode } from "react";
 import { BRAND } from "@/config/brand";
-import { dayInfo } from "@/data/catalog";
-
-const DAYS = [11, 12, 13, 14].map((d) => dayInfo("dekor", d));
+/* Illustration (Figma) — not live data */
+const DAYS = [
+  { wd: "Pa", d: 11, free: 35 },
+  { wd: "Ju", d: 12, free: 34 },
+  { wd: "Sh", d: 13, free: 6 },
+  { wd: "Ya", d: 14, free: 4 },
+];
 import { Icon } from "@/components/ui/Icon";
 import { Container } from "@/components/ui/Primitives";
 

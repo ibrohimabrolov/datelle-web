@@ -2,47 +2,60 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { BRAND } from "@/config/brand";
-import {
-  DEFAULT_DAY, MONTH, catalogHref, dayLabel, fmtSum, statusOf, vendorBySlug, type Package,
-} from "@/data/catalog";
+import { catalogHref, fmtSum, vendorBySlug, type Package } from "@/data/catalog";
+import { imageFor } from "@/data/images";
+import { dayLabel, defaultDate, isBookable, isISODate, monthDates, monthOf } from "@/lib/dates";
+import { useToday } from "@/lib/api";
 import { initials, reviewsFor } from "@/data/reviews";
 import { Icon } from "@/components/ui/Icon";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Primitives";
-import { FilterField, MonthCalendar, OptionList } from "@/components/ui/Picker";
-import { PhoneField, TextField, isPhoneValid } from "@/components/ui/Form";
+import { FilterField, OptionList } from "@/components/ui/Picker";
+import { VendorCalendar, useVendorMonth } from "@/components/ui/Calendars";
+import { isPhoneValid } from "@/components/ui/Form";
+import { ContactFields } from "./ContactFields";
 import { useSaved } from "@/components/ui/useSaved";
 import { Lightbox } from "./Lightbox";
+import { useRequestSubmit } from "./useRequestSubmit";
 
 /* Reads ?sana from the URL; the Suspense fallback renders the same view for the default day */
 export function VendorWithParams({ slug }: { slug: string }) {
   const sp = useSearchParams();
-  const n = Number(sp.get("sana"));
-  const asked = n >= 1 && n <= MONTH.days ? n : DEFAULT_DAY;
-  return <VendorView slug={slug} initialDay={asked} fromCatalog={sp.has("sana")} key={`${slug}-${asked}`} />;
+  const asked = sp.get("sana");
+  return <VendorView slug={slug} asked={isISODate(asked) ? asked : null} fromCatalog={sp.has("sana")} key={`${slug}-${asked}`} />;
 }
 
 const deposit = (p: number) => Math.round((p * 0.3) / 1000) * 1000;
 
-export function VendorView({ slug, initialDay = DEFAULT_DAY, fromCatalog }: { slug: string; initialDay?: number; fromCatalog?: boolean }) {
+export function VendorView({ slug, asked = null, fromCatalog }: { slug: string; asked?: string | null; fromCatalog?: boolean }) {
   const v = vendorBySlug(slug)!;
-  const router = useRouter();
-  const firstFree = (d: number) => {
-    for (let i = 0; i < MONTH.days; i++) {
-      const c = ((d - 1 + i) % MONTH.days) + 1;
-      if (statusOf(v, c) !== "busy") return c;
-    }
-    return d;
-  };
-  const [day, setDayRaw] = useState(() => (statusOf(v, initialDay) === "busy" ? firstFree(initialDay) : initialDay));
-  const [busyNotice, setBusyNotice] = useState(statusOf(v, initialDay) === "busy" && fromCatalog ? initialDay : null);
-  const setDay = (d: number) => {
-    setDayRaw(d);
+  const today = useToday();
+  const [picked, setPicked] = useState<string | null>(null);
+  const [busyNotice, setBusyNotice] = useState<string | null>(null);
+  const wanted = today ? (asked && isBookable(asked, today) ? asked : defaultDate(today)) : null;
+  const day = picked ?? wanted;
+  const [month, setMonth] = useState<string | null>(null);
+  const shownMonth = month ?? (day ? monthOf(day) : null);
+  const setDay = (d: string) => {
+    setPicked(d);
     setBusyNotice(null);
   };
+
+  /* Requested day turned out busy → move to the next open day in that month and say so */
+  const firstMonth = useVendorMonth(slug, wanted ? monthOf(wanted) : "2000-01");
+  useEffect(() => {
+    if (picked || !wanted || !firstMonth.map || !today) return;
+    if (firstMonth.map.get(wanted) !== "busy") return;
+    const next = monthDates(monthOf(wanted)).find((d) => d > wanted && isBookable(d, today) && firstMonth.map!.get(d) !== "busy");
+    if (next) {
+      setPicked(next); // eslint-disable-line react-hooks/set-state-in-effect -- one-time correction after data arrives
+      if (fromCatalog || asked) setBusyNotice(wanted);
+    }
+  }, [firstMonth.map, wanted, picked, today, fromCatalog, asked]);
+
   const [pkg, setPkg] = useState<Package>(v.packages[0]);
   const [photo, setPhoto] = useState<number | null>(null);
   const [saved, toggleSaved] = useSaved(v.slug);
@@ -51,6 +64,7 @@ export function VendorView({ slug, initialDay = DEFAULT_DAY, fromCatalog }: { sl
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [errors, setErrors] = useState<{ name?: string; phone?: string }>({});
+  const req = useRequestSubmit();
 
   const reviews = reviewsFor(v);
   const kind = v.category === "dekor" ? "Dekor" : "Floristika";
@@ -74,13 +88,14 @@ export function VendorView({ slug, initialDay = DEFAULT_DAY, fromCatalog }: { sl
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
+    const loggedIn = req.sessionStatus === "user";
     const next = {
-      name: name.trim().length < 2 ? "Ismingizni kiriting" : undefined,
-      phone: !isPhoneValid(phone) ? "Raqamni toʻliq kiriting" : undefined,
+      name: name.trim().length < 2 && !(loggedIn && req.user?.name) ? "Ismingizni kiriting" : undefined,
+      phone: !loggedIn && !isPhoneValid(phone) ? "Raqamni toʻliq kiriting" : undefined,
     };
     setErrors(next);
-    if (next.name || next.phone) return;
-    router.push(`/sorov/yuborildi?turi=bron&studio=${v.slug}&sana=${day}&paket=${encodeURIComponent(pkg.id)}`);
+    if (next.name || next.phone || !day) return;
+    req.submit({ type: "booking", vendor: v.slug, date: day, packageId: pkg.id, name: name.trim() || req.user?.name || "" }, phone);
   };
 
   return (
@@ -88,11 +103,11 @@ export function VendorView({ slug, initialDay = DEFAULT_DAY, fromCatalog }: { sl
       <Container wide className="flex flex-col gap-6 pt-4 pb-28 lg:gap-8 lg:pt-6 lg:pb-32">
         {/* Back link */}
         <Link
-          href={catalogHref({ sana: day, tur: v.category })}
+          href={catalogHref({ ...(day ? { sana: day } : {}), tur: v.category })}
           className="inline-flex w-fit items-center gap-1.5 py-3 t-body-sm text-ink-2 transition-colors hover:text-ink"
         >
           <Icon name="chevronLeft" size={16} />
-          {fromCatalog ? `${dayLabel(day)} · ${kind} natijalari` : `Barcha ${kind.toLowerCase()} studiyalari`}
+          {fromCatalog && day ? `${dayLabel(day)} · ${kind} natijalari` : `Barcha ${kind.toLowerCase()} studiyalari`}
         </Link>
 
         {/* Title row */}
@@ -152,13 +167,13 @@ export function VendorView({ slug, initialDay = DEFAULT_DAY, fromCatalog }: { sl
         {/* Gallery — Figma 241:363 */}
         <div className="flex flex-col gap-3 lg:flex-row">
           <button type="button" onClick={() => setPhoto(0)} className="relative h-[280px] w-full overflow-hidden rounded-3xl sm:h-[420px] lg:h-[520px] lg:w-auto lg:flex-1" aria-label="Galereyani ochish">
-            <Image src={v.gallery[0]} alt={v.name} fill priority placeholder="blur" sizes="(min-width:1024px) 840px, 100vw" className="object-cover transition-transform duration-500 hover:scale-[1.02]" />
+            <Image src={imageFor(v.gallery[0])} alt={v.name} fill priority placeholder="blur" sizes="(min-width:1024px) 840px, 100vw" className="object-cover transition-transform duration-500 hover:scale-[1.02]" />
           </button>
           <div className="grid grid-cols-2 gap-3 lg:flex lg:w-[428px] lg:flex-col">
             {[1, 2].map((i) => (
               <div key={i} className="relative h-[140px] overflow-hidden rounded-3xl sm:h-[200px] lg:h-[254px]">
                 <button type="button" onClick={() => setPhoto(i)} className="absolute inset-0" aria-label={`${i + 1}-fotoni ochish`}>
-                  <Image src={v.gallery[i]} alt="" fill placeholder="blur" sizes="(min-width:1024px) 428px, 50vw" className="object-cover transition-transform duration-500 hover:scale-[1.03]" />
+                  <Image src={imageFor(v.gallery[i])} alt="" fill placeholder="blur" sizes="(min-width:1024px) 428px, 50vw" className="object-cover transition-transform duration-500 hover:scale-[1.03]" />
                 </button>
                 {i === 2 && (
                   <Button variant="secondary" size="md" className="absolute right-4 bottom-4" onClick={() => setPhoto(0)}>
@@ -220,7 +235,7 @@ export function VendorView({ slug, initialDay = DEFAULT_DAY, fromCatalog }: { sl
                   <span className="t-body-s text-ink-2">Tadbiringizni tasvirlang — studiya 24 soat ichida narx beradi.</span>
                 </div>
                 <Link
-                  href={`/studio/${v.slug}/taklif?sana=${day}`}
+                  href={`/studio/${v.slug}/taklif${day ? `?sana=${day}` : ""}`}
                   className="inline-flex h-11 w-fit shrink-0 items-center justify-center rounded-lg border border-line bg-surface px-4 text-[14px] leading-[18px] font-semibold transition-colors hover:bg-surface-subtle"
                 >
                   Taklif soʻrash
@@ -230,21 +245,13 @@ export function VendorView({ slug, initialDay = DEFAULT_DAY, fromCatalog }: { sl
             <hr className="border-line" />
 
             <section className="flex flex-col gap-6">
-              <div className="flex items-center justify-between">
-                <h2 className="t-h3">Bandlik</h2>
-                <div className="flex items-center gap-3">
-                  <span className="t-body-sb">
-                    {MONTH.name} {MONTH.year}
-                  </span>
-                  {(["chevronLeft", "chevronRight"] as const).map((n) => (
-                    <button key={n} type="button" disabled title="Boshqa oylar tez orada" aria-label={n === "chevronLeft" ? "Oldingi oy" : "Keyingi oy"} className="grid size-11 place-items-center rounded-full border border-line bg-surface disabled:opacity-40">
-                      <Icon name={n} />
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <h2 className="t-h3">Bandlik</h2>
               <div className="max-w-[720px]">
-                <MonthCalendar size="lg" selected={day} status={(d) => statusOf(v, d)} onSelect={setDay} />
+                {today && shownMonth ? (
+                  <VendorCalendar slug={v.slug} size="lg" month={shownMonth} onMonth={setMonth} today={today} selected={day} onSelect={setDay} />
+                ) : (
+                  <div className="h-[380px] animate-pulse rounded-2xl bg-surface-subtle" />
+                )}
               </div>
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2 t-body-s text-ink-2">
                 <span className="flex items-center gap-2"><i className="size-3.5 rounded-xs border border-line-strong bg-surface" />Boʻsh</span>
@@ -303,21 +310,25 @@ export function VendorView({ slug, initialDay = DEFAULT_DAY, fromCatalog }: { sl
               </div>
               {busyNotice && (
                 <p role="status" className="rounded-lg bg-accent-subtle px-3 py-2 t-cap-m text-accent-subtle-text">
-                  {busyNotice}-iyun band. Eng yaqin boʻsh kun tanlandi — {dayLabel(day)}.
+                  {dayLabel(busyNotice).split(",")[0]} band. Eng yaqin boʻsh kun tanlandi — {day && dayLabel(day)}.
                 </p>
               )}
-              <FilterField icon="calendar" label="Sana" value={dayLabel(day)} panelWidth={380} align="right">
+              <FilterField icon="calendar" label="Sana" value={day ? dayLabel(day) : "…"} panelWidth={380} align="right">
                 {(close) => (
                   <div className="p-1">
                     <p className="mb-3 t-body-sb">{v.name} bandligi</p>
-                    <MonthCalendar
-                      selected={day}
-                      status={(d) => statusOf(v, d)}
-                      onSelect={(d) => {
-                        setDay(d);
-                        close();
-                      }}
-                    />
+                    {today && day && (
+                      <PanelCalendar
+                        slug={v.slug}
+                        today={today}
+                        day={day}
+                        onSelect={(d) => {
+                          setDay(d);
+                          setMonth(monthOf(d));
+                          close();
+                        }}
+                      />
+                    )}
                   </div>
                 )}
               </FilterField>
@@ -333,17 +344,21 @@ export function VendorView({ slug, initialDay = DEFAULT_DAY, fromCatalog }: { sl
                   />
                 )}
               </FilterField>
-              <TextField
-                label="Ismingiz"
-                placeholder="Masalan, Dilnoza"
-                autoComplete="given-name"
-                value={name}
-                onChange={(e) => (setName(e.target.value), setErrors((x) => ({ ...x, name: undefined })))}
-                error={errors.name}
+              <ContactFields
+                name={name}
+                setName={(n) => (setName(n), setErrors((x) => ({ ...x, name: undefined })))}
+                phone={phone}
+                setPhone={(p) => (setPhone(p), setErrors((x) => ({ ...x, phone: undefined })))}
+                errors={errors}
+                user={req.user}
               />
-              <PhoneField value={phone} onChange={(p) => (setPhone(p), setErrors((x) => ({ ...x, phone: undefined })))} error={errors.phone} />
-              <Button type="submit" size="lg" className="w-full">
-                Bron soʻrash
+              {req.error && (
+                <p role="alert" className="rounded-lg bg-error-subtle px-3 py-2 t-cap-m text-error-subtle-text">
+                  {req.error.message}
+                </p>
+              )}
+              <Button type="submit" size="lg" className="w-full" disabled={req.busy || !day}>
+                {req.busy ? "Yuborilmoqda…" : "Bron soʻrash"}
               </Button>
               <p className="t-cap text-ink-3">Hozir pul yechilmaydi. Studiya odatda {v.responseHours} soatda javob beradi.</p>
               <hr className="border-line" />
@@ -363,14 +378,15 @@ export function VendorView({ slug, initialDay = DEFAULT_DAY, fromCatalog }: { sl
       <div className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-between gap-4 border-t border-line bg-surface px-4 py-3 lg:hidden">
         <span className="flex flex-col">
           <span className="t-body-sb">{fmtSum(pkg.price)}</span>
-          <span className="t-cap text-ink-3">{dayLabel(day)}</span>
+          <span className="t-cap text-ink-3">{day ? dayLabel(day) : ""}</span>
         </span>
         <a href="#bron" className="inline-flex h-11 items-center rounded-lg bg-brand px-5 text-[14px] font-semibold text-white">
           Bron soʻrash
         </a>
       </div>
 
-      {photo !== null && <Lightbox images={v.gallery} index={photo} onIndex={setPhoto} onClose={() => setPhoto(null)} title={v.name} />}
+      {req.dialog}
+      {photo !== null && <Lightbox images={v.gallery.map(imageFor)} index={photo} onIndex={setPhoto} onClose={() => setPhoto(null)} title={v.name} />}
 
       {toast && (
         <div role="status" className="fixed bottom-20 left-1/2 z-[70] -translate-x-1/2 rounded-full bg-inverse px-4 py-2.5 t-body-sm text-white shadow-03 lg:bottom-8">
@@ -381,3 +397,8 @@ export function VendorView({ slug, initialDay = DEFAULT_DAY, fromCatalog }: { sl
   );
 }
 
+
+function PanelCalendar({ slug, today, day, onSelect }: { slug: string; today: string; day: string; onSelect: (d: string) => void }) {
+  const [m, setM] = useState(monthOf(day));
+  return <VendorCalendar slug={slug} month={m} onMonth={setM} today={today} selected={day} onSelect={onSelect} />;
+}

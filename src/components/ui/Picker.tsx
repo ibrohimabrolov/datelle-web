@@ -2,7 +2,10 @@
 
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Icon, type IconName } from "./Icon";
-import { MONTH, WD_SHORT, weekdayIdx, type Status } from "@/data/catalog";
+import type { Status } from "@/data/catalog";
+import {
+  BOOKING_MAX_DAYS, BOOKING_MIN_DAYS, WD_SHORT, addDays, addMonths, dayLabel, dayNum, isBookable, monthDates, monthLabel, monthOf, weekdayIdx,
+} from "@/lib/dates";
 
 /* ── Popover: anchored on ≥sm, bottom sheet on mobile ── */
 export function useDismiss(open: boolean, close: () => void, ref: React.RefObject<HTMLElement | null>, onEscape: () => void = close) {
@@ -138,27 +141,53 @@ export function OptionList<T extends string | number>({
   );
 }
 
-/* Month calendar — Figma "Calendar day" (Free / Few / Busy / Selected) */
+/* Month calendar — Figma "Calendar day" (Free / Few / Busy / Selected).
+   Real dates; past days and days beyond the booking window are disabled.
+   `status` may return undefined while availability is loading. */
 export function MonthCalendar({
+  month,
+  onMonth,
   selected,
   onSelect,
   status,
   note,
+  today,
   size = "md",
 }: {
-  selected: number;
-  onSelect: (d: number) => void;
-  status: (d: number) => Status;
-  note?: (d: number) => string | undefined;
+  month: string; // YYYY-MM
+  onMonth: (ym: string) => void;
+  selected: string | null;
+  onSelect: (iso: string) => void;
+  status: (iso: string) => Status | undefined;
+  note?: (iso: string) => string | undefined;
+  today: string;
   size?: "md" | "lg";
 }) {
-  const lead = weekdayIdx(1);
-  const cells: (number | null)[] = [...Array(lead).fill(null), ...Array.from({ length: MONTH.days }, (_, i) => i + 1)];
+  const dates = monthDates(month);
+  const lead = weekdayIdx(dates[0]);
+  const cells: (string | null)[] = [...Array(lead).fill(null), ...dates];
   while (cells.length % 7) cells.push(null);
   const h = size === "lg" ? "h-12 sm:h-14" : "h-12";
+  const minMonth = monthOf(addDays(today, BOOKING_MIN_DAYS));
+  const maxMonth = monthOf(addDays(today, BOOKING_MAX_DAYS));
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <span className="t-body-sb">{monthLabel(month)}</span>
+        <div className="flex gap-2">
+          {(
+            [
+              ["chevronLeft", -1, "Oldingi oy", month <= minMonth],
+              ["chevronRight", 1, "Keyingi oy", month >= maxMonth],
+            ] as const
+          ).map(([n, d, label, dis]) => (
+            <button key={n} type="button" aria-label={label} disabled={dis} onClick={() => onMonth(addMonths(month, d))} className="grid size-9 place-items-center rounded-full border border-line bg-surface transition-colors hover:bg-surface-subtle disabled:opacity-40 disabled:hover:bg-surface">
+              <Icon name={n} size={18} />
+            </button>
+          ))}
+        </div>
+      </div>
       <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
         {WD_SHORT.map((w) => (
           <span key={w} className="text-center t-cap-m text-ink-3">
@@ -167,25 +196,29 @@ export function MonthCalendar({
         ))}
       </div>
       <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
-        {cells.map((d, i) => {
-          if (d === null) return <span key={`e${i}`} />;
-          const s = status(d);
-          const sel = d === selected;
-          const n = note?.(d);
+        {cells.map((iso, i) => {
+          if (iso === null) return <span key={`e${i}`} />;
+          const d = dayNum(iso);
+          const bookable = isBookable(iso, today);
+          const s = bookable ? status(iso) : "busy";
+          const sel = iso === selected;
+          const n = bookable ? note?.(iso) : undefined;
           const base = `flex ${h} flex-col items-center justify-center rounded-lg transition-colors`;
+          if (s === undefined)
+            return <span key={iso} className={`${base} animate-pulse bg-surface-subtle text-[14px] leading-[18px] font-medium text-ink-3`}>{d}</span>;
           if (s === "busy" && !sel)
             return (
-              <span key={d} aria-disabled className={`${base} bg-surface-subtle text-[14px] leading-[18px] font-medium text-ink-3 line-through`}>
+              <span key={iso} aria-disabled className={`${base} bg-surface-subtle text-[14px] leading-[18px] font-medium text-ink-3 ${bookable ? "line-through" : "opacity-60"}`}>
                 {d}
               </span>
             );
           return (
             <button
-              key={d}
+              key={iso}
               type="button"
               aria-pressed={sel}
-              aria-label={`${d}-iyun${s === "few" ? ", 1 joy qoldi" : ""}`}
-              onClick={() => onSelect(d)}
+              aria-label={`${dayLabel(iso)}${s === "few" ? ", 1 joy qoldi" : ""}`}
+              onClick={() => onSelect(iso)}
               className={`${base} ${
                 sel
                   ? "bg-brand text-white"

@@ -2,11 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { useRef, useState, type ReactNode } from "react";
-import {
-  DEFAULT_DAY, DISTRICTS, EVENT_TYPES, catalogHref, dayLabel, districtBySlug, districtSlug, eventLabel, freeCount, type EventSlug,
-} from "@/data/catalog";
+import { DISTRICTS, EVENT_TYPES, catalogHref, districtBySlug, districtSlug, eventLabel, type EventSlug } from "@/data/catalog";
+import { dayLabel, defaultDate } from "@/lib/dates";
+import { useToday } from "@/lib/api";
+import { OPEN_DEKOR } from "@/lib/catalogClient";
+import { CountsCalendar } from "@/components/ui/Calendars";
 import { Icon, type IconName } from "@/components/ui/Icon";
-import { MonthCalendar, OptionList, useDismiss, useFocusFirst } from "@/components/ui/Picker";
+import { OptionList, useDismiss, useFocusFirst } from "@/components/ui/Picker";
 
 type Key = "sana" | "tadbir" | "tuman" | null;
 
@@ -56,35 +58,37 @@ export function HeroSearch() {
   const router = useRouter();
   const ref = useRef<HTMLFormElement>(null);
   const [open, setOpen] = useState<Key>(null);
-  const [sana, setSana] = useState(DEFAULT_DAY);
+  const today = useToday();
+  const [picked, setSana] = useState<string | null>(null);
+  const sana = picked ?? (today ? defaultDate(today) : null);
   const [tadbir, setTadbir] = useState<EventSlug>("toy");
   const [tuman, setTuman] = useState("all");
   const close = () => setOpen(null);
   useDismiss(open !== null, close, ref);
   const toggle = (k: Key) => setOpen((o) => (o === k ? null : k));
 
-  const dekorStatus = (d: number) => (freeCount("dekor", d) === 0 ? "busy" : "free");
-
   return (
     <form
       ref={ref}
       onSubmit={(e) => {
         e.preventDefault();
-        router.push(catalogHref({ sana, tadbir, tuman }));
+        router.push(catalogHref({ ...(sana ? { sana } : {}), tadbir, tuman }));
       }}
       className="relative z-20 mt-4 flex w-full max-w-[980px] flex-col gap-1 rounded-[28px] bg-surface p-2 text-left shadow-04 md:mt-10 md:flex-row md:items-center md:rounded-full"
     >
-      <Field icon="calendar" label="1 · Sana" value={dayLabel(sana)} active open={open === "sana"} onToggle={() => toggle("sana")} panelClass="md:left-0 md:w-[400px]">
-        <p className="mb-3 t-body-sb">Iyun 2026 · boʻsh studiyalar soni</p>
-        <MonthCalendar
-          selected={sana}
-          status={dekorStatus}
-          note={(d) => String(freeCount("dekor", d))}
-          onSelect={(d) => {
-            setSana(d);
-            setOpen("tadbir");
-          }}
-        />
+      <Field icon="calendar" label="1 · Sana" value={sana ? dayLabel(sana) : "Sanani tanlang"} active open={open === "sana"} onToggle={() => toggle("sana")} panelClass="md:left-0 md:w-[400px]">
+        <p className="mb-3 t-cap text-ink-3">Har bir kun ostida — oʻsha kuni boʻsh studiyalar soni</p>
+        {today && (
+          <CountsCalendar
+            filters={OPEN_DEKOR}
+            today={today}
+            selected={sana}
+            onSelect={(d) => {
+              setSana(d);
+              setOpen("tadbir");
+            }}
+          />
+        )}
       </Field>
       <Divider />
       <Field icon="sparkle" label="Tadbir turi" value={eventLabel(tadbir)} open={open === "tadbir"} onToggle={() => toggle("tadbir")} panelClass="md:left-0 md:w-[280px]">

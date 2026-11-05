@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Lockup } from "@/components/ui/Logo";
 import { ButtonLink } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
+import { useSession } from "@/components/auth/session";
 
 const LINKS = [
   { label: "Dekor", href: "/studiyalar" },
@@ -35,9 +36,15 @@ function LangSwitch() {
   );
 }
 
-export function Nav() {
+/* usePathname() is request data on dynamic routes — read it under Suspense */
+export function NavLive() {
+  return <Nav pathname={usePathname()} />;
+}
+
+export function Nav({ pathname = null }: { pathname?: string | null }) {
   const [open, setOpen] = useState(false);
-  const pathname = usePathname();
+  const session = useSession();
+  const account = session.status === "user" ? { href: "/bronlarim", label: "Bronlarim" } : { href: "/kirish", label: "Kirish" };
   const isActive = (href: string) => href.startsWith("/") && !href.includes("#") && !href.includes("?") && pathname === href;
   return (
     <header className="relative z-20 bg-bg-primary">
@@ -60,6 +67,14 @@ export function Nav() {
           </nav>
         </div>
         <div className="flex items-center gap-4">
+          <Link
+            href={account.href}
+            aria-current={pathname === account.href ? "page" : undefined}
+            className={`hidden items-center gap-1.5 px-1 py-3 t-body-sm transition-colors hover:text-ink sm:inline-flex ${session.status === "unknown" ? "invisible" : ""} ${pathname === account.href ? "text-ink" : "text-ink-2"}`}
+          >
+            {session.status === "user" && <span className="size-1.5 rounded-full bg-brand" aria-hidden />}
+            {account.label}
+          </Link>
           <div className="hidden sm:block">
             <LangSwitch />
           </div>
@@ -87,6 +102,9 @@ export function Nav() {
                 {l.label}
               </Link>
             ))}
+            <Link href={account.href} onClick={() => setOpen(false)} className="border-b border-line py-4 t-body-mm">
+              {account.label}
+            </Link>
           </nav>
           <div className="mt-5 flex items-center justify-between sm:hidden">
             <LangSwitch />

@@ -3,24 +3,35 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import {
-  BUDGETS, CHIPS, DISTRICTS, EVENT_TYPES, MONTH, SORTS, budgetLabel, countFor, dayLabel,
-  districtBySlug, districtSlug, eventLabel, parseFilters, search, toQuery, type Filters,
+  BUDGETS, CHIPS, DISTRICTS, EVENT_TYPES, SORTS, budgetLabel, dayLabel,
+  districtBySlug, districtSlug, eventLabel, parseFilters, toQuery, type Filters, type VendorHit,
 } from "@/data/catalog";
-import { Chip, FilterField, MonthCalendar, OptionList, Segmented } from "@/components/ui/Picker";
+import { api, useApi, useToday, type ApiError } from "@/lib/api";
+import { searchUrl, type SearchRes } from "@/lib/catalogClient";
+import { Chip, FilterField, OptionList, Segmented } from "@/components/ui/Picker";
+import { CountsCalendar } from "@/components/ui/Calendars";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { Container } from "@/components/ui/Primitives";
-import { VendorCard } from "@/components/ui/VendorCard";
+import { VendorCard, VendorCardSkeleton } from "@/components/ui/VendorCard";
+import { CatalogSkeleton } from "./CatalogSkeleton";
 import { EmptyState } from "./EmptyState";
 
 const PAGE = 9;
 
 export function Catalog() {
+  const today = useToday();
+  if (!today) return <CatalogSkeleton />;
+  return <CatalogInner today={today} />;
+}
+
+function CatalogInner({ today }: { today: string }) {
   const sp = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const f = parseFilters(sp);
-  const results = search(f);
+  const f = parseFilters(sp, today);
+  const first = useApi<SearchRes>(searchUrl(f, PAGE));
+  const total = first.data?.total;
 
   const update = (patch: Partial<Filters>) =>
     router.push(`${pathname}?${toQuery({ ...f, ...patch })}`, { scroll: false });
@@ -38,13 +49,11 @@ export function Catalog() {
             <FilterField icon="calendar" label="Sana" value={dayLabel(f.sana)} emphasis className="w-[220px] shrink-0" panelWidth={400}>
               {(close) => (
                 <div className="p-1">
-                  <p className="mb-3 t-body-sb">
-                    {MONTH.name} {MONTH.year} · mos {f.tur === "dekor" ? "studiyalar" : "floristlar"}
-                  </p>
-                  <MonthCalendar
+                  <p className="mb-3 t-cap text-ink-3">Kun ostida — shu filtrlarga mos boʻsh {f.tur === "dekor" ? "studiyalar" : "floristlar"} soni</p>
+                  <CountsCalendar
+                    filters={f}
+                    today={today}
                     selected={f.sana}
-                    status={(d) => (countFor(f, d) ? "free" : "busy")}
-                    note={(d) => String(countFor(f, d))}
                     onSelect={(d) => {
                       update({ sana: d });
                       close();
@@ -103,16 +112,23 @@ export function Catalog() {
         </Container>
       </div>
 
-      {results.length === 0 ? (
-        <EmptyState f={f} districtName={districtName} onChange={update} />
+      {first.error ? (
+        <Container wide className="py-24 text-center">
+          <p className="t-body-m text-ink-2">{first.error.message}</p>
+          <Button variant="secondary" size="md" className="mt-4" onClick={first.reload}>
+            Qayta urinish
+          </Button>
+        </Container>
+      ) : total === 0 && !first.loading ? (
+        <EmptyState f={f} today={today} districtName={districtName} onChange={update} />
       ) : (
         <>
           {/* Results header — Figma 245:630 */}
           <Container wide className="flex flex-col gap-5 pt-8 pb-6 lg:pt-10">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div className="flex flex-col gap-2">
-                <h1 className="t-h2">
-                  {results.length} ta {noun}
+                <h1 className="t-h2" aria-live="polite">
+                  {total === undefined ? "Qidirilmoqda…" : `${total} ta ${noun}`}
                 </h1>
                 <p className="t-body-s text-ink-3">{meta}</p>
               </div>
@@ -156,34 +172,57 @@ export function Catalog() {
             </div>
           </Container>
 
-          <Grid key={sp.toString()} results={results} day={f.sana} />
+          {first.data && !first.loading ? <Grid key={sp.toString()} first={first.data} f={f} /> : <GridSkeleton />}
         </>
       )}
     </>
   );
 }
 
-function Grid({ results, day }: { results: ReturnType<typeof search>; day: number }) {
-  const [shown, setShown] = useState(PAGE);
-  const rest = results.length - shown;
+function GridSkeleton() {
+  return (
+    <Container wide className="grid grid-cols-1 gap-x-8 gap-y-10 pb-14 sm:grid-cols-2 lg:grid-cols-3 lg:gap-y-14">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <VendorCardSkeleton key={i} />
+      ))}
+    </Container>
+  );
+}
+
+function Grid({ first, f }: { first: SearchRes; f: Filters }) {
+  const [items, setItems] = useState<VendorHit[]>(first.items);
+  const [more, setMore] = useState<"idle" | "loading" | ApiError>("idle");
+  const rest = first.total - items.length;
+
+  const loadMore = async () => {
+    setMore("loading");
+    try {
+      const res = await api<SearchRes>(searchUrl(f, 60, items.length));
+      setItems((x) => [...x, ...res.items]);
+      setMore("idle");
+    } catch (e) {
+      setMore(e as ApiError);
+    }
+  };
+
   return (
     <Container wide className="flex flex-col items-center gap-12 pb-14">
       <div className="grid w-full grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 lg:gap-y-14">
-        {results.slice(0, shown).map((v, i) => (
-          <VendorCard key={v.slug} v={v} day={day} priority={i < 3} />
+        {items.map((v, i) => (
+          <VendorCard key={v.slug} v={v} day={f.sana} priority={i < 3} />
         ))}
       </div>
       <div className="flex flex-col items-center gap-3">
         {rest > 0 && (
-          <Button variant="secondary" size="lg" onClick={() => setShown(results.length)}>
-            Yana {rest} ta koʻrsatish
+          <Button variant="secondary" size="lg" disabled={more === "loading"} onClick={loadMore}>
+            {more === "loading" ? "Yuklanmoqda…" : `Yana ${rest} ta koʻrsatish`}
           </Button>
         )}
+        {typeof more === "object" && <span className="t-cap text-error">{more.message}</span>}
         <span className="t-cap text-ink-3">
-          {Math.min(shown, results.length)} / {results.length} koʻrsatildi
+          {items.length} / {first.total} koʻrsatildi
         </span>
       </div>
     </Container>
   );
 }
-

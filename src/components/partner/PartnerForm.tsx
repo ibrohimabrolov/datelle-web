@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { BRAND } from "@/config/brand";
+import { ApiError, api } from "@/lib/api";
 import { DISTRICTS, districtBySlug, districtSlug } from "@/data/catalog";
 import { Button, buttonClass } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
@@ -22,6 +23,8 @@ export function PartnerForm() {
   const [phone, setPhone] = useState("");
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [sent, setSent] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [serverErr, setServerErr] = useState<string>();
   const clear = (k: string) => setErrors((e) => ({ ...e, [k]: undefined }));
 
   if (sent) {
@@ -57,7 +60,18 @@ export function PartnerForm() {
       phone: !isPhoneValid(phone) ? "Raqamni toʻliq kiriting" : undefined,
     };
     setErrors(next);
-    if (!Object.values(next).some(Boolean)) setSent(true);
+    if (Object.values(next).some(Boolean)) return;
+    setBusy(true);
+    setServerErr(undefined);
+    api("/api/partners", {
+      body: { studioName: studio.trim(), category: kind, district: districtBySlug(district), instagram: instagram.trim() || undefined, legalForm: legal, contactName: name.trim(), phone },
+    })
+      .then(() => setSent(true))
+      .catch((e: ApiError) => {
+        if (e.fields) setErrors((x) => ({ ...x, ...e.fields }));
+        setServerErr(e.fields ? undefined : e.message);
+      })
+      .finally(() => setBusy(false));
   };
 
   return (
@@ -106,9 +120,14 @@ export function PartnerForm() {
           </div>
         </fieldset>
 
+        {serverErr && (
+          <p role="alert" className="rounded-lg bg-error-subtle px-3 py-2 t-cap-m text-error-subtle-text">
+            {serverErr}
+          </p>
+        )}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <Button type="submit" size="lg">
-            Ariza yuborish
+          <Button type="submit" size="lg" disabled={busy}>
+            {busy ? "Yuborilmoqda…" : "Ariza yuborish"}
           </Button>
           <span className="t-body-s text-ink-2">
             Bepul. Yuborish orqali <Link href="/oferta" className="font-semibold text-brand underline underline-offset-2">ofertaga</Link> rozilik bildirasiz.

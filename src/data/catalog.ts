@@ -1,35 +1,16 @@
-import type { StaticImageData } from "next/image";
-
-import gulnoza from "@/assets/img/vendor-gulnoza.jpg";
-import oqsaroy from "@/assets/img/vendor-oqsaroy.jpg";
-import lola from "@/assets/img/vendor-lola.jpg";
-import navroz from "@/assets/img/vendor-navroz.jpg";
-import zarafshon from "@/assets/img/vendor-zarafshon.jpg";
-import bahor from "@/assets/img/vendor-bahor.jpg";
-import evToy from "@/assets/img/event-toy.jpg";
-import evQiz from "@/assets/img/event-qiz-uzatar.jpg";
-import evTk from "@/assets/img/event-tugilgan-kun.jpg";
-import evYub from "@/assets/img/event-yubiley.jpg";
-import evKorp from "@/assets/img/event-korporativ.jpg";
-import florist from "@/assets/img/florist.jpg";
-import hero from "@/assets/img/hero.jpg";
 
 /* ─────────────────────────────────────────────────────────────
-   Mock catalog. Deterministic — every page (home, katalog, studiya)
-   reads availability from the same functions, so counts always agree.
-   Replace with API calls when the backend exists.
+   Catalogue reference data: labels, filters and vendor profiles.
+   Vendor profiles are also the DB seed (src/server/seed.ts).
+   Availability is NOT here — it lives in Postgres (vendor_days)
+   and reaches the UI through /api/*.
    ───────────────────────────────────────────────────────────── */
+
+import { defaultDate, isISODate, isBookable, todayISO } from "@/lib/dates";
+export { dayLabel, dayShort } from "@/lib/dates";
 
 export type Category = "dekor" | "floristika";
 export type Status = "free" | "few" | "busy";
-
-export const MONTH = { name: "Iyun", year: 2026, days: 30, firstWeekday: 0 } as const; // 1-iyun 2026 — dushanba
-export const WD_SHORT = ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"] as const;
-export const WD_FULL = ["dushanba", "seshanba", "chorshanba", "payshanba", "juma", "shanba", "yakshanba"] as const;
-export const weekdayIdx = (d: number) => (MONTH.firstWeekday + d - 1) % 7;
-export const dayLabel = (d: number) => `${d}-iyun, ${WD_FULL[weekdayIdx(d)]}`;
-export const dayShort = (d: number) => `${d}-iyun`;
-export const DEFAULT_DAY = 12;
 
 export const EVENT_TYPES = [
   { slug: "toy", label: "Toʻy" },
@@ -88,12 +69,12 @@ export type Vendor = {
   verified: boolean;
   completed: number;
   events: EventSlug[];
-  img: StaticImageData;
-  gallery: StaticImageData[];
+  img: string; // image key — resolve with imageFor() from "@/data/images"
+  gallery: string[];
   rank: number;
   about: string;
   packages: Package[];
-  featured?: { busy: number[]; few: number[] };
+  imageKey: string;
 };
 
 /* ── deterministic hash ── */
@@ -106,11 +87,11 @@ function hash(str: string) {
   return h >>> 0;
 }
 
-const POOL = [gulnoza, oqsaroy, lola, navroz, zarafshon, bahor, evToy, evQiz, evYub, evKorp, evTk, hero];
-const FLORIST_POOL = [florist, evYub, evQiz, lola, evToy, gulnoza];
+const POOL = ["vendor-gulnoza", "vendor-oqsaroy", "vendor-lola", "vendor-navroz", "vendor-zarafshon", "vendor-bahor", "event-toy", "event-qiz-uzatar", "event-yubiley", "event-korporativ", "event-tugilgan-kun", "hero"];
+const FLORIST_POOL = ["florist", "event-yubiley", "event-qiz-uzatar", "vendor-lola", "event-toy", "vendor-gulnoza"];
 const ALL_EVENTS = EVENT_TYPES.map((e) => e.slug);
 
-function galleryFor(cover: StaticImageData, seed: string, pool = POOL) {
+function galleryFor(cover: string, seed: string, pool = POOL) {
   const rest = pool.filter((p) => p !== cover);
   const start = hash(seed) % rest.length;
   return [cover, ...rest.slice(start), ...rest.slice(0, start)].slice(0, 8);
@@ -145,35 +126,20 @@ const FLORIST_ABOUT = [
 
 /* ── featured vendors (Figma names, in "Tavsiya etilgan" order) ── */
 type Seed = Pick<Vendor, "slug" | "name" | "district" | "rating" | "reviews" | "priceFrom" | "img"> & {
-  responseHours?: number; completed?: number; busy?: number[]; few?: number[];
+  responseHours?: number; completed?: number;
 };
-const WEEKEND_BUSY = [6, 7, 20, 21, 27, 28];
 const FEATURED_SEEDS: Seed[] = [
-  { slug: "gulnoza-decor", name: "Gulnoza Decor", district: "Yunusobod", rating: 4.9, reviews: 38, priceFrom: 3_000_000, img: gulnoza, responseHours: 1, completed: 112, busy: [6, 7, 13, 20, 21, 27], few: [14, 28] },
-  { slug: "oq-saroy-event", name: "Oq Saroy Event", district: "Mirzo Ulugʻbek", rating: 5.0, reviews: 21, priceFrom: 6_500_000, img: oqsaroy },
-  { slug: "lola-studio", name: "Lola Studio", district: "Yakkasaroy", rating: 4.7, reviews: 64, priceFrom: 2_500_000, img: lola },
-  { slug: "navroz-dekor", name: "Navroʻz Dekor", district: "Sergeli", rating: 4.6, reviews: 33, priceFrom: 1_800_000, img: navroz },
-  { slug: "bahor-studio", name: "Bahor Studio", district: "Chilonzor", rating: 4.8, reviews: 52, priceFrom: 2_200_000, img: bahor },
-  { slug: "zarafshon-decor", name: "Zarafshon Decor", district: "Olmazor", rating: 4.9, reviews: 45, priceFrom: 4_000_000, img: zarafshon },
-  { slug: "sumbula-event", name: "Sumbula Event", district: "Mirobod", rating: 4.5, reviews: 12, priceFrom: 3_500_000, img: gulnoza },
-  { slug: "oydin-decor", name: "Oydin Decor", district: "Uchtepa", rating: 4.8, reviews: 27, priceFrom: 1_500_000, img: oqsaroy },
-  { slug: "ipak-yoli-event", name: "Ipak Yoʻli Event", district: "Shayxontohur", rating: 4.7, reviews: 19, priceFrom: 4_800_000, img: lola },
-  { slug: "lazurit-studio", name: "Lazurit Studio", district: "Yashnobod", rating: 4.6, reviews: 41, priceFrom: 2_900_000, img: navroz },
+  { slug: "gulnoza-decor", name: "Gulnoza Decor", district: "Yunusobod", rating: 4.9, reviews: 38, priceFrom: 3_000_000, img: "vendor-gulnoza", responseHours: 1, completed: 112 },
+  { slug: "oq-saroy-event", name: "Oq Saroy Event", district: "Mirzo Ulugʻbek", rating: 5.0, reviews: 21, priceFrom: 6_500_000, img: "vendor-oqsaroy" },
+  { slug: "lola-studio", name: "Lola Studio", district: "Yakkasaroy", rating: 4.7, reviews: 64, priceFrom: 2_500_000, img: "vendor-lola" },
+  { slug: "navroz-dekor", name: "Navroʻz Dekor", district: "Sergeli", rating: 4.6, reviews: 33, priceFrom: 1_800_000, img: "vendor-navroz" },
+  { slug: "bahor-studio", name: "Bahor Studio", district: "Chilonzor", rating: 4.8, reviews: 52, priceFrom: 2_200_000, img: "vendor-bahor" },
+  { slug: "zarafshon-decor", name: "Zarafshon Decor", district: "Olmazor", rating: 4.9, reviews: 45, priceFrom: 4_000_000, img: "vendor-zarafshon" },
+  { slug: "sumbula-event", name: "Sumbula Event", district: "Mirobod", rating: 4.5, reviews: 12, priceFrom: 3_500_000, img: "vendor-gulnoza" },
+  { slug: "oydin-decor", name: "Oydin Decor", district: "Uchtepa", rating: 4.8, reviews: 27, priceFrom: 1_500_000, img: "vendor-oqsaroy" },
+  { slug: "ipak-yoli-event", name: "Ipak Yoʻli Event", district: "Shayxontohur", rating: 4.7, reviews: 19, priceFrom: 4_800_000, img: "vendor-lola" },
+  { slug: "lazurit-studio", name: "Lazurit Studio", district: "Yashnobod", rating: 4.6, reviews: 41, priceFrom: 2_900_000, img: "vendor-navroz" },
 ];
-// Figma states: 12-iyun hamma boʻsh (Navroʻz, Oydin — 1 joy); 13-iyun 4 ta; 14-iyun 3 ta.
-const FREE_13 = ["lola-studio", "navroz-dekor", "bahor-studio", "oydin-decor"];
-const FREE_14 = ["gulnoza-decor", "zarafshon-decor", "lazurit-studio"];
-const FEW_12 = ["navroz-dekor", "oydin-decor"];
-
-function featuredCalendar(s: Seed) {
-  if (s.busy) return { busy: s.busy, few: s.few ?? [] };
-  const busy = WEEKEND_BUSY.filter((d) => hash(s.slug + d) % 2 === 0);
-  if (!FREE_13.includes(s.slug)) busy.push(13);
-  if (!FREE_14.includes(s.slug)) busy.push(14);
-  const few = FEW_12.includes(s.slug) ? [12] : [];
-  return { busy, few };
-}
-
 const FIRST = ["Afrosiyob", "Bonu", "Charos", "Dilnur", "Feruza", "Gulsara", "Hilola", "Iroda", "Jasmin", "Kamola", "Laylo", "Malika", "Nigora", "Orzu", "Parizod", "Qumri", "Rayhon", "Sabo", "Shirin", "Umida", "Chinor", "Xumor", "Yulduz", "Zilola", "Marjon", "Nafosat", "Sevara", "Tillo", "Zumrad", "Durdona", "Gavhar", "Munisa", "Nodira", "Safiya", "Ziyoda", "Barno", "Lazzat", "Oqtosh", "Mehr", "Anor"];
 const SUFFIX = ["Decor", "Event", "Studio", "Dekor", "Design"];
 const FLORISTS = ["Gulshan Flowers", "Rayhona Florist", "Lavanda Gul", "Nilufar Flowers", "Bonu Florist", "Sadaf Gul Studio", "Atirgul Florist", "Moviy Gul", "Lolazor Flowers", "Sumbul Florist", "Gulnor Studio", "Bahorgul Flowers"];
@@ -195,7 +161,7 @@ function build(): Vendor[] {
       rank: i + 1,
       about: DECOR_ABOUT[h % DECOR_ABOUT.length],
       packages: decorPackages(s.slug, s.priceFrom),
-      featured: featuredCalendar(s),
+      imageKey: s.img,
     });
   });
   FIRST.forEach((f, i) => {
@@ -218,6 +184,7 @@ function build(): Vendor[] {
       rank: 20 + (h % 1000),
       about: DECOR_ABOUT[h % DECOR_ABOUT.length],
       packages: decorPackages(slug, priceFrom),
+      imageKey: img,
     });
   });
   FLORISTS.forEach((name) => {
@@ -239,6 +206,7 @@ function build(): Vendor[] {
       rank: 20 + (h % 1000),
       about: FLORIST_ABOUT[h % FLORIST_ABOUT.length],
       packages: floristPackages(slug, priceFrom),
+      imageKey: img,
     });
   });
   return list.sort((a, b) => a.rank - b.rank);
@@ -247,47 +215,9 @@ function build(): Vendor[] {
 export const VENDORS: Vendor[] = build();
 export const vendorBySlug = (slug: string) => VENDORS.find((v) => v.slug === slug);
 
-/* ── availability ── */
-// Figma: dekor boʻsh studiyalar soni 8–17-iyun
-const DEKOR_TARGET: Record<number, number> = { 8: 41, 9: 38, 10: 36, 11: 35, 12: 34, 13: 6, 14: 4, 15: 44, 16: 47, 17: 45 };
-function target(cat: Category, d: number) {
-  const weekend = weekdayIdx(d) >= 5;
-  const h = hash(`${cat}-${d}`);
-  if (cat === "dekor") return DEKOR_TARGET[d] ?? (weekend ? 6 + (h % 8) : 28 + (h % 16));
-  return weekend ? 2 + (h % 3) : 6 + (h % 4);
-}
-
-const statusCache = new Map<string, Status>();
-function computeDay(cat: Category, d: number) {
-  const ofCat = VENDORS.filter((v) => v.category === cat);
-  const fixed = ofCat.filter((v) => v.featured);
-  const rest = ofCat.filter((v) => !v.featured);
-  let freeFixed = 0;
-  for (const v of fixed) {
-    const s: Status = v.featured!.busy.includes(d) ? "busy" : v.featured!.few.includes(d) ? "few" : "free";
-    if (s !== "busy") freeFixed++;
-    statusCache.set(`${v.slug}:${d}`, s);
-  }
-  const need = Math.max(0, target(cat, d) - freeFixed);
-  [...rest]
-    .sort((a, b) => hash(a.slug + d) - hash(b.slug + d))
-    .forEach((v, i) => {
-      const s: Status = i < need ? (hash(v.slug + "few" + d) % 9 === 0 ? "few" : "free") : "busy";
-      statusCache.set(`${v.slug}:${d}`, s);
-    });
-}
-
-export function statusOf(v: Vendor, d: number): Status {
-  if (d < 1 || d > MONTH.days) return "busy";
-  const key = `${v.slug}:${d}`;
-  if (!statusCache.has(key)) computeDay(v.category, d);
-  return statusCache.get(key)!;
-}
-export const isFree = (v: Vendor, d: number) => statusOf(v, d) !== "busy";
-
 /* ── filtering ── */
 export type Filters = {
-  sana: number;
+  sana: string; // ISO date
   tadbir: EventSlug | "all";
   tuman: string; // district slug | "all"
   byudjet: number; // 0 = istalgan
@@ -296,8 +226,7 @@ export type Filters = {
   saralash: SortValue;
 };
 
-export const DEFAULT_FILTERS: Filters = {
-  sana: DEFAULT_DAY,
+export const DEFAULT_FILTERS: Omit<Filters, "sana"> = {
   tadbir: "toy",
   tuman: "all",
   byudjet: 5_000_000,
@@ -306,37 +235,10 @@ export const DEFAULT_FILTERS: Filters = {
   saralash: "tavsiya",
 };
 
-export function matches(v: Vendor, f: Filters, day = f.sana) {
-  if (v.category !== f.tur) return false;
-  if (!isFree(v, day)) return false;
-  if (f.tadbir !== "all" && !v.events.includes(f.tadbir)) return false;
-  if (f.tuman !== "all" && districtSlug(v.district) !== f.tuman) return false;
-  if (f.byudjet && v.priceFrom > f.byudjet) return false;
-  if (f.chips.includes("tekshirilgan") && !v.verified) return false;
-  if (f.chips.includes("reyting") && v.rating < 4.5) return false;
-  if (f.chips.includes("tez") && v.responseHours > 2) return false;
-  return true;
-}
-
-export function search(f: Filters) {
-  const res = VENDORS.filter((v) => matches(v, f));
-  const by: Record<SortValue, (a: Vendor, b: Vendor) => number> = {
-    tavsiya: (a, b) => a.rank - b.rank,
-    arzon: (a, b) => a.priceFrom - b.priceFrom,
-    qimmat: (a, b) => b.priceFrom - a.priceFrom,
-    reyting: (a, b) => b.rating - a.rating || b.reviews - a.reviews,
-  };
-  return res.sort(by[f.saralash]);
-}
-
-export const countFor = (f: Filters, day: number) => VENDORS.filter((v) => matches(v, f, day)).length;
-export const freeCount = (cat: Category, d: number) =>
-  VENDORS.filter((v) => v.category === cat && isFree(v, d)).length;
-
 /* ── URL <-> filters ── */
 type SP = { get(name: string): string | null };
-export function parseFilters(sp: SP): Filters {
-  const n = Number(sp.get("sana"));
+export function parseFilters(sp: SP, today = todayISO()): Filters {
+  const n = sp.get("sana");
   const t = sp.get("tadbir");
   const tm = sp.get("tuman");
   const b = sp.get("byudjet");
@@ -344,7 +246,7 @@ export function parseFilters(sp: SP): Filters {
   const f = sp.get("f");
   const s = sp.get("saralash");
   return {
-    sana: n >= 1 && n <= MONTH.days ? n : DEFAULT_FILTERS.sana,
+    sana: isISODate(n) && isBookable(n, today) ? n : defaultDate(today),
     tadbir: t === "all" ? "all" : (EVENT_TYPES.find((e) => e.slug === t)?.slug ?? DEFAULT_FILTERS.tadbir),
     tuman: tm && (tm === "all" || districtBySlug(tm)) ? tm : DEFAULT_FILTERS.tuman,
     byudjet: b !== null && BUDGETS.some((x) => String(x.value) === b) ? Number(b) : DEFAULT_FILTERS.byudjet,
@@ -357,7 +259,7 @@ export function parseFilters(sp: SP): Filters {
 export function toQuery(f: Partial<Filters>) {
   const q = new URLSearchParams();
   if (f.tur && f.tur !== "dekor") q.set("tur", f.tur);
-  if (f.sana !== undefined) q.set("sana", String(f.sana));
+  if (f.sana !== undefined) q.set("sana", f.sana);
   if (f.tadbir !== undefined) q.set("tadbir", f.tadbir);
   if (f.tuman !== undefined) q.set("tuman", f.tuman);
   if (f.byudjet !== undefined) q.set("byudjet", String(f.byudjet));
@@ -373,7 +275,12 @@ export const catalogHref = (p: Partial<Filters> = {}) =>
 export const fmtSum = (n: number) => n.toLocaleString("ru-RU").replace(/[  ,]/g, " ") + " soʻm";
 export const fmtMln = (n: number) => `${(n / 1_000_000).toLocaleString("ru-RU").replace(",", ".")} mln`;
 
-export const dayInfo = (cat: Category, d: number) => {
-  const free = freeCount(cat, d);
-  return { wd: WD_SHORT[weekdayIdx(d)] as string, d, free, few: free < 10 };
+/* What /api/vendors/search returns per vendor */
+export type VendorHit = {
+  slug: string; name: string; category: Category; district: string; rating: number; reviews: number;
+  priceFrom: number; verified: boolean; imageKey: string; status: Status;
 };
+export const toHit = (v: Vendor, status: Status): VendorHit => ({
+  slug: v.slug, name: v.name, category: v.category, district: v.district, rating: v.rating, reviews: v.reviews,
+  priceFrom: v.priceFrom, verified: v.verified, imageKey: v.imageKey, status,
+});

@@ -2,29 +2,37 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useRef, useState } from "react";
-import { DEFAULT_DAY, EVENT_TYPES, MONTH, dayLabel, eventLabel, statusOf, vendorBySlug, type EventSlug } from "@/data/catalog";
+import { EVENT_TYPES, eventLabel, vendorBySlug, type EventSlug } from "@/data/catalog";
+import { imageFor } from "@/data/images";
+import { dayLabel, defaultDate, isBookable, isISODate, monthOf } from "@/lib/dates";
+import { useToday } from "@/lib/api";
+import { VendorCalendar } from "@/components/ui/Calendars";
+import { ContactFields } from "./ContactFields";
+import { useRequestSubmit } from "./useRequestSubmit";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
-import { Chip, FilterField, MonthCalendar, OptionList } from "@/components/ui/Picker";
-import { PhoneField, TextArea, TextField, isPhoneValid } from "@/components/ui/Form";
+import { Chip, FilterField, OptionList } from "@/components/ui/Picker";
+import { TextArea, TextField, isPhoneValid } from "@/components/ui/Form";
 import { Container } from "@/components/ui/Primitives";
 import { Stepper } from "@/components/ui/Stepper";
 
 const BUDGET_RANGES = ["5 mln gacha", "5–15 mln", "15 mln+", "Hali bilmayman"] as const;
 
 export function BriefWithParams({ slug }: { slug: string }) {
-  const n = Number(useSearchParams().get("sana"));
-  return <BriefForm slug={slug} initialDay={n >= 1 && n <= MONTH.days ? n : DEFAULT_DAY} key={n} />;
+  const asked = useSearchParams().get("sana");
+  return <BriefForm slug={slug} asked={isISODate(asked) ? asked : null} key={asked} />;
 }
 
 /* B3 · Individual soʻrov (brief) — Figma 246:1314 */
-export function BriefForm({ slug, initialDay = DEFAULT_DAY }: { slug: string; initialDay?: number }) {
+export function BriefForm({ slug, asked = null }: { slug: string; asked?: string | null }) {
   const v = vendorBySlug(slug)!;
-  const router = useRouter();
+  const today = useToday();
+  const req = useRequestSubmit();
   const fileRef = useRef<HTMLInputElement>(null);
-  const [day, setDay] = useState(initialDay);
+  const [picked, setDay] = useState<string | null>(null);
+  const day = picked ?? (today ? (asked && isBookable(asked, today) ? asked : defaultDate(today)) : null);
   const [event, setEvent] = useState<EventSlug>("toy");
   const [place, setPlace] = useState("");
   const [guests, setGuests] = useState("");
@@ -45,15 +53,20 @@ export function BriefForm({ slug, initialDay = DEFAULT_DAY }: { slug: string; in
     e.preventDefault();
     const next = {
       guests: guests && !/^\d{1,4}$/.test(guests) ? "Faqat raqam" : undefined,
-      name: name.trim().length < 2 ? "Ismingizni kiriting" : undefined,
-      phone: !isPhoneValid(phone) ? "Raqamni toʻliq kiriting" : undefined,
+      name: name.trim().length < 2 && !req.user?.name ? "Ismingizni kiriting" : undefined,
+      phone: req.sessionStatus !== "user" && !isPhoneValid(phone) ? "Raqamni toʻliq kiriting" : undefined,
     };
     setErrors(next);
-    if (Object.values(next).some(Boolean)) return;
-    const q = new URLSearchParams({ turi: "taklif", studio: v.slug, sana: String(day), tadbir: event, byudjet: budget });
-    if (guests) q.set("mehmon", guests);
-    if (place.trim()) q.set("joy", place.trim());
-    router.push(`/sorov/yuborildi?${q}`);
+    if (Object.values(next).some(Boolean) || !day) return;
+    req.submit(
+      {
+        type: "quote", vendor: v.slug, date: day, eventType: event, budget,
+        guests: guests ? Number(guests) : undefined, venue: place.trim() || undefined,
+        notes: [style.trim(), files.length ? `Fotolar: ${files.length} ta (yuklash keyingi bosqichda)` : ""].filter(Boolean).join("\n\n") || undefined,
+        name: name.trim() || req.user?.name || "",
+      },
+      phone,
+    );
   };
 
   const section = "flex flex-col gap-4";
@@ -72,11 +85,11 @@ export function BriefForm({ slug, initialDay = DEFAULT_DAY }: { slug: string; in
         <fieldset className={section}>
           <legend className="mb-4 t-title">Tadbir</legend>
           <div className="grid gap-3 sm:grid-cols-2">
-            <FilterField icon="calendar" label="Sana" value={dayLabel(day)} panelWidth={380}>
+            <FilterField icon="calendar" label="Sana" value={day ? dayLabel(day) : "…"} panelWidth={380}>
               {(close) => (
                 <div className="p-1">
                   <p className="mb-3 t-body-sb">{v.name} bandligi</p>
-                  <MonthCalendar selected={day} status={(d) => statusOf(v, d)} onSelect={(d) => (setDay(d), close())} />
+                  {today && day && <BriefCalendar slug={v.slug} today={today} day={day} onSelect={(d) => (setDay(d), close())} />}
                 </div>
               )}
             </FilterField>
@@ -145,23 +158,34 @@ export function BriefForm({ slug, initialDay = DEFAULT_DAY }: { slug: string; in
 
         <fieldset className={section}>
           <legend className="mb-4 t-title">Aloqa</legend>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <TextField label="Ismingiz" placeholder="Masalan, Dilnoza" autoComplete="given-name" value={name} onChange={(e) => (setName(e.target.value), setErrors((x) => ({ ...x, name: undefined })))} error={errors.name} />
-            <PhoneField value={phone} onChange={(p) => (setPhone(p), setErrors((x) => ({ ...x, phone: undefined })))} error={errors.phone} />
-          </div>
+          <ContactFields
+              grid
+              name={name}
+              setName={(n) => (setName(n), setErrors((x) => ({ ...x, name: undefined })))}
+              phone={phone}
+              setPhone={(p) => (setPhone(p), setErrors((x) => ({ ...x, phone: undefined })))}
+              errors={errors}
+              user={req.user}
+            />
         </fieldset>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <Button type="submit" size="lg">
-            Soʻrov yuborish
+          <Button type="submit" size="lg" disabled={req.busy || !day}>
+            {req.busy ? "Yuborilmoqda…" : "Soʻrov yuborish"}
           </Button>
           <span className="t-body-s text-ink-2">Bepul. Pul faqat taklifni qabul qilsangiz yechiladi.</span>
         </div>
+        {req.error && (
+          <p role="alert" className="rounded-lg bg-error-subtle px-3 py-2 t-cap-m text-error-subtle-text">
+            {req.error.message}
+          </p>
+        )}
       </form>
+      {req.dialog}
 
       <aside className="flex w-full flex-col gap-4 rounded-2xl border border-line bg-surface p-6 lg:sticky lg:top-6 lg:w-[424px] lg:shrink-0">
         <div className="relative h-[180px] overflow-hidden rounded-xl">
-          <Image src={v.img} alt={v.name} fill placeholder="blur" sizes="400px" className="object-cover" />
+          <Image src={imageFor(v.img)} alt={v.name} fill placeholder="blur" sizes="400px" className="object-cover" />
         </div>
         <div className="flex flex-col gap-1">
           <span className="t-title">{v.name}</span>
@@ -182,4 +206,9 @@ export function BriefForm({ slug, initialDay = DEFAULT_DAY }: { slug: string; in
       </aside>
     </Container>
   );
+}
+
+function BriefCalendar({ slug, today, day, onSelect }: { slug: string; today: string; day: string; onSelect: (d: string) => void }) {
+  const [m, setM] = useState(monthOf(day));
+  return <VendorCalendar slug={slug} month={m} onMonth={setM} today={today} selected={day} onSelect={onSelect} />;
 }

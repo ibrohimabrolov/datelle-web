@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { BRAND } from "@/config/brand";
 import { VENDORS, fmtSum, vendorBySlug } from "@/data/catalog";
+import { imageFor } from "@/data/images";
 import { VendorView, VendorWithParams } from "@/components/vendor/VendorView";
 import { VendorSkeleton } from "@/components/vendor/VendorSkeleton";
 
@@ -18,7 +19,7 @@ export async function generateMetadata({ params }: PageProps<"/studio/[slug]">):
     title: `${v.name} — ${v.category === "dekor" ? "dekor studiyasi" : "florist"}, ${v.district}`,
     description: `${v.name}: ${fmtSum(v.priceFrom)}dan, reyting ${v.rating}. Boʻsh kunlarni koʻring va ${BRAND.name} orqali bron qiling.`,
     alternates: { canonical: `/studio/${v.slug}` },
-    openGraph: { images: [{ url: v.img.src, width: v.img.width, height: v.img.height }] },
+    openGraph: { images: [{ url: imageFor(v.img).src, width: imageFor(v.img).width, height: imageFor(v.img).height }] },
   };
 }
 
