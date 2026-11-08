@@ -9,7 +9,9 @@ npm run db:migrate && npm run db:seed
 npm run dev     # http://localhost:3000
 ```
 
-Backend (Postgres, API, auth): **[BACKEND.md](./BACKEND.md)**
+Loyiha konteksti (yangi chat uchun boshlash nuqtasi): **[docs/PROJECT_CONTEXT.md](./docs/PROJECT_CONTEXT.md)**
+
+Backend (Postgres, API, auth, admin): **[BACKEND.md](./BACKEND.md)**
 
 - `src/app/globals.css` — tokenlar (Figma Colors · Light / Light · App) va type scale (`t-*` utility)
 - `src/config/brand.ts` — brend nomi (bir joyda)
