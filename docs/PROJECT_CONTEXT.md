@@ -206,6 +206,7 @@ pending/confirmed → cancelled (mijoz)
 - **2026-11-11:** kodni qurishdan oldin Figma prototip bilan 10–15 studiyaga "founding partner" demosi; ≥ 5 "ha" boʻlsa kod. Mijoz sayti jonli qoladi, yangi ish qilinmaydi, sotuvda koʻrsatilmaydi.
 - **2026-11-12:** kod demo natijasidan qatʼi nazar quriladi (mahsulot portfolio case sifatida ham qoladi); demolar parallel davom etadi va v1.1 ni belgilaydi. Kod faqat Ibrohim Figma'ni koʻrib chiqqandan keyin boshlanadi. Reja: `docs/studio/IMPLEMENTATION-PLAN.md`, handoff: `docs/studio/DESIGN-HANDOFF.md`, tokenlar: `src/studio/tokens.css` (branch `studio/prep`).
 - **2026-11-12:** Figma prototip ulandi — Mobile 5 flow (push = chapga siljish 300ms, sheet/state = smart animate 300ms, tab = dissolve 150ms, Telegram BackButton = Back), Desktop 5 flow (sahifa = dissolve 200ms, panel/state = smart animate 300ms, saqlash → 0.9s timeout). Desktop'ga oddiy `S3 · Kalendar` (panelsiz) qoʻshildi.
+- **2026-11-12:** Figma'da `📣 Marketing` sahifasi: 8 slaydli pitch deck (studiyalar uchun, oʻzbekcha, real ekranlar bilan; Present → "Pitch deck", → / ← bilan) va outreach grafikalari (feed 1080×1350, story 1080×1920). Desktop sahifasi 6 ta flow seksiyasiga (4 ustunli grid) qayta tartiblandi.
 - **v1.1 kandidatlari:** jamoani tadbirlarga taqsimlash, rekvizit hisobi, xarajatlar — demolar tartibni hal qiladi.
 
 ---
