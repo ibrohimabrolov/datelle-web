@@ -1,0 +1,57 @@
+# Datelle Studio — implementation plan
+
+> v1.0 · 2026-11-12 · Status: **prep done, feature code not started** (waiting for Ibrohim's Figma review).
+> Decision 2026-11-12: code is built regardless of the demo go/no-go — the product doubles as a portfolio case. Demos still run in parallel and still shape v1.1.
+
+## Ground rules
+
+- `main` = production (`datelle-web.vercel.app`). Every phase on its own branch `studio/<phase>`, merged only after checks pass.
+- Marketplace code (`(site)`, `/admin`, existing `/api/*`, `app/globals.css`) is not touched. Studio lives in `src/app/panel`, `src/app/api/panel`, `src/components/studio`, `src/server/studio`, `src/studio`.
+- Read `node_modules/next/dist/docs/` before writing Next code (Next 16, see `AGENTS.md`).
+- Design is the spec: `docs/studio/DESIGN-HANDOFF.md` + Figma. Every PR ends with a 1:1 visual check against the Figma screen at 390 and 1440 (and 1280/1920 for desktop).
+- Tests stay green: existing unit/API/e2e + new studio tests per phase.
+
+## Phase 0 — Prep ✅ (this branch `studio/prep`)
+
+- [x] Tokens exported from Figma → `src/studio/tokens.json` + `src/studio/tokens.css` (scoped `.studio`, Light/Dark, Telegram themeParams mapping, focus ring, motion).
+- [x] Design handoff map: components → React, screens → routes, state matrix, a11y checklist.
+- [x] This plan.
+- [ ] Ibrohim reviews Figma (prototype flows) → comments become issues before Phase 1.
+
+## Phase 1 — Schema, auth, shell (`studio/foundation`)
+
+- Migration `drizzle/0001_studio.sql`: `studios`, `studio_members`, `studio_invites`, `studio_days`, `orders`, `order_payments`, `studio_events`; `users` + `telegram_id`, nullable `phone` (Tech §2).
+- Auth: Mini App `initData` + desktop Login Widget → session cookie `dt_panel`; `requireStudio()` (Tech §3–4).
+- `/panel` layout: `.studio` wrapper + `tokens.css`, Sidebar (≥1024) / TabBar (<1024), Telegram SDK init (`ready`, `expand`, BackButton, MainButton, theme → `data-platform`, `data-theme`).
+- Base components: Button, IconButton, TextField, SearchField, Switch, Checkbox, Chip, SegmentedControl, StatusPill, Alert, Toast, ConfirmDialog, PanelHeader, BottomSheet.
+- **Done when:** unit tests for both signatures (valid / tampered / expired); tenant isolation test skeleton; Storybook-free component page `/panel/_ui` (dev only) matches Figma components 1:1.
+
+## Phase 2 — Onboarding, settings, team (`studio/team`)
+
+Onboarding (Mini App), Sozlamalar (owner / manager views), invites (`t.me/<bot>?startapp=inv_…`, 7 days, one-time), remove member (confirm). **Done when:** API tests for invite reuse/expiry and role guards.
+
+## Phase 3 — Calendar (`studio/calendar`)
+
+Month grid (DayCell / DayCellLarge, states incl. "1 joy"), day sheet (mobile) / side panel (desktop), close/open day with reason + undo toast, capacity warning (not blocking). **Done when:** `day_status` unit tests (capacity 1 and 3); keyboard navigation across the grid.
+
+## Phase 4 — Orders & payments (`studio/orders`)
+
+List (segments, search, cursor pagination, bulk select), DataTable (desktop) / OrderCard (mobile), create/edit form (validation, saving, unsaved guard), detail panel, payments (add, undo, owner soft delete), cancel/done with confirm, history (audit). **Done when:** balance/overpayment unit tests; soft delete restores balance; audit written for every money/status change.
+
+## Phase 5 — Dashboard (`studio/dashboard`)
+
+KPI (month paid + delta, total balance, next 30 days), next 7 days, balance list with overdue alert, revenue chart (12 months). Owner only. **Done when:** numbers reconcile with orders/payments fixtures.
+
+## Phase 6 — Bot & reminders (`studio/bot`)
+
+Webhook `/start`, daily 20:00 Tashkent (15:00 UTC) cron with tomorrow's events + balance to collect; settings toggles respected. **Done when:** cron dry-run test; no message for empty days.
+
+## Phase 7 — QA & release
+
+Playwright demo flow (onboarding → calendar → order + advance → day "1 joy" → dashboard balance up), axe on every route, Light/Dark + Telegram theme check, 1:1 Figma review → merge to `main`.
+
+## Needs from Ibrohim (with click-by-click guides when we get there)
+
+1. BotFather: create bot, get token, set Mini App URL, `/setdomain`.
+2. Vercel → Settings → Environment Variables: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET`, `CRON_SECRET`, `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME`. (Secrets are never pasted into chat.)
+3. Before any real studio data: move the database to a provider in Uzbekistan (legal requirement) — Tech §10.
