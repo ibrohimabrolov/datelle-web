@@ -1,7 +1,9 @@
 # Datelle — loyiha konteksti (handoff)
 
-> Yangi chatda shu fayldan boshlang. Oxirgi yangilanish: 2026-11-08.
+> Yangi chatda shu fayldan boshlang. Oxirgi yangilanish: 2026-11-11.
 > Kod: `github.com/ibrohimabrolov/datelle-web` (private) · Jonli sayt: https://datelle-web.vercel.app
+
+> **⚡ 2026-11-11 — yoʻnalish oʻzgardi.** Hozirgi mahsulot — ***Datelle Studio***: dekor studiyalari va floristlar uchun **faqat ichki tizim** (mijoz tomoni yoʻq). MVP: Kalendar · Buyurtma va pul (avans/qoldiq) · egasi uchun Dashboard. Bitta web app: desktop brauzer + Telegram Mini App. Pul — studiya obunasi. Mahsulot rejasi: **`claude/Datelle-MVP-SCOPE.md`** (v0.2) · texnik dizayn: **`claude/Datelle-STUDIO-TECH.md`**. Quyidagi 1–9-boʻlimlar mavjud mijoz saytini (marketplace) tasvirlaydi — u jonli, lekin muzlatilgan.
 
 ---
 
@@ -10,7 +12,8 @@
 **Datelle** (ichki eski nomlari: Chaman, Calla) — Toshkentda tadbir **dekor studiyalari va floristlarni sana boʻyicha** bron qilish marketplace'i. Ibrohim Abrolovning shaxsiy startapi.
 
 - Asosiy gʻoya: **"Avval sana, keyin dekor"** — mijoz sanani tanlaydi, faqat oʻsha kuni boʻsh studiyalar chiqadi.
-- Pul modeli: mijoz **30% zadatok** toʻlaydi (Payme/Click), zadatok platformada himoyalanadi; studiya kelmasa qaytariladi.
+- Pul modeli (**2026-11-11 dan yangi**): pul **studiyadan** — Datelle Studio. Gipoteza: setup 500 000 soʻm (bir marta) + 299 000 soʻm/oy (3 foydalanuvchi, qoʻshimchasi 49 000) yoki yillik 2 990 000. Founding partner (birinchi 10 ta): setup va 3 oy bepul, keyin umrbod 149 000/oy. Bir martalik katta sotuv rad etildi (agentlikka aylanadi, takroriy daromad yoʻq). Mijozdan pul olinmaydi.
+  - *Eski model (kodda hali bor, qayta yoziladi):* mijoz 30% zadatokni platformaga toʻlaydi. Rad etildi: Datelle'ga ishonch yoʻq, studiyalar pulni darhol olishni xohlaydi, boshqa birovning pulini ushlab turish huquqiy jihatdan ogʻir, merchant ulash uzoq.
 - Ikki xil soʻrov:
   - **Bron** (`booking`) — tayyor paket, narx aniq, studiya **6 ish soati** ichida javob beradi (22:00–08:00 hisoblanmaydi).
   - **Taklif soʻrovi** (`quote`) — brief (mehmonlar, joy, byudjet, izoh), studiya **24 soat** ichida taklif beradi.
@@ -21,7 +24,7 @@
 
 ---
 
-## 2. Hozirgi holat (2026-11-08)
+## 2. Hozirgi holat (2026-11-08, kod oʻzgarmagan)
 
 **Jonli va ishlaydi** (`main` = `backend` = commit `27b0fbf`):
 
@@ -39,7 +42,7 @@
 | **Admin panel `/admin`** | Parol bilan. Soʻrovlarni tasdiqlash/rad etish, studiyalar, arizalar, lidlar |
 | SEO | robots, sitemap, OG image, icon, error/404 |
 
-**Baza:** Neon Postgres (Frankfurt), Vercel orqali ulangan. 62 ta studiya (50 dekor + 12 florist), 186 paket, ~8 oylik sintetik bandlik (seed). Real foydalanuvchi maʼlumoti hali yoʻq.
+**Baza:** Neon Postgres (Frankfurt), Vercel orqali ulangan. 62 ta studiya (50 dekor + 12 florist), 186 paket, ~8 oylik sintetik bandlik (seed). Real foydalanuvchi va real studiya maʼlumoti hali yoʻq.
 
 **Testlar (oxirgi yugurish — hammasi yashil):** unit 6/6, API integratsiya 25/25, e2e oqim Playwright bilan, 58 sahifa crawl, axe a11y.
 
@@ -55,7 +58,7 @@
 | Preview | boshqa branch'lar → `datelle-web-git-<branch>-abrolov.vercel.app` — **Vercel login ortida**, Claude ocha olmaydi |
 | Baza | Neon, `neon-aero-anchor` (Vercel → Storage), Free plan, Frankfurt |
 | Admin | https://datelle-web.vercel.app/admin · parol Vercel env'da (`ADMIN_PASSWORD`) |
-| Dizayn | Figma `figma.com/design/VfrwfbjWNNyA5BombIor7z/Chaman` — Home frame `240:247`, Admin sahifasi `268:4567` |
+| Dizayn | Figma `figma.com/design/VfrwfbjWNNyA5BombIor7z/Chaman` — Home frame `240:247`, Admin sahifasi `268:4567`. Datelle Studio — **alohida fayl** `figma.com/design/XNmqL3kbnh0lPpzO6ZQKUR` (Projects team): Cover · 📝 UX audit · Foundations · 💠 Icons (845 ta ikon set × 6 style; ishlatilgan style — **Filled**, chevron/search va nofaol nav ikonlari — Line; Filled va Line variantlar `icon/default` tokeniga bogʻlangan) · Components (14 set + Avatar, Toast; eski Icon/* oʻchirildi, hammasi 💠 Icons'ga swap qilindi; native qatlam: Toggle, Selection (Checkbox/Radio), ListRow, Alert, SearchField, SheetHeader, Dialog, Keyboard/NumPad, System/StatusBar, System/HomeIndicator, Telegram/Header; Button'da Destructive, Segment'da Count) · Mobile (42 ekran, 6 flow; har seksiya tepasida `Docs/Section Header`, screen'lar 100px pastda) · Desktop (7 asosiy + 18 holat). **Tokenlar:** Primitives 97 (neutral, green, amber, red, blue, violet, rose, teal + alpha) · Color 117 (Light + Dark: control, keyboard, bg, text, border, brand, icon, status ×4, state, day, money, event, chart) · Spacing 11 · Radius 5 · Typography 20 (text style'larga bogʻlangan) · Size 17 · Layout 8 (Mobile/Desktop). 2026-11-11 |
 
 **Vercel environment variables** (Production + Preview `backend`):
 
@@ -65,6 +68,7 @@
 | `ADMIN_PASSWORD` | Ibrohim qoʻygan oddiy demo parol — **real ishga tushirishdan oldin almashtirish** |
 | `SMS_PROVIDER` | `demo` (kod ekranda chiqadi). Real ishda `eskiz` |
 | `OTP_PEPPER` | hali qoʻyilmagan — `eskiz` yoqilganda **majburiy** |
+| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET`, `CRON_SECRET` | *(Datelle Studio uchun, hali yoʻq)* — Ibrohim oʻzi qoʻyadi |
 
 ---
 
@@ -81,7 +85,7 @@
 ### Muhim tamoyillar
 - Statik shell + klientda `/api/*` dan maʼlumot (skeleton bilan). `useToday()` SSR'da `null` — statik HTML'ga sana "yopishib qolmasin".
 - Sanalar — ISO string, Toshkent UTC+5 (`src/lib/dates.ts`). Bron oynasi: ertadan 365 kungacha.
-- Pul — butun soʻm (`bigint`). Zadatok = narxning 30%i, 1000 ga yaxlitlanadi.
+- Pul — butun soʻm (`bigint`). Zadatok = narxning 30%i, 1000 ga yaxlitlanadi *(eski model)*.
 - Xatolar formati: `{ error: { code, message, fields? } }`, xabarlar oʻzbekcha (foydalanuvchiga koʻrinadi).
 - CSRF: mutatsiyalar faqat `application/json` + oʻz `Origin`.
 - Rate limit Postgres'da (fixed window) — serverless'da ham ishlaydi.
@@ -111,6 +115,8 @@ tests/                 # unit.test.ts, api.test.ts
 BACKEND.md             # backend batafsil: env, model, API, admin, deploy
 ```
 
+Datelle Studio rejasi (hali kod yoʻq): `src/app/panel/`, `/api/panel/*`, `/api/telegram/webhook`, `/api/cron/daily`; jadvallar `studios`, `studio_members`, `studio_invites`, `studio_days`, `orders`, `order_payments`, `studio_events` — `claude/Datelle-STUDIO-TECH.md`.
+
 ---
 
 ## 6. Maʼlumotlar modeli (qisqa)
@@ -129,6 +135,7 @@ pending/confirmed → cancelled (mijoz)
 - Bitta mijoz + studiya + sana uchun faqat bitta ochiq soʻrov (partial unique index).
 - **Tasdiqlash** (`→ confirmed`) studiyaning kunlik joyini band qiladi (`booked + 1`); confirmed/paid'dan chiqish joyni qaytaradi.
 - Kod formati: `DT-B-######` (bron), `DT-R-######` (taklif).
+- Datelle Studio bu jadvallardan foydalanmaydi — oʻz jadvallari bor (`studios`, `orders`, …). Kelajakda bogʻlash uchun `studios.vendor_id` (hozir null).
 
 ---
 
@@ -157,7 +164,7 @@ pending/confirmed → cancelled (mijoz)
 - **Soʻrovlar:** filtr (Ochiq / Javob kutilmoqda / Zadatok kutilmoqda / Toʻlangan / Yopilgan / Hammasi), qidiruv; Tasdiqlash, Rad etish, Zadatok olindi, Bajarildi, Bekor qilish.
 - **Studiyalar:** yashirish/koʻrsatish, kunlik sigʻim (−/+), "Tekshirilgan" belgisi, 8 haftalik kunlarni yopish/ochish.
 - **Hamkor arizalari:** yangi → koʻrib chiqilmoqda → qabul / rad. **Lidlar:** "Bogʻlanildi".
-- Studiya tomoni hali yoʻq — **hozircha studiya oʻrniga admin tasdiqlaydi**.
+- Studiya tomoni hali yoʻq — **hozircha studiya oʻrniga admin tasdiqlaydi** (marketplace muzlatilgan, shuning uchun dolzarb emas).
 
 ---
 
@@ -182,6 +189,7 @@ pending/confirmed → cancelled (mijoz)
 - `pkill -f next` shell'ning oʻzini oʻldiradi — PID boʻyicha oʻldirish.
 - Konteyner qayta ishga tushsa Postgres oʻchib qoladi — `pg_ctlcluster 16 main start`.
 - Seed'ni prod'da qoʻlda yugurtirmang: u studiya maʼlumotlarini qayta yozadi (predeploy faqat boʻsh bazada seed qiladi).
+- Shu fayl ikki joyda: Project (`Datelle-PROJECT_CONTEXT.md`) va repo (`docs/PROJECT_CONTEXT.md`) — ikkalasini birga yangilash. 2026-11-12 da sinxronlandi. `claude/Datelle-MVP-SCOPE.md` va `claude/Datelle-STUDIO-TECH.md` hozircha faqat Project'da.
 
 ---
 
@@ -192,20 +200,23 @@ pending/confirmed → cancelled (mijoz)
 - Login — telefon + SMS kod (parolsiz). Admin — oddiy parol (v1 soddalik uchun).
 - Studiya tomoni qurilguncha soʻrovlarni admin boshqaradi.
 - Mock bandlik olib tashlangan; hamma raqamlar bazadan.
+- **2026-11-11:** platforma zadatok olmaydi; pul studiyadan (obuna).
+- **2026-11-11:** keyingi mahsulot — *Datelle Studio*, **faqat ichki tizim, mijoz tomoni aralashmaydi** (Ibrohim qarori). MVP = Kalendar · Buyurtma va pul · egasi Dashboard'i. Bitta responsive web app (desktop + Telegram Mini App). Rollar: owner, manager. Login Telegram orqali (SMS'siz). Kod `/panel` boʻlimida, marketplace kodiga tegilmaydi.
+- **2026-11-11:** narx — setup + oylik obuna + yillik chegirma (bir martalik katta summa emas).
+- **2026-11-11:** kodni qurishdan oldin Figma prototip bilan 10–15 studiyaga "founding partner" demosi; ≥ 5 "ha" boʻlsa kod. Mijoz sayti jonli qoladi, yangi ish qilinmaydi, sotuvda koʻrsatilmaydi.
+- **v1.1 kandidatlari:** jamoani tadbirlarga taqsimlash, rekvizit hisobi, xarajatlar — demolar tartibni hal qiladi.
 
 ---
 
 ## 11. Ochiq masalalar va keyingi qadamlar (ustuvorlik tartibida)
 
-1. **Home illyustratsiyalari** — Hero floating kartalar, Signature, HowItWorks hali statik "12-iyun · 34" koʻrsatadi → haqiqiy sanaga almashtirish.
-2. **Studiya tomoni** — Telegram bot (yangi soʻrov xabari, Tasdiqlash/Rad tugmalari, kun yopish) + oddiy studiya paneli. Admin qoʻlda ishlashini olib tashlaydi.
-3. **Toʻlov** — Payme / Click merchant, `confirmed → paid` zadatok oqimi (hozir admin qoʻlda "Zadatok olindi" bosadi).
-4. **SMS** — Eskiz (yoki Play Mobile) shartnomasi, sender nomi, shablon tasdiqlash; `SMS_PROVIDER=eskiz`, `OTP_PEPPER` qoʻyish. `src/server/sms.ts` endpointlarini Eskiz hujjatlari bilan tekshirish.
-5. **Maʼlumotlar joylashuvi** — Oʻzbekiston qonuni: fuqarolar shaxsiy maʼlumotlari Oʻzbekistondagi serverda. Real foydalanuvchilardan **oldin** bazani (ideal holda ilovani ham) mahalliy provayderga koʻchirish.
-6. **Foto yuklash** — taklif brief'i va studiya galereyasi uchun S3-mos storage (Oʻzbekistonda).
-7. **Admin** — umumiy parol oʻrniga shaxsiy admin akkauntlari (`role=admin` + OTP) va "kim nima qildi" auditi.
-8. **Brend va domen** — yakuniy nom (Datelle) va `datelle.uz`, Instagram/Telegram akkauntlari; Vercel'ga domen ulash.
-9. Vercel **Hobby** tarifi tijoriy foydalanish uchun emas — pul ishlay boshlaganda Pro'ga yoki boshqa hostingga oʻtish.
+1. **Figma: Datelle Studio** — UX toʻliq + **UI v2 (mobile)** tayyor (2026-11-11). UI yoʻnalishi: **oq canvas** (bg/canvas = neutral/0), kartalar/maydonlar sovuq kulrang bg/surface (#F1F1F3), **chegara yoʻq**; neutral rampa iliqdan sovuq (zinc-ga yaqin) tonga oʻtkazildi; tepadagi yashil glow olib tashlandi; tab bar oq (bg/elevated) + Float soyasi; pill tugmalar, qora pill segment; buyurtma sana plitkasi tadbir rangida. Native komponentlar (user qoʻshgan seksiya) tahlil qilindi: KYC/telefon/SMS/fayl yuklash/ijtimoiy tarmoq/davlat tanlash/rus tab'lari va TabBar/Avatar/Button dublikatlari oʻchirildi; kerakli 11 tasi tokenlar bilan qayta qurildi va ekranlarga qoʻyildi: barcha 42 ekranda StatusBar/HomeIndicator/Telegram header instance; Sozlamalar → 'Kechki eslatma' Toggle; Toʻlov qoʻshish → NumPad klaviatura; Forma · kun band → Alert (warning); Bekor qilish / Aʼzoni chiqarish → Dialog; Qidiruv → SearchField; Buyurtmalar → 'Qoldiq bor 7' counter. **A11y/consistency audit (2026-11-11):** P0/P1 root'dan tuzatildi — caption 12px (`font/size/2xs`), `control/track-off` va yangi `border/control`, `chart/1-weak` = neutral/green 500, Destructive → `status/danger-solid`, Button/IconButton/Chip/ListRow'ga Pressed·Disabled·Loading state'lari, yopiq kunda lock belgisi, spacing ~1880 qiymat `space/*`ga bogʻlandi, kalendar 360px'da sigʻadi. Grafik `chart/1-weak`/`chart/3-strong` va `day/booked-bg` Dark mode'da AA'ga keltirildi; Input/Toggle/Selection'ga Disabled, Segment'ga Pressed qoʻshildi. **Barcha 57 screen auto layout'da** (mobile: vertical, Content grow + pastki bar oqimda, overlay'lar absolute+constraints; desktop: Sidebar + Main fill). **Mobile yopildi (2026-11-11):** ichki screen'larda Telegram BackButton (24 ta), content ichidagi orqaga/yopish olib tashlandi; barcha asosiy action'lar `Tab bar` (MainButton/SecondaryButton) component'ida, sheet'lar bar ortida pastgacha; touch target'lar ≥44 (IconButton, Button M, Chip, Segment 36/44 track, Stepper, Clear, matnli linklar → Ghost M), kalendar katagi 360px'da 44; filtr → scroll chip + count; 7 ta yangi state screen (Buyurtmalar/Dashboard loading, Toʻlov qoʻshildi, Toʻlov xato, Nom saqlandi, Link nusxalandi, Saqlanmoqda). Mobile jami 49 screen. **Desktop UI v2 (2026-11-11):** chegarasiz kartalar/jadval/qidiruv, oq side panel + kulrang kartalar, DayCell Large kulrang katak + oq chip (`day/booked-chip`), Button/IconButton/Chip/Segment/NavItem'ga Hover va Focus (2px `border/focus`), spacing 836/1027 bogʻlangan, `bg/skeleton-on-surface` token. 7 ta yangi desktop state: Menejer qoʻshish (modal), Aʼzoni chiqarish (dialog), Tarix (panel), Kirish · ruxsat yoʻq, Toʻlov · xato (modal), Saqlandi (toast), Buyurtmalar · yuklanmoqda — jami 22 desktop screen. Desktop pointer target qoidasi: WCAG 2.5.8 (≥24px). **Desktop enhance + flow tekshiruvi (2026-11-11, inspiration: Moodboard + Omon CRM):** NavItem'ga Count badge (Sidebar'da "Studiya" boʻlim sarlavhasi, Buyurtmalar · 9; boʻsh/yuklanmoqda/xato holatlarida yashirin), KpiCard'ga Delta chip (↑ 18%), Dashboard'ga "Tushum" bar chart (12 oy, Hafta/Oy/Yil segment, joriy oy tooltip) va Qoldiq kartasida jami + "3 tasi kechikdi" Alert; Dashboard · boʻsh → Setup checklist (1/4, progress, 4 qadam); Buyurtmalar jadvaliga toolbar (sana filtri) + pagination. Root fix: Button/IconButton **Secondary** endi `bg/elevated` + `border/default` (kulrang kartada koʻrinmay qolardi). Maʼlumot izchilligi: hamma joyda 9 ta qarzdor, jami qoldiq 31 300 000 (avval 7 / 9 / 21,3 mln aralash edi — mobile ham). Yangi flow'lar: Kunni yopish (panel: sabab chip + izoh), Dashboard · yuklanmoqda, Dashboard · xato (Qayta urinish), Sozlamalar → Eslatmalar (3 Toggle) + Hisob → Chiqish. Studiya yaratish desktop'da ataylab yoʻq — Mini App'da (Kirish ekranidagi @datelle_bot havolasi). Jami 25 desktop screen. Keyingi: prototip (mobile + desktop flow'lar) → 10–15 studiyaga demo.
+2. **25 ta studiya roʻyxati → 15 ta demo** (2-hafta). Javoblar gipotezalar jadvaliga (scope 1-boʻlim). Eng muhim savollar: qarz/qoldiq ogʻrigʻi (H2), rekvizit (H4) va jamoa (H5) — qaysi biri kuchliroq.
+3. **Go / no-go** — ≥ 5 "ha" → scope v0.3 → MVP kodi tech doc 9-boʻlim tartibida (3–5-hafta).
+4. **Maʼlumotlar joylashuvi** — birinchi founding partner real mijoz maʼlumotini kiritishidan **oldin** bazani Oʻzbekistondagi provayderga koʻchirish.
+5. **BotFather** — bot + Mini App, `/setdomain`, Vercel env'ga `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET`, `CRON_SECRET` (Ibrohim, Claude yoʻriqnoma beradi).
+6. **Domen** — Login Widget va sotuv uchun barqaror domen (`datelle.uz` yoki `studio.datelle.uz`).
+7. Marketplace boʻyicha (muzlatilgan): zadatok matnlari, SMS (Eskiz), Payme/Click, foto yuklash, shaxsiy admin akkauntlari, Home illyustratsiyalari, Vercel Hobby → Pro — faqat marketplace'ga qaytilsa.
 
 ---
 
