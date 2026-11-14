@@ -120,6 +120,7 @@ Internal tool for studios — separate tables (`studios`, `studio_members`, `stu
 | GET | `/api/panel/orders/:id/events` | member | history (order + its payments) |
 | DELETE | `/api/panel/payments/:id` | owner (manager: own, ≤10 min) | soft delete |
 | GET | `/api/panel/summary` | member | `{counts: {debt, active}}` |
+| GET | `/api/panel/dashboard` | owner | month received + same-period delta, debt (overdue, top 5), next 7, next 30, revenue weeks/months/years, setup flags |
 | POST | `/api/telegram/webhook` | secret header | bot updates |
 | GET | `/api/cron/daily` | `Bearer CRON_SECRET` | 20:00 Tashkent reminders |
 

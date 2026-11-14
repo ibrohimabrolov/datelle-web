@@ -68,3 +68,22 @@ test("overdue and week groups", () => {
   assert.equal(weekGroup("2026-11-16", "2026-11-14", m), "Keyingi hafta");
   assert.equal(weekGroup("2026-12-10", "2026-11-14", m), "dekabr");
 });
+
+import { compactSum, greeting, niceMax, periodWindow } from "../src/lib/studio/dashboard";
+
+test("dashboard: same-period comparison window", () => {
+  assert.deepEqual(periodWindow("2026-11-14"), { from: "2026-10-01", to: "2026-10-14" });
+  assert.deepEqual(periodWindow("2026-03-31"), { from: "2026-02-01", to: "2026-02-28" }); // Feb is shorter
+  assert.deepEqual(periodWindow("2026-01-05"), { from: "2025-12-01", to: "2025-12-05" });
+});
+test("dashboard: compact sums, greeting, nice axis", () => {
+  assert.equal(compactSum(48_600_000), "48,6 mln");
+  assert.equal(compactSum(9_000_000), "9 mln");
+  assert.equal(compactSum(950_000), "950 ming");
+  assert.equal(compactSum(1_250_000_000), "1,3 mlrd");
+  assert.equal(greeting(8), "Xayrli tong");
+  assert.equal(greeting(14), "Xayrli kun");
+  assert.equal(greeting(22), "Xayrli kech");
+  assert.equal(niceMax(48_600_000), 60_000_000);
+  assert.equal(niceMax(0), 3);
+});

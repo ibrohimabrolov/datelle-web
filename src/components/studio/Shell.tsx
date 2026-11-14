@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { api } from "@/lib/api";
 import { useDataVersion } from "./data";
 import { StudioIcon, type StudioIconName } from "./icons";
-import { PANEL, useStudio, type Role } from "./PanelProvider";
+import { PANEL, usePanel, useStudio, type Role } from "./PanelProvider";
 
 type NavDef = { href: string; label: string; icon: StudioIconName; roles: Role[] };
 
@@ -31,6 +31,20 @@ const initials = (name: string) =>
 export function Shell({ children }: { children: ReactNode }) {
   const path = usePathname();
   const ctx = useStudio();
+  const { tg } = usePanel();
+  const router = useRouter();
+  // Telegram ⋯ menu → Sozlamalar (MVP-SCOPE: settings top-right on mobile; Telegram owns that corner)
+  useEffect(() => {
+    const sb = tg?.SettingsButton;
+    if (!sb) return;
+    const go = () => router.push(SETTINGS.href);
+    sb.show();
+    sb.onClick(go);
+    return () => {
+      sb.offClick(go);
+      sb.hide();
+    };
+  }, [tg, router]);
   const studio = ctx?.studio;
   const items = studio ? NAV.filter((n) => n.roles.includes(studio.role)) : [];
   const active = (href: string) => path === href || path.startsWith(`${href}/`);
@@ -118,6 +132,15 @@ function NavItem({ item, current, count }: { item: NavDef; current: boolean; cou
 }
 
 /* Page header: H1 + actions. Settings lives in the header on mobile (MVP-SCOPE navigation). */
+/* Mobile settings shortcut for the browser (inside Telegram the ⋯ menu has it) */
+export function SettingsLink() {
+  return (
+    <Link href={SETTINGS.href} className="ds-iconbtn ds-mobile-only" data-style="secondary" aria-label="Sozlamalar">
+      <StudioIcon name="gear" />
+    </Link>
+  );
+}
+
 export function PageHead({ title, actions, settings = true }: { title: string; actions?: ReactNode; settings?: boolean }) {
   return (
     <header className="ds-page-head">

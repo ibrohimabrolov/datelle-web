@@ -412,3 +412,61 @@ describe("orders & payments", () => {
     assert.equal((await stranger.req("/api/panel/orders?view=upcoming&q=laziz")).json.items.length, 0);
   });
 });
+
+describe("dashboard", () => {
+  const owner = new Client();
+  const manager = new Client();
+  let studioId = "";
+  let userId = "";
+  const today = new Date(Date.now() + 5 * 3600e3).toISOString().slice(0, 10);
+  const plus = (n: number) => new Date(Date.parse(`${today}T00:00:00Z`) + n * 86_400e3).toISOString().slice(0, 10);
+
+  before(async () => {
+    userId = (await owner.devLogin(tgId(), "Dash")).json.user.id;
+    studioId = (await owner.req("/api/panel/onboarding", { body: { name: "Dash Studio", category: "dekor", dailyCapacity: 3 } })).json.studio.id;
+    const m = (await manager.devLogin(tgId(), "Mgr")).json.user;
+    await pool.query("insert into studio_members (studio_id, user_id, role) values ($1, $2, 'manager')", [studioId, m.id]);
+  });
+
+  test("empty studio: zeros and setup checklist", async () => {
+    const r = await owner.req("/api/panel/dashboard");
+    assert.equal(r.status, 200, JSON.stringify(r.json));
+    assert.equal(r.json.month.paid, 0);
+    assert.equal(r.json.month.deltaPct, null);
+    assert.equal(r.json.debt.total, 0);
+    assert.deepEqual(r.json.setup, { hasOrders: false, hasBlockedDay: false, hasTeam: true });
+    assert.equal(r.json.revenue.months.length, 12);
+  });
+
+  test("numbers reconcile with orders and payments", async () => {
+    const mk = async (date: string, total: number, advance?: number) =>
+      (await owner.req("/api/panel/orders", { body: { clientName: "Mijoz " + date, clientPhone: "901234567", eventDate: date, eventType: "toy", total, ...(advance ? { advance: { amount: advance } } : {}) } })).json.order;
+    const a = await mk(plus(2), 10_000_000, 4_000_000); // due 6M, in next 7
+    await mk(plus(20), 5_000_000); // due 5M, in next 30
+    const old = await mk(plus(-3), 3_000_000, 1_000_000); // overdue 2M
+    const paidUp = await mk(plus(1), 2_000_000, 2_000_000); // paid in full
+    const cancelled = await mk(plus(4), 7_000_000, 1_000_000);
+    await owner.req(`/api/panel/orders/${cancelled.id}/status`, { body: { to: "cancelled" } });
+    // a deleted payment never counts
+    const pay = await owner.req(`/api/panel/orders/${a.id}/payments`, { body: { amount: 500_000, method: "card" } });
+    await owner.req(`/api/panel/payments/${pay.json.order.payments.at(-1).id}`, { method: "DELETE", body: {} });
+
+    const r = (await owner.req("/api/panel/dashboard")).json;
+    assert.equal(r.month.paid, 4_000_000 + 1_000_000 + 2_000_000 + 1_000_000); // advances paid today, cancelled order's money was still received
+    assert.equal(r.debt.total, 6_000_000 + 5_000_000 + 2_000_000);
+    assert.equal(r.debt.count, 3);
+    assert.deepEqual(r.debt.overdue, { count: 1, total: 2_000_000 });
+    assert.equal(r.debt.items[0].id, old.id); // overdue first
+    assert.deepEqual(r.next7.map((o: { id: string }) => o.id), [paidUp.id, a.id]);
+    assert.equal(r.next30Count, 3);
+    assert.equal(r.revenue.months.at(-1).paid, r.month.paid);
+    assert.equal(r.setup.hasOrders, true);
+  });
+
+  test("managers and strangers don't see money", async () => {
+    assert.equal((await manager.req("/api/panel/dashboard")).status, 403);
+    const s = new Client();
+    await s.devLogin(tgId());
+    assert.equal((await s.req("/api/panel/dashboard", { headers: { "x-studio-id": studioId } })).status, 404);
+  });
+});

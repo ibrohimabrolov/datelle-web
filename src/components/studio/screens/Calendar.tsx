@@ -13,6 +13,7 @@ import { OrderForm } from "../OrderForm";
 import { Overlay } from "../Overlay";
 import { useStudio } from "../PanelProvider";
 import { Toast, type ToastMsg } from "../Toast";
+import { SettingsLink } from "../Shell";
 import { fetchMonth, monthCache, monthKey, useDataVersion, type CalDay, type CalOrder, type MonthData } from "../data";
 
 /* ── data ── */
@@ -197,6 +198,7 @@ export function CalendarScreen() {
           <button className="ds-iconbtn" data-style="secondary" onClick={() => go({ oy: addMonths(month, 1), sana: null })} aria-label="Keyingi oy">
             <StudioIcon name="chevron-right" />
           </button>
+          <SettingsLink />
           <span className="ds-desktop-only" style={{ display: "contents" }}>
             <Button variant="secondary" onClick={() => open(today)} disabled={!ctx}>
               Bugun

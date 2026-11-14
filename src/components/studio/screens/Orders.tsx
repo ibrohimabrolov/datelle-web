@@ -14,6 +14,7 @@ import { OrderDetail } from "../OrderDetail";
 import { OrderForm } from "../OrderForm";
 import { useStudio } from "../PanelProvider";
 import { Toast, type ToastMsg } from "../Toast";
+import { SettingsLink } from "../Shell";
 
 const BASE = "/panel/buyurtmalar";
 const VIEW_LABEL: Record<OrderView, string> = { upcoming: "Kelgusi", debt: "Qoldiq bor", past: "Oʻtgan", cancelled: "Bekor qilingan" };
@@ -138,6 +139,7 @@ export function OrdersScreen() {
             <StudioIcon name="search" />
             <input type="search" aria-label="Ism yoki telefon boʻyicha qidirish" placeholder="Ism yoki telefon" value={term} onChange={(e) => onSearch(e.target.value)} />
           </div>
+          <SettingsLink />
           <button className="ds-iconbtn ds-mobile-only" data-style="secondary" aria-label="Qidirish" aria-expanded={searchOpen} onClick={() => setSearchOpen((o) => !o)}>
             <StudioIcon name="search" />
           </button>

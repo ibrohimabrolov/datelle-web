@@ -29,6 +29,8 @@ export type TelegramWebApp = {
   offEvent(e: "themeChanged", cb: () => void): void;
   MainButton: BottomButton;
   BackButton: { show(): void; hide(): void; onClick(cb: () => void): void; offClick(cb: () => void): void };
+  /* "Sozlamalar" item in the Mini App ⋯ menu (Bot API 7.0+) */
+  SettingsButton?: { show(): void; hide(): void; onClick(cb: () => void): void; offClick(cb: () => void): void };
   HapticFeedback?: { notificationOccurred(t: "error" | "success" | "warning"): void };
 };
 

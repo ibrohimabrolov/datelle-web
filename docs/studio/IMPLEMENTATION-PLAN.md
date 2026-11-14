@@ -64,6 +64,12 @@ List (segments, search, cursor pagination, bulk select), DataTable (desktop) / O
 
 KPI (month paid + delta, total balance, next 30 days), next 7 days, balance list with overdue alert, revenue chart (12 months). Owner only. **Done when:** numbers reconcile with orders/payments fixtures.
 
+**Status 2026-11-14 (`studio/dashboard`):**
+- [x] `GET /api/panel/dashboard` (owner; manager 403, stranger 404): month-to-date received vs the same days last month (`periodWindow`), debt total / count / overdue / top 5 (overdue first), next 7 days, next 30 + this week counts, revenue by 12 weeks / 12 months / 5 years, setup checklist flags. Tushum = payments actually received (by `paid_on`), deleted payments excluded, money on later-cancelled orders still counts as received.
+- [x] UI per Figma S2: KPI cards (inverse / due / default, delta), Keyingi 7 kun (desktop rows, mobile day-pill strip), Qoldiq bor (total, overdue alert, top 3), Tushum bar chart (Hafta / Oy / Yil, hover + keyboard tooltip, accessible list labels; bar pair validated with the dataviz validator, light + dark), empty state = setup checklist (4 steps), skeleton + error/retry, new order / order detail in place.
+- [x] Mobile settings: gear in page headers (browser) + Telegram `SettingsButton` in the ⋯ menu.
+- [x] Tests: 2 unit (period window incl. short February, compact sums / greeting / nice axis), 3 API (empty, reconciliation with fixtures incl. cancelled + soft-deleted, role/tenancy); axe 0 at 390 / 1280 / 1440.
+
 ## Phase 6 — Bot & reminders (`studio/bot`)
 
 Webhook `/start`, daily 20:00 Tashkent (15:00 UTC) cron with tomorrow's events + balance to collect; settings toggles respected. **Done when:** cron dry-run test; no message for empty days.
