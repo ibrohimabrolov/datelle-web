@@ -53,6 +53,13 @@ Month grid (DayCell / DayCellLarge, states incl. "1 joy"), day sheet (mobile) / 
 
 List (segments, search, cursor pagination, bulk select), DataTable (desktop) / OrderCard (mobile), create/edit form (validation, saving, unsaved guard), detail panel, payments (add, undo, owner soft delete), cancel/done with confirm, history (audit). **Done when:** balance/overpayment unit tests; soft delete restores balance; audit written for every money/status change.
 
+**Status 2026-11-14 (`studio/orders`):**
+- [x] API: list (`view` upcoming/debt/past/cancelled, search name/venue/code + phone digits, sort date/total/balance, page 30, counts), create (+advance as first payment, `capacity_exceeded` / `day_blocked` warnings, DS-###### codes), detail, edit (field diff audit, no-op writes nothing), status machine (active→done|cancelled, done→active, cancelled→active), payments (future date refused, cancelled order refused, `overpaid` warning), soft delete (owner always; manager only own payment ≤10 min = toast undo), history, `/api/panel/summary` (nav badge).
+- [x] UI per Figma S4/S5: DataTable with sortable headers + pagination (desktop), week-grouped cards + "Yana N ta" (mobile), segments with counts, debounced search, empty states (Topilmadi / Qoldiq yoʻq / …), OrderForm (Mijoz · Tadbir · Pul, live Qoldiq, day capacity, unsaved guard), detail (balance card + progress, call / Telegram, payments, ⋯ Tahrirlash · Bajarildi · Bekor qilish · Tarix), payment modal ("Toʻliq qoldiq", method, date), ConfirmDialog, toasts with undo, NavItem debt badge.
+- [x] Calendar opens the form and order detail in place — the demo flow (day → order + advance → day turns "1 joy") works end to end.
+- [x] Tests: 3 unit (transitions, money parsing, week groups), 10 API (create/advance, validation, capacity warning, payments + undo rights, edit diff, status machine, list/search, history, tenancy 404 everywhere); axe 0 on form, detail, payment modal, list at 390 and 1440.
+- Deviations: offset pagination instead of cursor (studios have hundreds of orders, not millions; gives "1–30 · jami N" like Figma); bulk select dropped until there is a bulk action; native date input instead of the custom date sheet.
+
 ## Phase 5 — Dashboard (`studio/dashboard`)
 
 KPI (month paid + delta, total balance, next 30 days), next 7 days, balance list with overdue alert, revenue chart (12 months). Owner only. **Done when:** numbers reconcile with orders/payments fixtures.

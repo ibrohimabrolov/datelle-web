@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { api } from "@/lib/api";
+import { useDataVersion } from "./data";
 import { StudioIcon, type StudioIconName } from "./icons";
 import { PANEL, useStudio, type Role } from "./PanelProvider";
 
@@ -32,6 +34,19 @@ export function Shell({ children }: { children: ReactNode }) {
   const studio = ctx?.studio;
   const items = studio ? NAV.filter((n) => n.roles.includes(studio.role)) : [];
   const active = (href: string) => path === href || path.startsWith(`${href}/`);
+  // nav badge: orders that still owe money (refreshes whenever money or orders change)
+  const version = useDataVersion();
+  const [debt, setDebt] = useState<number | null>(null);
+  useEffect(() => {
+    if (!studio?.id) return;
+    let alive = true;
+    api<{ counts: { debt: number } }>("/api/panel/summary")
+      .then((r) => alive && setDebt(r.counts.debt))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [studio?.id, version]);
   const tabs = [...items].sort((a, b) => TAB_ORDER.indexOf(a.href.split("/").pop()!) - TAB_ORDER.indexOf(b.href.split("/").pop()!));
 
   return (
@@ -50,7 +65,7 @@ export function Shell({ children }: { children: ReactNode }) {
           <p className="ds-caps ds-navlabel">Studiya</p>
           <nav className="ds-nav" aria-busy={!studio || undefined}>
             {studio
-              ? [...items, SETTINGS].map((n) => <NavItem key={n.href} item={n} current={active(n.href)} />)
+              ? [...items, SETTINGS].map((n) => <NavItem key={n.href} item={n} current={active(n.href)} count={n.href.endsWith("/buyurtmalar") ? debt : null} />)
               : [0, 1, 2, 3].map((i) => <span key={i} className="ds-skeleton" style={{ height: 40, borderRadius: "var(--ds-radius-md)" }} />)}
           </nav>
         </div>
@@ -88,11 +103,16 @@ export function Shell({ children }: { children: ReactNode }) {
   );
 }
 
-function NavItem({ item, current }: { item: NavDef; current: boolean }) {
+function NavItem({ item, current, count }: { item: NavDef; current: boolean; count?: number | null }) {
   return (
     <Link href={item.href} className="ds-navitem" aria-current={current ? "page" : undefined}>
       <StudioIcon name={item.icon} variant={current ? "Filled" : "Line"} />
-      {item.label}
+      <span style={{ flex: 1 }}>{item.label}</span>
+      {count ? (
+        <span className="ds-navcount" aria-label={`${count} ta qoldiq`}>
+          {count}
+        </span>
+      ) : null}
     </Link>
   );
 }

@@ -394,7 +394,12 @@
 
 /* PanelHeader (Figma: Title H3 + 44 close) */
 .ds-panelhead { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-8); min-height: 44px; }
-@media (max-width: 1023.98px) { .ds-panelhead { display: none; } }
+@media (max-width: 1023.98px) {
+  .ds-panelhead { display: none; }
+  /* sheets with actions (⋯) keep a slim header: actions only, title and ✕ hidden (scrim / Telegram Back close) */
+  .ds-panelhead[data-actions] { display: flex; justify-content: flex-end; min-height: 0; margin-bottom: calc(-1 * var(--ds-space-8)); }
+  .ds-panelhead[data-actions] > h2, .ds-panelhead[data-actions] .ds-actions > button[aria-label="Yopish"] { display: none; }
+}
 
 .ds-dayhead { display: flex; align-items: center; gap: var(--ds-space-12); }
 .ds-dayhead > b { font: var(--ds-type-display-numeral); letter-spacing: var(--ds-type-display-numeral-tracking); font-variant-numeric: tabular-nums; min-width: 62px; }
@@ -432,3 +437,152 @@
 .ds-fab:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
 @media (min-width: 1024px) { .ds-fab { display: none; } }
 @media (max-width: 1023.98px) { .ds-tabbar { left: var(--ds-space-16); transform: none; } }
+
+/* ═════════ Phase 4 · Orders ═════════ */
+
+/* Segment (Figma Segment: 36h pills in a bg/surface track, selected bg/inverse) */
+.ds-segment { display: inline-flex; gap: var(--ds-space-4); padding: var(--ds-space-4); border-radius: var(--ds-radius-full); background: var(--ds-bg-surface); max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.ds-segment button { height: 36px; padding: 0 var(--ds-space-12); border-radius: var(--ds-radius-full); font: var(--ds-type-label-default); color: var(--ds-text-secondary); white-space: nowrap; }
+.ds-segment button:hover { background: var(--ds-state-hover); }
+.ds-segment button[aria-checked="true"], .ds-segment button[aria-selected="true"] { background: var(--ds-bg-inverse); color: var(--ds-text-on-inverse); font: var(--ds-type-label-strong); }
+.ds-segment button:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
+.ds-segment .ds-count { color: inherit; }
+@media (max-width: 1023.98px) { .ds-segment .ds-count { color: var(--ds-money-due); font: var(--ds-type-label-strong); } }
+.ds-segment button[aria-selected="true"] .ds-count { color: inherit; }
+/* mobile: Figma uses separate 44px chips that scroll */
+@media (max-width: 1023.98px) {
+  .ds-segment { background: none; padding: 0; gap: var(--ds-space-8); margin: 0 calc(-1 * var(--ds-layout-gutter)); padding: 0 var(--ds-layout-gutter); }
+  .ds-segment button { height: 44px; padding: 0 var(--ds-space-16); background: var(--ds-bg-surface); color: var(--ds-text-primary); }
+}
+
+/* SearchField (Figma: 44h, radius full, 1px border/control, icon left) */
+.ds-search { position: relative; display: flex; align-items: center; }
+.ds-search svg { position: absolute; left: var(--ds-space-16); color: var(--ds-icon-muted); pointer-events: none; }
+.ds-search input { height: 44px; width: 100%; padding: 0 var(--ds-space-16) 0 44px; border: 0; border-radius: var(--ds-radius-full); background: var(--ds-bg-surface); box-shadow: inset 0 0 0 1px var(--ds-border-control); font: var(--ds-type-body-default); color: var(--ds-text-primary); outline: none; }
+.ds-search input::placeholder { color: var(--ds-text-tertiary); }
+.ds-search input:focus { box-shadow: inset 0 0 0 1.5px var(--ds-border-focus); }
+.ds-search input::-webkit-search-cancel-button { cursor: pointer; }
+@media (min-width: 1024px) { .ds-search { width: 280px; } }
+
+.ds-list-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--ds-space-16); }
+.ds-list-head > div:first-child { display: flex; flex-direction: column; gap: var(--ds-space-4); }
+.ds-list-tools { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-12); }
+
+/* DataTable (Figma DataTable/Head + Row: 56h rows, caps head, divider border/subtle) */
+.ds-table-wrap { background: var(--ds-bg-surface); border-radius: var(--ds-radius-xl); overflow: hidden; }
+.ds-table { width: 100%; border-collapse: collapse; font: var(--ds-type-body-default); }
+.ds-table th { height: 44px; padding: 0 var(--ds-space-16); text-align: left; font: var(--ds-type-label-caps); letter-spacing: var(--ds-type-label-caps-tracking); text-transform: uppercase; color: var(--ds-text-tertiary); box-shadow: inset 0 -1px 0 var(--ds-border-subtle); white-space: nowrap; }
+.ds-table th[data-num], .ds-table td[data-num] { text-align: right; }
+.ds-table th button { display: inline-flex; align-items: center; gap: var(--ds-space-4); font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit; border-radius: var(--ds-radius-sm); }
+.ds-table th[aria-sort] button { color: var(--ds-text-primary); }
+.ds-table th button:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
+.ds-table td { height: 56px; padding: 0 var(--ds-space-16); box-shadow: inset 0 -1px 0 var(--ds-border-subtle); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 0; }
+.ds-table tbody tr { cursor: pointer; transition: background-color var(--ds-duration-fast) var(--ds-ease-out); }
+.ds-table tbody tr:hover { background: var(--ds-state-hover); }
+.ds-table tbody tr[aria-selected="true"] { background: var(--ds-state-hover); box-shadow: inset 3px 0 0 var(--ds-icon-brand); }
+.ds-table tbody tr:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--ds-border-focus); }
+.ds-table .c-date { color: var(--ds-text-secondary); width: 13%; }
+.ds-table .c-client { font: var(--ds-type-body-medium); width: 20%; }
+.ds-table .c-phone { color: var(--ds-text-secondary); font-variant-numeric: tabular-nums; width: 17%; }
+.ds-table .c-place { color: var(--ds-text-secondary); width: 24%; }
+.ds-table .c-sum { font: var(--ds-type-body-medium); font-variant-numeric: tabular-nums; width: 13%; }
+.ds-table .c-due { font: var(--ds-type-label-strong); font-variant-numeric: tabular-nums; color: var(--ds-money-due); width: 13%; }
+.ds-table .c-due[data-paid] { color: var(--ds-text-brand); }
+.ds-table .c-due[data-overdue] { color: var(--ds-money-overdue); }
+.ds-table-foot { display: flex; align-items: center; justify-content: space-between; padding: var(--ds-space-12) var(--ds-space-16) var(--ds-space-12) var(--ds-space-24); }
+.ds-table-foot > div { display: flex; gap: var(--ds-space-8); }
+.ds-table-foot .ds-iconbtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Mobile list: grouped cards */
+.ds-groups { display: flex; flex-direction: column; gap: var(--ds-space-24); }
+.ds-group { display: flex; flex-direction: column; gap: var(--ds-space-8); }
+.ds-group > h2 { padding-bottom: var(--ds-space-4); }
+a.ds-ordercard, button.ds-ordercard { width: 100%; text-align: left; transition: background-color var(--ds-duration-fast) var(--ds-ease-out); }
+a.ds-ordercard:hover, button.ds-ordercard:hover { background: var(--ds-bg-surface-hover); }
+a.ds-ordercard:focus-visible, button.ds-ordercard:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
+
+/* Empty state */
+.ds-empty { display: flex; flex-direction: column; align-items: center; gap: var(--ds-space-8); padding: var(--ds-space-48) var(--ds-space-24); text-align: center; }
+.ds-empty .ds-empty-icon { display: grid; place-items: center; width: 56px; height: 56px; border-radius: var(--ds-radius-full); background: var(--ds-bg-surface); color: var(--ds-icon-muted); margin-bottom: var(--ds-space-8); }
+
+/* ── Form (Figma S5 Yangi buyurtma: section caps, 2-col pairs on desktop) ── */
+.ds-form { display: flex; flex-direction: column; gap: var(--ds-space-24); }
+.ds-form section { display: flex; flex-direction: column; gap: var(--ds-space-16); }
+.ds-pair { display: grid; grid-template-columns: 1fr; gap: var(--ds-space-16); }
+@media (min-width: 400px) { .ds-pair { grid-template-columns: 1fr 1fr; gap: var(--ds-space-12); } }
+.ds-affix { position: relative; }
+.ds-affix .ds-input { padding-right: 56px; font-variant-numeric: tabular-nums; }
+.ds-affix > span { position: absolute; right: var(--ds-space-16); top: 50%; transform: translateY(-50%); color: var(--ds-text-tertiary); pointer-events: none; }
+textarea.ds-input { height: auto; min-height: 48px; padding-top: 13px; padding-bottom: 13px; resize: vertical; }
+.ds-due-line { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-12); padding: var(--ds-space-12) var(--ds-space-16); border-radius: var(--ds-radius-md); background: var(--ds-money-due-bg); color: var(--ds-money-due); font: var(--ds-type-label-strong); }
+.ds-due-line b { font: var(--ds-type-number-money); font-variant-numeric: tabular-nums; }
+.ds-due-line[data-zero] { background: var(--ds-money-paid-bg); color: var(--ds-money-paid); }
+.ds-sticky-foot { position: sticky; bottom: calc(-1 * var(--ds-space-24)); margin: auto calc(-1 * var(--ds-space-16)) calc(-1 * var(--ds-space-24) - env(safe-area-inset-bottom)); padding: var(--ds-space-16) var(--ds-space-16) calc(var(--ds-space-16) + env(safe-area-inset-bottom)); background: var(--ds-bg-canvas); box-shadow: inset 0 1px 0 var(--ds-border-subtle); z-index: 1; }
+@media (min-width: 1024px) {
+  .ds-sticky-foot { margin: auto calc(-1 * var(--ds-space-24)) calc(-1 * var(--ds-space-24)); padding: var(--ds-space-20) var(--ds-space-24) var(--ds-space-20); background: var(--ds-bg-elevated); }
+}
+
+/* ── Detail (Figma S5 Buyurtma panel) ── */
+.ds-panelhead .ds-actions { display: flex; gap: var(--ds-space-4); }
+.ds-status { display: inline-flex; align-items: center; height: 28px; padding: 0 var(--ds-space-8); border-radius: var(--ds-radius-sm); font: var(--ds-type-label-strong); white-space: nowrap; }
+.ds-status[data-status="active"] { background: var(--ds-status-success-bg); color: var(--ds-status-success); }
+.ds-status[data-status="done"] { background: var(--ds-status-info-bg); color: var(--ds-status-info); }
+.ds-status[data-status="cancelled"] { background: var(--ds-bg-muted); color: var(--ds-text-secondary); }
+.ds-client { display: flex; flex-direction: column; gap: var(--ds-space-4); }
+.ds-client h3 { font: var(--ds-type-heading-h1); letter-spacing: var(--ds-type-heading-h1-tracking); overflow-wrap: anywhere; }
+.ds-two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ds-space-8); }
+.ds-balance { display: flex; flex-direction: column; gap: var(--ds-space-16); padding: var(--ds-space-20); border-radius: var(--ds-radius-xl); background: var(--ds-bg-surface); }
+.ds-balance .ds-baltitle { color: var(--ds-money-due); }
+.ds-balance[data-state="paid"] .ds-baltitle { color: var(--ds-money-paid); }
+.ds-balance[data-state="overdue"] .ds-baltitle { color: var(--ds-money-overdue); }
+.ds-balance[data-state="over"] .ds-baltitle { color: var(--ds-status-info); }
+.ds-balance .ds-big { display: flex; align-items: baseline; gap: var(--ds-space-8); color: var(--ds-money-due); }
+.ds-balance .ds-big b { font: var(--ds-type-number-kpi); letter-spacing: var(--ds-type-number-kpi-tracking); font-variant-numeric: tabular-nums; }
+.ds-balance[data-state="paid"] .ds-big { color: var(--ds-money-paid); }
+.ds-balance[data-state="overdue"] .ds-big { color: var(--ds-money-overdue); }
+.ds-balance[data-state="over"] .ds-big { color: var(--ds-status-info); }
+.ds-progress { height: 6px; border-radius: 3px; background: var(--ds-border-default); overflow: hidden; }
+.ds-progress i { display: block; height: 100%; border-radius: 3px; background: var(--ds-brand-solid); }
+.ds-balance dl { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ds-space-8); margin: 0; }
+.ds-balance dt { font: var(--ds-type-label-default); color: var(--ds-text-secondary); }
+.ds-balance dd { margin: 2px 0 0; font: var(--ds-type-number-money); font-variant-numeric: tabular-nums; }
+.ds-balance dd[data-paid] { color: var(--ds-money-paid); }
+/* PaymentRow (Figma PaymentRow: 40 icon tile, title/meta, amount, ⋯) */
+.ds-payrow { display: flex; align-items: center; gap: var(--ds-space-12); min-height: 56px; }
+.ds-payrow .ds-tile { display: grid; place-items: center; width: 40px; height: 40px; border-radius: var(--ds-radius-md); background: var(--ds-bg-surface); color: var(--ds-icon-default); flex: none; }
+.ds-payrow > div:nth-child(2) { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ds-payrow b { font: var(--ds-type-number-money); font-variant-numeric: tabular-nums; }
+
+/* Menu (⋯) */
+.ds-menu-wrap { position: relative; }
+.ds-menu { position: absolute; z-index: 5; right: 0; top: calc(100% + 4px); min-width: 220px; padding: var(--ds-space-4); border-radius: var(--ds-radius-lg); background: var(--ds-bg-elevated); box-shadow: var(--ds-elevation-float); display: flex; flex-direction: column; }
+.ds-menu button { display: flex; align-items: center; gap: var(--ds-space-12); height: 44px; padding: 0 var(--ds-space-12); border-radius: var(--ds-radius-md); font: var(--ds-type-body-medium); text-align: left; }
+.ds-menu button:hover, .ds-menu button:focus-visible { background: var(--ds-state-hover); outline: none; }
+.ds-menu button[data-danger] { color: var(--ds-text-danger); }
+
+/* Modal layer (Figma ConfirmDialog 420 / Toʻlov qoʻshish modal 480; bottom sheet on mobile) */
+.ds-modal-scrim { position: fixed; inset: 0; z-index: 60; background: var(--ds-bg-overlay); animation: ds-fade var(--ds-duration-base) var(--ds-ease-out); }
+.ds-modal {
+  position: fixed; z-index: 61; left: 0; right: 0; bottom: 0; max-height: 92dvh; overflow-y: auto;
+  display: flex; flex-direction: column; gap: var(--ds-space-16);
+  padding: var(--ds-space-24) var(--ds-space-16) calc(var(--ds-space-24) + env(safe-area-inset-bottom));
+  background: var(--ds-bg-elevated); border-radius: var(--ds-layout-sheet-radius) var(--ds-layout-sheet-radius) 0 0; box-shadow: var(--ds-elevation-sheet);
+  animation: ds-sheet-in var(--ds-duration-slow) var(--ds-ease-out);
+}
+.ds-modal:focus { outline: none; }
+.ds-modal-foot { display: flex; flex-direction: column-reverse; gap: var(--ds-space-8); }
+@media (min-width: 1024px) {
+  .ds-modal { left: 50%; right: auto; top: 50%; bottom: auto; width: 480px; transform: translate(-50%, -50%); border-radius: var(--ds-radius-2xl); padding: var(--ds-space-24); animation-name: ds-fade; }
+  .ds-modal[data-size="sm"] { width: 420px; }
+  .ds-modal-foot { flex-direction: row; justify-content: flex-end; }
+}
+
+/* History */
+.ds-timeline { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.ds-timeline li { display: grid; grid-template-columns: 12px 1fr; gap: var(--ds-space-12); padding-bottom: var(--ds-space-16); position: relative; }
+.ds-timeline li::before { content: ""; width: 8px; height: 8px; margin: 7px 2px 0; border-radius: var(--ds-radius-full); background: var(--ds-icon-muted); }
+.ds-timeline li:not(:last-child)::after { content: ""; position: absolute; left: 5px; top: 19px; bottom: 0; width: 2px; background: var(--ds-border-subtle); }
+.ds-timeline li > div { display: flex; flex-direction: column; gap: 2px; }
+
+/* NavItem Count (Figma: money/due on money/due-bg pill) */
+.ds-navcount { display: grid; place-items: center; min-width: 24px; height: 24px; padding: 0 var(--ds-space-8); border-radius: var(--ds-radius-full); background: var(--ds-money-due-bg); color: var(--ds-money-due); font: var(--ds-type-label-strong); font-variant-numeric: tabular-nums; }

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { api, ApiError } from "@/lib/api";
@@ -9,26 +8,23 @@ import { canBlock, DAY_REASONS, dayStatus, freeSlots, monthWeeks, reasonLabel, t
 import { Button } from "../Button";
 import { StudioIcon } from "../icons";
 import { OrderCard } from "../OrderCard";
+import { OrderDetail } from "../OrderDetail";
+import { OrderForm } from "../OrderForm";
 import { Overlay } from "../Overlay";
 import { useStudio } from "../PanelProvider";
 import { Toast, type ToastMsg } from "../Toast";
+import { fetchMonth, monthCache, monthKey, useDataVersion, type CalDay, type CalOrder, type MonthData } from "../data";
 
 /* ── data ── */
-type Order = { id: string; client: string; venue: string | null; eventType: string; total: number; paid: number; balance: number };
-type Day = { date: string; status: DayStatus; load: number; blocked: boolean; reason: string | null; note: string | null; orders: Order[] };
-type MonthData = { month: string; today: string; capacity: number; summary: { events: number; due: number }; days: Day[] };
-
-const cache = new Map<string, MonthData>(); // studioId:month → data; month switches feel instant on revisit
-const key = (studio: string, m: string) => `${studio}:${m}`;
-const fetchMonth = (studio: string, m: string) =>
-  api<MonthData>(`/api/panel/calendar?month=${m}`).then((d) => {
-    cache.set(key(studio, m), d);
-    return d;
-  });
+type Order = CalOrder;
+type Day = CalDay;
+const cache = monthCache;
+const key = monthKey;
 
 function useMonth(studioId: string | undefined, month: string) {
   const [state, setState] = useState<{ data: MonthData | null; error: string | null; for: string | null }>({ data: null, error: null, for: null });
   const [nonce, setNonce] = useState(0);
+  const version = useDataVersion(); // an order saved anywhere → this month refetches
 
   useEffect(() => {
     if (!studioId) return;
@@ -42,7 +38,7 @@ function useMonth(studioId: string | undefined, month: string) {
     return () => {
       alive = false;
     };
-  }, [studioId, month, nonce]);
+  }, [studioId, month, nonce, version]);
 
   const patchDay = useCallback(
     (day: Day) => {
@@ -97,6 +93,13 @@ export function CalendarScreen() {
   const [focusDate, setFocusDate] = useState<string | null>(null);
   const [mode, setMode] = useState<"view" | "close">("view");
   const [toast, setToast] = useState<ToastMsg | null>(null);
+  // order layers open in place so the calendar stays behind them (demo flow: day → new order → "1 joy")
+  const [layer, setLayer] = useState<{ kind: "new"; date?: string } | { kind: "order"; id: string } | null>(null);
+  const openLayer = (l: NonNullable<typeof layer>) => {
+    setMode("view");
+    if (selected) go({ sana: null });
+    setLayer(l);
+  };
   const gridRef = useRef<HTMLDivElement>(null);
 
   const go = useCallback(
@@ -198,10 +201,9 @@ export function CalendarScreen() {
             <Button variant="secondary" onClick={() => open(today)} disabled={!ctx}>
               Bugun
             </Button>
-            <Link className="ds-btn" data-style="primary" href={`/panel/buyurtmalar/yangi${selected ? `?sana=${selected}` : ""}`}>
-              <StudioIcon name="plus" />
-              <span>Buyurtma qoʻshish</span>
-            </Link>
+            <Button icon={<StudioIcon name="plus" />} onClick={() => openLayer({ kind: "new", date: selected ?? undefined })} disabled={!ctx}>
+              Buyurtma qoʻshish
+            </Button>
           </span>
         </div>
       </header>
@@ -282,16 +284,16 @@ export function CalendarScreen() {
             Bugun, {dayTitle(today)}
           </h2>
           {todays.length ? (
-            todays.map((o) => <OrderCard key={o.id} order={{ ...o, date: today }} today={today} />)
+            todays.map((o) => <OrderCard key={o.id} order={{ ...o, date: today }} today={today} onOpen={() => openLayer({ kind: "order", id: o.id })} />)
           ) : (
             <p className="ds-body ds-secondary">Bugun tadbir yoʻq</p>
           )}
         </section>
       )}
 
-      <Link className="ds-fab" href={`/panel/buyurtmalar/yangi${selected ? `?sana=${selected}` : ""}`} aria-label="Buyurtma qoʻshish">
+      <button className="ds-fab" aria-label="Buyurtma qoʻshish" onClick={() => openLayer({ kind: "new", date: selected ?? undefined })}>
         <StudioIcon name="plus" size={24} />
-      </Link>
+      </button>
 
       {selected && data && (
         <DayPanel
@@ -302,6 +304,8 @@ export function CalendarScreen() {
           mode={mode}
           onMode={setMode}
           onClose={closePanel}
+          onNew={(date) => openLayer({ kind: "new", date })}
+          onOpenOrder={(id) => openLayer({ kind: "order", id })}
           onSave={async (body) => {
             const r = await setBlocked(selected, body);
             setMode("view");
@@ -310,6 +314,24 @@ export function CalendarScreen() {
           }}
         />
       )}
+
+      {layer?.kind === "new" && (
+        <OrderForm
+          date={layer.date}
+          onClose={() => setLayer(null)}
+          onSaved={(r) => {
+            setLayer(null);
+            const d = r.order.date;
+            setToast({
+              id: Date.now(),
+              text: r.warnings.includes("capacity_exceeded") ? `${dayTitle(d)} · sigʻim toʻlgan, baribir saqlandi` : `Buyurtma saqlandi · ${dayTitle(d)}`,
+              action: { label: "Ochish", run: () => setLayer({ kind: "order", id: r.order.id }) },
+            });
+            if (d.slice(0, 7) !== month) go({ oy: d.slice(0, 7) });
+          }}
+        />
+      )}
+      {layer?.kind === "order" && <OrderDetail id={layer.id} onClose={() => setLayer(null)} toast={setToast} />}
 
       <Toast toast={toast} onDone={() => setToast(null)} />
     </>
@@ -402,7 +424,11 @@ function DayPanel({
   onMode,
   onClose,
   onSave,
+  onNew,
+  onOpenOrder,
 }: {
+  onNew(date: string): void;
+  onOpenOrder(id: string): void;
   day: Day;
   capacity: number;
   today: string;
@@ -538,7 +564,7 @@ function DayPanel({
             {day.orders.length} ta buyurtma
           </h3>
           {day.orders.map((o) => (
-            <OrderCard key={o.id} order={{ ...o, date: day.date }} today={today} />
+            <OrderCard key={o.id} order={{ ...o, date: day.date }} today={today} onOpen={() => onOpenOrder(o.id)} />
           ))}
         </section>
       ) : (
@@ -557,10 +583,9 @@ function DayPanel({
             </Button>
           ) : (
             <>
-              <Link className="ds-btn" data-style="primary" data-size="l" data-block href={`/panel/buyurtmalar/yangi?sana=${day.date}`} data-autofocus>
-                <StudioIcon name="plus" />
-                <span>Buyurtma qoʻshish</span>
-              </Link>
+              <Button size="l" block icon={<StudioIcon name="plus" />} onClick={() => onNew(day.date)} data-autofocus>
+                Buyurtma qoʻshish
+              </Button>
               <Button variant="secondary" size="l" block icon={<StudioIcon name="lock" variant="Filled" />} onClick={() => onMode("close")}>
                 Kunni yopish
               </Button>

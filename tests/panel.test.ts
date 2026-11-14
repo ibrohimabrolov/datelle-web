@@ -286,3 +286,129 @@ describe("calendar", () => {
     assert.deepEqual(ev.map((x) => x.action), ["block", "unblock"]);
   });
 });
+
+describe("orders & payments", () => {
+  const owner = new Client();
+  const manager = new Client();
+  const stranger = new Client();
+  let studioId = "";
+  let orderId = "";
+  let paymentId = "";
+  const today = new Date(Date.now() + 5 * 3600e3).toISOString().slice(0, 10);
+  const plus = (n: number) => new Date(Date.parse(`${today}T00:00:00Z`) + n * 86_400e3).toISOString().slice(0, 10);
+  const day = plus(20);
+  const order = (over: Record<string, unknown> = {}) => ({ clientName: "Laziz Ergashev", clientPhone: "97 214 60 05", eventDate: day, eventType: "toy", venue: "Bahor", guests: 120, total: 9_000_000, ...over });
+
+  before(async () => {
+    await owner.devLogin(tgId(), "Owner");
+    studioId = (await owner.req("/api/panel/onboarding", { body: { name: "Orders Studio", category: "dekor", dailyCapacity: 1 } })).json.studio.id;
+    const m = (await manager.devLogin(tgId(), "Sardor")).json.user;
+    await pool.query("insert into studio_members (studio_id, user_id, role) values ($1, $2, 'manager')", [studioId, m.id]);
+    await stranger.devLogin(tgId(), "Stranger");
+    await stranger.req("/api/panel/onboarding", { body: { name: "Else", category: "dekor", dailyCapacity: 3 } });
+  });
+
+  test("create with advance: phone normalised, advance becomes the first payment, audit written", async () => {
+    const r = await owner.req("/api/panel/orders", { body: order({ advance: { amount: 6_000_000, method: "cash" } }) });
+    assert.equal(r.status, 201, JSON.stringify(r.json));
+    orderId = r.json.order.id;
+    assert.match(r.json.order.code, /^DS-\d{6}$/);
+    assert.equal(r.json.order.phone, "+998972146005");
+    assert.equal(r.json.order.paid, 6_000_000);
+    assert.equal(r.json.order.balance, 3_000_000);
+    assert.deepEqual(r.json.warnings, []);
+    const { rows } = await pool.query("select action from studio_events where entity = 'order' and entity_id = $1", [orderId]);
+    assert.deepEqual(rows.map((x) => x.action), ["create"]);
+  });
+
+  test("validation: advance > total, bad phone, unknown event type — field errors in Uzbek", async () => {
+    const r = await owner.req("/api/panel/orders", { body: order({ clientPhone: "123", eventType: "x", advance: { amount: 10_000_000 } }) });
+    assert.equal(r.status, 422);
+    assert.ok(r.json.error.fields.clientPhone && r.json.error.fields.eventType);
+    const adv = await owner.req("/api/panel/orders", { body: order({ advance: { amount: 10_000_000 } }) });
+    assert.equal(adv.json.error.fields["advance.amount"], "Avans summadan oshmasin");
+  });
+
+  test("capacity is a warning, not a block (capacity 1 → second order warns)", async () => {
+    const r = await manager.req("/api/panel/orders", { body: order({ clientName: "Ikkinchi", total: 1_000_000 }) });
+    assert.equal(r.status, 201);
+    assert.deepEqual(r.json.warnings, ["capacity_exceeded"]);
+    await manager.req(`/api/panel/orders/${r.json.order.id}/status`, { body: { to: "cancelled" } });
+  });
+
+  test("payments: add, overpay warns, manager can undo own fresh payment but not others'", async () => {
+    const p = await manager.req(`/api/panel/orders/${orderId}/payments`, { body: { amount: 2_000_000, method: "card" } });
+    assert.equal(p.status, 201);
+    assert.equal(p.json.order.balance, 1_000_000);
+    paymentId = p.json.order.payments.at(-1).id;
+    const over = await owner.req(`/api/panel/orders/${orderId}/payments`, { body: { amount: 1_500_000, method: "cash" } });
+    assert.deepEqual(over.json.warnings, ["overpaid"]);
+    assert.equal(over.json.order.balance, -500_000);
+    const ownerPayment = over.json.order.payments.at(-1).id;
+    assert.equal((await manager.req(`/api/panel/payments/${ownerPayment}`, { method: "DELETE", body: {} })).status, 403);
+    const undo = await manager.req(`/api/panel/payments/${paymentId}`, { method: "DELETE", body: {} });
+    assert.equal(undo.status, 200);
+    assert.equal(undo.json.order.balance, 1_500_000); // 9M − (6M advance + 1.5M owner)
+    // owner removes the overpayment; soft-deleted rows stay in the table
+    const del = await owner.req(`/api/panel/payments/${ownerPayment}`, { method: "DELETE", body: {} });
+    assert.equal(del.json.order.balance, 3_000_000);
+    const { rows } = await pool.query("select count(*)::int as n from order_payments where order_id = $1 and deleted_at is not null", [orderId]);
+    assert.equal(rows[0].n, 2);
+    assert.equal((await owner.req(`/api/panel/payments/${ownerPayment}`, { method: "DELETE", body: {} })).status, 404);
+  });
+
+  test("future-dated payment is rejected; cancelled orders take no payments", async () => {
+    const f = await owner.req(`/api/panel/orders/${orderId}/payments`, { body: { amount: 1000, method: "cash", paidOn: plus(3) } });
+    assert.equal(f.status, 422);
+  });
+
+  test("edit writes a field diff; no-op edit writes nothing", async () => {
+    const r = await owner.req(`/api/panel/orders/${orderId}`, { method: "PATCH", body: { venue: "Navroʻz", guests: 150 } });
+    assert.equal(r.json.order.venue, "Navroʻz");
+    await owner.req(`/api/panel/orders/${orderId}`, { method: "PATCH", body: { venue: "Navroʻz" } });
+    const { rows } = await pool.query("select diff from studio_events where entity = 'order' and entity_id = $1 and action = 'update'", [orderId]);
+    assert.equal(rows.length, 1);
+    assert.deepEqual(rows[0].diff.venue, ["Bahor", "Navroʻz"]);
+  });
+
+  test("status machine: active → done → active, cancelled → done is refused", async () => {
+    assert.equal((await owner.req(`/api/panel/orders/${orderId}/status`, { body: { to: "done" } })).json.order.status, "done");
+    assert.equal((await owner.req(`/api/panel/orders/${orderId}/status`, { body: { to: "active" } })).json.order.status, "active");
+    await owner.req(`/api/panel/orders/${orderId}/status`, { body: { to: "cancelled" } });
+    const bad = await owner.req(`/api/panel/orders/${orderId}/status`, { body: { to: "done" } });
+    assert.equal(bad.status, 409);
+    const pay = await owner.req(`/api/panel/orders/${orderId}/payments`, { body: { amount: 1000, method: "cash" } });
+    assert.equal(pay.status, 409);
+    await owner.req(`/api/panel/orders/${orderId}/status`, { body: { to: "active" } });
+  });
+
+  test("list views, counts, search by name and phone digits", async () => {
+    const up = await owner.req("/api/panel/orders?view=upcoming");
+    assert.equal(up.status, 200);
+    assert.ok(up.json.items.some((o: { id: string }) => o.id === orderId));
+    assert.ok(up.json.counts.debt >= 1 && up.json.counts.cancelled >= 1);
+    const debt = await owner.req("/api/panel/orders?view=debt");
+    assert.ok(debt.json.items.every((o: { balance: number }) => o.balance > 0));
+    assert.equal((await owner.req("/api/panel/orders?view=upcoming&q=laziz")).json.items.length, 1);
+    assert.equal((await owner.req("/api/panel/orders?view=upcoming&q=214 60")).json.items.length, 1);
+    assert.equal((await owner.req("/api/panel/orders?view=upcoming&q=%25")).json.items.length, 0); // % is literal
+    assert.equal((await owner.req("/api/panel/orders?view=nope")).status, 422);
+  });
+
+  test("history lists order + payment events with actor names", async () => {
+    const h = await owner.req(`/api/panel/orders/${orderId}/events`);
+    const kinds = h.json.events.map((e: { entity: string; action: string }) => `${e.entity}:${e.action}`);
+    assert.ok(kinds.includes("order:create") && kinds.includes("payment:create") && kinds.includes("payment:delete") && kinds.includes("order:status"));
+    assert.ok(h.json.events.some((e: { actor: string }) => e.actor === "Sardor"));
+  });
+
+  test("tenancy: a stranger gets 404 everywhere", async () => {
+    assert.equal((await stranger.req(`/api/panel/orders/${orderId}`)).status, 404);
+    assert.equal((await stranger.req(`/api/panel/orders/${orderId}`, { method: "PATCH", body: { venue: "x" } })).status, 404);
+    assert.equal((await stranger.req(`/api/panel/orders/${orderId}/payments`, { body: { amount: 1, method: "cash" } })).status, 404);
+    assert.equal((await stranger.req(`/api/panel/orders/${orderId}/status`, { body: { to: "cancelled" } })).status, 404);
+    assert.equal((await stranger.req(`/api/panel/orders/${orderId}/events`)).status, 404);
+    assert.equal((await stranger.req(`/api/panel/orders/not-a-uuid`)).status, 404);
+    assert.equal((await stranger.req("/api/panel/orders?view=upcoming&q=laziz")).json.items.length, 0);
+  });
+});

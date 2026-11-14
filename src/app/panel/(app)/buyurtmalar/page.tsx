@@ -1,8 +1,13 @@
 import type { Metadata } from "next";
-import { Planned } from "@/components/studio/screens/Planned";
+import { Suspense } from "react";
+import { OrdersScreen } from "@/components/studio/screens/Orders";
 
 export const metadata: Metadata = { title: "Buyurtmalar" };
 
 export default function Page() {
-  return <Planned title="Buyurtmalar" text="Buyurtmalar roʻyxati, qidiruv va toʻlovlar shu yerda boʻladi." />;
+  return (
+    <Suspense fallback={<span className="ds-skeleton" style={{ height: 480, borderRadius: "var(--ds-radius-xl)" }} />}>
+      <OrdersScreen />
+    </Suspense>
+  );
 }

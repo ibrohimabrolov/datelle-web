@@ -113,6 +113,13 @@ Internal tool for studios — separate tables (`studios`, `studio_members`, `stu
 | GET | `/api/panel/studio` | member | `x-studio-id` optional; not a member → 404 |
 | GET | `/api/panel/calendar?month=YYYY-MM` | member | days with data: status, load, reason/note, orders with balance; summary |
 | PUT | `/api/panel/days/:date` `{blocked, reason?, note?}` | member | close needs a reason (tamir/dam/shaxsiy/boshqa), today…+730; `warnings: ["has_orders"]` |
+| GET / POST | `/api/panel/orders` | member | list `?view&q&sort&dir&page` (30/page, counts) · create `{client…, total, advance?}` → `warnings` |
+| GET / PATCH | `/api/panel/orders/:id` | member | detail with payments, paid, balance · edit (audit diff) |
+| POST | `/api/panel/orders/:id/status` `{to}` | member | active→done/cancelled, done/cancelled→active |
+| POST | `/api/panel/orders/:id/payments` | member | `{amount, method, paidOn?}`; `overpaid` warning |
+| GET | `/api/panel/orders/:id/events` | member | history (order + its payments) |
+| DELETE | `/api/panel/payments/:id` | owner (manager: own, ≤10 min) | soft delete |
+| GET | `/api/panel/summary` | member | `{counts: {debt, active}}` |
 | POST | `/api/telegram/webhook` | secret header | bot updates |
 | GET | `/api/cron/daily` | `Bearer CRON_SECRET` | 20:00 Tashkent reminders |
 

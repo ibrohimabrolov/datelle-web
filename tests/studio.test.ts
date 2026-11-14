@@ -40,3 +40,31 @@ test("block window, reasons, event tones", () => {
   assert.equal(eventTone("beshik-toy"), "birthday");
   assert.equal(eventTone("korporativ"), "other");
 });
+
+import { canTransition, isOverdue, parseMoney, weekGroup } from "../src/lib/studio/orders";
+
+test("order status transitions", () => {
+  assert.ok(canTransition("active", "done"));
+  assert.ok(canTransition("active", "cancelled"));
+  assert.ok(canTransition("cancelled", "active"));
+  assert.ok(canTransition("done", "active"));
+  assert.ok(!canTransition("done", "cancelled"));
+  assert.ok(!canTransition("cancelled", "done"));
+});
+test("money input parsing", () => {
+  assert.equal(parseMoney("9 000 000"), 9_000_000);
+  assert.equal(parseMoney("9000000 soʻm"), 9_000_000);
+  assert.equal(parseMoney("9.000.000"), 9_000_000);
+  assert.equal(parseMoney("9,5 mln"), 9_500_000);
+  assert.equal(parseMoney(""), null);
+  assert.equal(parseMoney("abc"), null);
+});
+test("overdue and week groups", () => {
+  assert.ok(isOverdue("2026-11-10", 1, "2026-11-14"));
+  assert.ok(!isOverdue("2026-11-10", 0, "2026-11-14"));
+  assert.ok(!isOverdue("2026-11-20", 5, "2026-11-14"));
+  const m = () => "dekabr";
+  assert.equal(weekGroup("2026-11-15", "2026-11-14", m), "Shu hafta"); // Sun of the same week
+  assert.equal(weekGroup("2026-11-16", "2026-11-14", m), "Keyingi hafta");
+  assert.equal(weekGroup("2026-12-10", "2026-11-14", m), "dekabr");
+});
