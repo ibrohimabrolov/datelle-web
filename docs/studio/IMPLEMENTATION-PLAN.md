@@ -46,6 +46,9 @@ KPI (month paid + delta, total balance, next 30 days), next 7 days, balance list
 
 Webhook `/start`, daily 20:00 Tashkent (15:00 UTC) cron with tomorrow's events + balance to collect; settings toggles respected. **Done when:** cron dry-run test; no message for empty days.
 
+- [x] Foundation pulled forward (`studio/telegram`, 2026-11-14): signatures, webhook, `/start` + invite, digest composer, cron fan-out, build-time setup, 16 unit tests — see `TELEGRAM.md`.
+- [ ] Real `loadDigests` query + mute toggle (after Phase 1 schema).
+
 ## Phase 7 — QA & release
 
 Playwright demo flow (onboarding → calendar → order + advance → day "1 joy" → dashboard balance up), axe on every route, Light/Dark + Telegram theme check, 1:1 Figma review → merge to `main`.
@@ -53,5 +56,5 @@ Playwright demo flow (onboarding → calendar → order + advance → day "1 joy
 ## Needs from Ibrohim (with click-by-click guides when we get there)
 
 1. BotFather: create bot, get token, set Mini App URL, `/setdomain`.
-2. Vercel → Settings → Environment Variables: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET`, `CRON_SECRET`, `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME`. (Secrets are never pasted into chat.)
+2. Vercel → Settings → Environment Variables: `TELEGRAM_BOT_TOKEN`, `CRON_SECRET`, `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME` (`TELEGRAM_WEBHOOK_SECRET` optional — derived from the token). (Secrets are never pasted into chat.)
 3. Before any real studio data: move the database to a provider in Uzbekistan (legal requirement) — Tech §10.

@@ -5,15 +5,16 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "vercel-build": "tsx scripts/predeploy.ts && next build",
+    "vercel-build": "tsx scripts/predeploy.ts && tsx scripts/telegram-setup.ts && next build",
     "start": "next start",
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "tsx --env-file=.env.local src/server/seed.ts",
     "test:api": "tsx --env-file=.env.local --test tests/api.test.ts",
-    "test": "tsx --test tests/unit.test.ts",
-    "db:deploy": "tsx --env-file=.env.local scripts/predeploy.ts"
+    "test": "tsx --test tests/unit.test.ts tests/telegram.test.ts",
+    "db:deploy": "tsx --env-file=.env.local scripts/predeploy.ts",
+    "bot:setup": "tsx --env-file=.env.local scripts/telegram-setup.ts --force"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.4",

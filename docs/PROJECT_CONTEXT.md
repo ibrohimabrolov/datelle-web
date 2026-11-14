@@ -68,7 +68,7 @@
 | `ADMIN_PASSWORD` | Ibrohim qoʻygan oddiy demo parol — **real ishga tushirishdan oldin almashtirish** |
 | `SMS_PROVIDER` | `demo` (kod ekranda chiqadi). Real ishda `eskiz` |
 | `OTP_PEPPER` | hali qoʻyilmagan — `eskiz` yoqilganda **majburiy** |
-| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET`, `CRON_SECRET` | *(Datelle Studio uchun, hali yoʻq)* — Ibrohim oʻzi qoʻyadi |
+| `TELEGRAM_BOT_TOKEN`, `CRON_SECRET`, `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME` (+ ixtiyoriy `TELEGRAM_WEBHOOK_SECRET`, `TELEGRAM_MINIAPP_URL`) | *(Datelle Studio bot, hali qoʻyilmagan)* — Ibrohim oʻzi qoʻyadi, faqat Production. Yoʻq boʻlsa bot/cron 503, build oʻtkazib yuboradi — `docs/studio/TELEGRAM.md` |
 
 ---
 
@@ -207,6 +207,7 @@ pending/confirmed → cancelled (mijoz)
 - **2026-11-12:** kod demo natijasidan qatʼi nazar quriladi (mahsulot portfolio case sifatida ham qoladi); demolar parallel davom etadi va v1.1 ni belgilaydi. Kod faqat Ibrohim Figma'ni koʻrib chiqqandan keyin boshlanadi. Reja: `docs/studio/IMPLEMENTATION-PLAN.md`, handoff: `docs/studio/DESIGN-HANDOFF.md`, tokenlar: `src/studio/tokens.css` (branch `studio/prep`).
 - **2026-11-12:** Figma prototip ulandi — Mobile 5 flow (push = chapga siljish 300ms, sheet/state = smart animate 300ms, tab = dissolve 150ms, Telegram BackButton = Back), Desktop 5 flow (sahifa = dissolve 200ms, panel/state = smart animate 300ms, saqlash → 0.9s timeout). Desktop'ga oddiy `S3 · Kalendar` (panelsiz) qoʻshildi.
 - **2026-11-12:** Figma'da `📣 Marketing` sahifasi: 8 slaydli pitch deck (studiyalar uchun, oʻzbekcha, real ekranlar bilan; Present → "Pitch deck", → / ← bilan) va outreach grafikalari (feed 1080×1350, story 1080×1920). Desktop sahifasi 6 ta flow seksiyasiga (4 ustunli grid) qayta tartiblandi.
+- **2026-11-14:** Telegram bot poydevori (`studio/telegram`, Phase 6 oldinga olindi): initData/Login Widget imzolari, webhook `/start` + taklif (`/start inv_…`), kunlik digest ("Ertaga, 15-noyabr, ya — N ta tadbir … Qoldiq: X soʻm", boʻsh kunda xabar yoʻq), `/api/cron/daily` (`vercel.json` 15:00 UTC), webhook production build'da avtomatik sozlanadi (`scripts/telegram-setup.ts`). Webhook secret token'dan hosil qilinadi — Ibrohim faqat 3 ta env qoʻyadi. Haqiqiy maʼlumot (`loadDigests`) Phase 1 sxemasidan keyin. Batafsil: `docs/studio/TELEGRAM.md`.
 - **v1.1 kandidatlari:** jamoani tadbirlarga taqsimlash, rekvizit hisobi, xarajatlar — demolar tartibni hal qiladi.
 
 ---
@@ -217,7 +218,7 @@ pending/confirmed → cancelled (mijoz)
 2. **25 ta studiya roʻyxati → 15 ta demo** (2-hafta). Javoblar gipotezalar jadvaliga (scope 1-boʻlim). Eng muhim savollar: qarz/qoldiq ogʻrigʻi (H2), rekvizit (H4) va jamoa (H5) — qaysi biri kuchliroq.
 3. **Go / no-go** — ≥ 5 "ha" → scope v0.3 → MVP kodi tech doc 9-boʻlim tartibida (3–5-hafta).
 4. **Maʼlumotlar joylashuvi** — birinchi founding partner real mijoz maʼlumotini kiritishidan **oldin** bazani Oʻzbekistondagi provayderga koʻchirish.
-5. **BotFather** — bot + Mini App, `/setdomain`, Vercel env'ga `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET`, `CRON_SECRET` (Ibrohim, Claude yoʻriqnoma beradi).
+5. **BotFather** — bot yaratish (username'ni hozir band qilish), Vercel env'ga `TELEGRAM_BOT_TOKEN`, `CRON_SECRET`, `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME`; `/setdomain` — domen aniq boʻlganda (Ibrohim, yoʻriqnoma 2026-11-14 chatda). Kod tayyor: PR `studio/telegram`.
 6. **Domen** — Login Widget va sotuv uchun barqaror domen (`datelle.uz` yoki `studio.datelle.uz`).
 7. Marketplace boʻyicha (muzlatilgan): zadatok matnlari, SMS (Eskiz), Payme/Click, foto yuklash, shaxsiy admin akkauntlari, Home illyustratsiyalari, Vercel Hobby → Pro — faqat marketplace'ga qaytilsa.
 
