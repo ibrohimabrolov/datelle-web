@@ -95,3 +95,33 @@ Errors: `{ error: { code, message, fields? } }` — messages are user-facing Uzb
 3. **Payments** — Payme / Click merchant accounts; deposit flow (`confirmed → paid`) is not built yet.
 4. **Vendor side** — confirm / decline / block days by the studio itself. Planned as a Telegram bot + vendor panel; until then the admin panel does it.
 5. **Photo uploads** for quotes and vendor galleries — needs object storage (S3-compatible, in Uzbekistan).
+
+
+## Datelle Studio (`/panel`, `/api/panel/*`)
+
+Internal tool for studios — separate tables (`studios`, `studio_members`, `studio_invites`, `studio_days`, `orders`, `order_payments`, `studio_events`), separate session (`dt_panel`, `sessions.scope = 'panel'`). Plan and status: `docs/studio/IMPLEMENTATION-PLAN.md`, bot: `docs/studio/TELEGRAM.md`.
+
+| Method | Path | Auth | Notes |
+|---|---|---|---|
+| GET | `/api/panel/auth/config` | — | `{ botId, botUsername, devLogin }` for the Kirish screen |
+| POST | `/api/panel/auth/telegram` `{initData}` | — | Mini App; HMAC("WebAppData", token), ≤ 24 h; 60/h/IP |
+| POST | `/api/panel/auth/widget` | — | desktop Login Widget payload; SHA256(token) |
+| POST | `/api/panel/auth/dev` `{id, firstName?}` | — | only with `PANEL_DEV_LOGIN=1` and never on Vercel |
+| POST | `/api/panel/auth/logout` | cookie | deletes the session row |
+| GET | `/api/panel/me` | cookie | user + studios with role |
+| POST | `/api/panel/onboarding` `{name, category, dailyCapacity}` | cookie | creates studio + owner; 409 if the user already owns one |
+| GET | `/api/panel/studio` | member | `x-studio-id` optional; not a member → 404 |
+| GET | `/api/panel/calendar?month=YYYY-MM` | member | days with data: status, load, reason/note, orders with balance; summary |
+| PUT | `/api/panel/days/:date` `{blocked, reason?, note?}` | member | close needs a reason (tamir/dam/shaxsiy/boshqa), today…+730; `warnings: ["has_orders"]` |
+| GET / POST | `/api/panel/orders` | member | list `?view&q&sort&dir&page` (30/page, counts) · create `{client…, total, advance?}` → `warnings` |
+| GET / PATCH | `/api/panel/orders/:id` | member | detail with payments, paid, balance · edit (audit diff) |
+| POST | `/api/panel/orders/:id/status` `{to}` | member | active→done/cancelled, done/cancelled→active |
+| POST | `/api/panel/orders/:id/payments` | member | `{amount, method, paidOn?}`; `overpaid` warning |
+| GET | `/api/panel/orders/:id/events` | member | history (order + its payments) |
+| DELETE | `/api/panel/payments/:id` | owner (manager: own, ≤10 min) | soft delete |
+| GET | `/api/panel/summary` | member | `{counts: {debt, active}}` |
+| GET | `/api/panel/dashboard` | owner | month received + same-period delta, debt (overdue, top 5), next 7, next 30, revenue weeks/months/years, setup flags |
+| POST | `/api/telegram/webhook` | secret header | bot updates |
+| GET | `/api/cron/daily` | `Bearer CRON_SECRET` | 20:00 Tashkent reminders |
+
+Tests: `npm run test:panel` against a running server started with `PANEL_DEV_LOGIN=1 TELEGRAM_BOT_TOKEN=7000000001:AAtest_token_for_local_integration_only CRON_SECRET=cron_test_secret_1234567890`.

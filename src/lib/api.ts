@@ -15,7 +15,7 @@ export class ApiError extends Error {
   }
 }
 
-export async function api<T>(url: string, init?: { method?: "GET" | "POST"; body?: unknown; signal?: AbortSignal }): Promise<T> {
+export async function api<T>(url: string, init?: { method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE"; body?: unknown; signal?: AbortSignal }): Promise<T> {
   let res: Response;
   try {
     res = await fetch(url, {
