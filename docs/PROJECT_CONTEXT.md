@@ -115,7 +115,7 @@ tests/                 # unit.test.ts, api.test.ts
 BACKEND.md             # backend batafsil: env, model, API, admin, deploy
 ```
 
-Datelle Studio rejasi (hali kod yoʻq): `src/app/panel/`, `/api/panel/*`, `/api/telegram/webhook`, `/api/cron/daily`; jadvallar `studios`, `studio_members`, `studio_invites`, `studio_days`, `orders`, `order_payments`, `studio_events` — `claude/Datelle-STUDIO-TECH.md`.
+Datelle Studio kodi (branch `studio/foundation`, hali main'da emas): `src/app/panel/` (layout + `(app)` shell, `kirish`, `onboarding`), `src/components/studio/` (PanelProvider, Shell, Button, icons, telegram, screens/*), `src/server/panel/` (auth, service), `src/server/telegram/` (bot), `src/app/api/panel/*`, `/api/telegram/webhook`, `/api/cron/daily`; dizayn tizimi `src/studio/tokens.css` + `src/app/panel/studio.css`; jadvallar `drizzle/0001_studio.sql`. API jadvali — `BACKEND.md` oxirida.
 
 ---
 
@@ -208,6 +208,7 @@ pending/confirmed → cancelled (mijoz)
 - **2026-11-12:** Figma prototip ulandi — Mobile 5 flow (push = chapga siljish 300ms, sheet/state = smart animate 300ms, tab = dissolve 150ms, Telegram BackButton = Back), Desktop 5 flow (sahifa = dissolve 200ms, panel/state = smart animate 300ms, saqlash → 0.9s timeout). Desktop'ga oddiy `S3 · Kalendar` (panelsiz) qoʻshildi.
 - **2026-11-12:** Figma'da `📣 Marketing` sahifasi: 8 slaydli pitch deck (studiyalar uchun, oʻzbekcha, real ekranlar bilan; Present → "Pitch deck", → / ← bilan) va outreach grafikalari (feed 1080×1350, story 1080×1920). Desktop sahifasi 6 ta flow seksiyasiga (4 ustunli grid) qayta tartiblandi.
 - **2026-11-14:** Telegram bot poydevori (`studio/telegram`, Phase 6 oldinga olindi): initData/Login Widget imzolari, webhook `/start` + taklif (`/start inv_…`), kunlik digest ("Ertaga, 15-noyabr, ya — N ta tadbir … Qoldiq: X soʻm", boʻsh kunda xabar yoʻq), `/api/cron/daily` (`vercel.json` 15:00 UTC), webhook production build'da avtomatik sozlanadi (`scripts/telegram-setup.ts`). Webhook secret token'dan hosil qilinadi — Ibrohim faqat 3 ta env qoʻyadi. Haqiqiy maʼlumot (`loadDigests`) Phase 1 sxemasidan keyin. Batafsil: `docs/studio/TELEGRAM.md`.
+- **2026-11-14:** 1-bosqich (`studio/foundation`, PR #4): sxema + migratsiya (7 jadval, `sessions.scope` — panel tokeni marketplace'da ishlamaydi), Telegram orqali kirish (Mini App initData / desktop Login Widget, cookie `dt_panel`), `requireStudio` (boshqa studiya → 404), onboarding (bitta studiya, 90 kun founding trial), `/panel` shell (Sidebar / floating TabBar, Figma ikonlari 1:1, Telegram tema + MainButton), Kirish va Onboarding ekranlari Figma bo'yicha, Sozlamalar (faqat koʻrish). Kunlik eslatma endi haqiqiy buyurtmalardan. Testlar: unit 22, panel API 13, marketplace API 25, axe WCAG 2.2 AA — hammasi yashil. Figma bug: Onboarding'dagi tanlangan radio belgisi 14×22 ga ezilgan — kodda 22×22.
 - **v1.1 kandidatlari:** jamoani tadbirlarga taqsimlash, rekvizit hisobi, xarajatlar — demolar tartibni hal qiladi.
 
 ---

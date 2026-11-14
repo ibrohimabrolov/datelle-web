@@ -1,0 +1,246 @@
+/* Datelle Studio — component layer. Every value is a --ds-* token from src/studio/tokens.css
+   (Figma XNmqL3kbnh0lPpzO6ZQKUR). Raw numbers only for geometry the Figma components fix
+   (control heights, icon boxes) — each noted with its component. */
+
+.studio {
+  --ds-font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+/* Resets at zero specificity so every component class wins */
+:where(.studio) *,
+:where(.studio) *::before,
+:where(.studio) *::after { box-sizing: border-box; }
+:where(.studio) :where(button) { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+:where(.studio) :where(a) { color: inherit; text-decoration: none; }
+:where(.studio) :where(h1, h2, h3, p, dl) { margin: 0; }
+
+/* ── Type ── */
+.ds-hero { font: var(--ds-type-display-hero); letter-spacing: var(--ds-type-display-hero-tracking); }
+.ds-h1 { font: var(--ds-type-heading-h1); letter-spacing: var(--ds-type-heading-h1-tracking); }
+.ds-h2 { font: var(--ds-type-heading-h2); letter-spacing: var(--ds-type-heading-h2-tracking); }
+.ds-h3 { font: var(--ds-type-heading-h3); letter-spacing: var(--ds-type-heading-h3-tracking); }
+.ds-body { font: var(--ds-type-body-default); }
+.ds-body-medium { font: var(--ds-type-body-medium); }
+.ds-body-strong { font: var(--ds-type-body-strong); }
+.ds-label { font: var(--ds-type-label-default); }
+.ds-label-strong { font: var(--ds-type-label-strong); }
+.ds-caps { font: var(--ds-type-label-caps); letter-spacing: var(--ds-type-label-caps-tracking); text-transform: uppercase; }
+.ds-secondary { color: var(--ds-text-secondary); }
+.ds-tertiary { color: var(--ds-text-tertiary); }
+.ds-brand { color: var(--ds-text-brand); }
+@media (min-width: 1024px) {
+  .ds-h1 { font: var(--ds-type-heading-h1-desktop); letter-spacing: var(--ds-type-heading-h1-desktop-tracking); }
+}
+.ds-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* ── Button (Figma Button: Style × Size L 52 / M 44, radius full) ── */
+.ds-btn {
+  position: relative;
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--ds-space-8);
+  height: 44px; padding: 0 var(--ds-space-16);
+  border-radius: var(--ds-radius-full);
+  font: var(--ds-type-body-strong); white-space: nowrap;
+  transition: background-color var(--ds-duration-fast) var(--ds-ease-out), box-shadow var(--ds-duration-fast) var(--ds-ease-out);
+}
+.ds-btn[data-size="l"] { height: 52px; padding: 0 var(--ds-space-20); }
+.ds-btn[data-block] { width: 100%; }
+.ds-btn[data-style="primary"] { background: var(--ds-brand-solid); color: var(--ds-text-on-brand); }
+.ds-btn[data-style="primary"]:hover { background: var(--ds-brand-hover); }
+.ds-btn[data-style="primary"]:active { background: var(--ds-brand-pressed); }
+.ds-btn[data-style="secondary"] { background: var(--ds-bg-elevated); color: var(--ds-text-primary); box-shadow: inset 0 0 0 1px var(--ds-border-default); }
+.ds-btn[data-style="secondary"]:hover { background: var(--ds-bg-surface-hover); }
+.ds-btn[data-style="ghost"] { color: var(--ds-text-brand); }
+.ds-btn[data-style="ghost"]:hover { background: var(--ds-state-hover); }
+.ds-btn[data-style="destructive"] { background: var(--ds-status-danger-solid); color: var(--ds-text-on-danger); }
+.ds-btn[data-style="destructive"]:active { background-image: linear-gradient(var(--ds-state-pressed-solid), var(--ds-state-pressed-solid)); }
+.ds-btn:disabled:not([aria-busy="true"]) { background: var(--ds-bg-disabled); color: var(--ds-text-disabled); box-shadow: none; cursor: not-allowed; }
+.ds-btn[aria-busy="true"] { cursor: progress; }
+.ds-btn[aria-busy="true"] > :not(.ds-spinner) { visibility: hidden; }
+.ds-btn[aria-busy="true"] > .ds-spinner { position: absolute; }
+.ds-btn:focus-visible { box-shadow: var(--ds-focus-ring); }
+
+.ds-spinner {
+  width: 20px; height: 20px; border-radius: var(--ds-radius-full);
+  border: 2px solid currentColor; border-right-color: transparent;
+  animation: ds-spin 700ms linear infinite;
+}
+@keyframes ds-spin { to { transform: rotate(360deg); } }
+
+/* ── Input (Figma Input: label 13/18 · field 48, radius-lg 16, 1px border/control) ── */
+.ds-field { display: flex; flex-direction: column; gap: var(--ds-space-8); }
+.ds-field > label { font: var(--ds-type-label-default); color: var(--ds-text-secondary); }
+.ds-input {
+  height: 48px; width: 100%; padding: 0 var(--ds-space-16);
+  border-radius: var(--ds-radius-lg); border: 0;
+  background: var(--ds-bg-surface); color: var(--ds-text-primary);
+  box-shadow: inset 0 0 0 1px var(--ds-border-control);
+  font: var(--ds-type-body-default); outline: none;
+  transition: box-shadow var(--ds-duration-fast) var(--ds-ease-out);
+}
+.ds-input::placeholder { color: var(--ds-text-tertiary); }
+.ds-input:focus { box-shadow: inset 0 0 0 1.5px var(--ds-border-focus); }
+.ds-input[aria-invalid="true"] { box-shadow: inset 0 0 0 1.5px var(--ds-status-danger); }
+.ds-helper { font: var(--ds-type-label-default); color: var(--ds-text-tertiary); }
+.ds-helper[data-error] { color: var(--ds-status-danger); }
+
+/* ── Alert (inline) ── */
+.ds-alert {
+  display: flex; gap: var(--ds-space-8); padding: var(--ds-space-12) var(--ds-space-16);
+  border-radius: var(--ds-radius-lg); font: var(--ds-type-label-default);
+  background: var(--ds-status-danger-bg); color: var(--ds-text-danger);
+}
+
+/* ── Skeleton ── */
+.ds-skeleton { background: var(--ds-bg-skeleton); border-radius: var(--ds-radius-md); animation: ds-pulse 1.4s ease-in-out infinite; }
+@keyframes ds-pulse { 50% { opacity: 0.55; } }
+
+/* ── Splash / full-screen states ── */
+.ds-center { min-height: 100dvh; display: grid; place-items: center; padding: var(--ds-space-24); }
+.ds-state { display: flex; flex-direction: column; align-items: center; gap: var(--ds-space-16); max-width: 360px; text-align: center; }
+
+/* ── Logo mark (Sidebar 28 / Kirish 40, radius 8, brand/solid) ── */
+.ds-mark {
+  display: grid; place-items: center; flex: none;
+  width: 28px; height: 28px; border-radius: var(--ds-radius-sm);
+  background: var(--ds-brand-solid); color: var(--ds-text-on-brand); font: var(--ds-type-body-strong);
+}
+.ds-mark[data-size="lg"] { width: 40px; height: 40px; }
+
+/* ── App shell ── */
+.ds-shell { min-height: 100dvh; }
+.ds-sidebar { display: none; }
+.ds-main { padding: var(--ds-space-16) var(--ds-layout-gutter) calc(112px + env(safe-area-inset-bottom)); }
+.ds-main-inner { max-width: var(--ds-layout-content-max); margin: 0 auto; display: flex; flex-direction: column; gap: var(--ds-layout-stack-gap); }
+.ds-page-head { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-16); min-height: 44px; }
+
+@media (min-width: 1024px) {
+  .ds-shell { display: grid; grid-template-columns: var(--ds-layout-sidebar-width) minmax(0, 1fr); }
+  .ds-sidebar {
+    position: sticky; top: 0; height: 100dvh;
+    display: flex; flex-direction: column; justify-content: space-between;
+    padding: var(--ds-space-20) var(--ds-space-16);
+    background: var(--ds-bg-surface); box-shadow: inset -1px 0 0 var(--ds-border-subtle);
+  }
+  .ds-main { padding: var(--ds-space-32) var(--ds-layout-gutter) var(--ds-space-48); }
+  .ds-tabbar, .ds-mobile-only { display: none !important; }
+}
+@media (max-width: 1023.98px) { .ds-desktop-only { display: none !important; } }
+
+.ds-brandline { display: flex; align-items: center; gap: var(--ds-space-8); padding: 0 var(--ds-space-8) var(--ds-space-32); }
+.ds-brandline small { display: block; font: var(--ds-type-label-default); color: var(--ds-text-secondary); }
+.ds-navlabel { padding: 0 var(--ds-space-12) var(--ds-space-8); color: var(--ds-text-tertiary); }
+.ds-nav { display: flex; flex-direction: column; gap: var(--ds-space-4); }
+
+/* NavItem (Figma NavItem: 40h, radius 12, pad 0 12, gap 12; active = bg/elevated + Filled icon) */
+.ds-navitem {
+  display: flex; align-items: center; gap: var(--ds-space-12);
+  height: 40px; padding: 0 var(--ds-space-12); border-radius: var(--ds-radius-md);
+  font: var(--ds-type-body-medium); color: var(--ds-text-secondary);
+  transition: background-color var(--ds-duration-fast) var(--ds-ease-out);
+}
+.ds-navitem svg { color: var(--ds-icon-muted); flex: none; }
+.ds-navitem:hover { background: var(--ds-state-hover); }
+.ds-navitem[aria-current="page"] { background: var(--ds-bg-elevated); color: var(--ds-text-primary); font: var(--ds-type-body-strong); }
+.ds-navitem[aria-current="page"] svg { color: var(--ds-icon-default); }
+
+.ds-studiocard { display: flex; align-items: center; gap: var(--ds-space-12); padding: var(--ds-space-12) var(--ds-space-8); border-radius: var(--ds-radius-md); }
+.ds-studiocard:hover { background: var(--ds-state-hover); }
+.ds-studiocard > div { min-width: 0; }
+.ds-studiocard strong { display: block; font: var(--ds-type-body-strong); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-avatar {
+  display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: var(--ds-radius-full);
+  background: var(--ds-brand-subtle); color: var(--ds-text-brand); font: var(--ds-type-label-strong);
+}
+
+/* Mobile tab bar (Figma TabBar: floating pill, pad 6, gap 4; active = bg/inverse pill with label) */
+.ds-tabbar {
+  position: fixed; left: 50%; bottom: calc(var(--ds-space-16) + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 20;
+  display: flex; gap: var(--ds-space-4); padding: 6px;
+  background: var(--ds-bg-elevated); border-radius: var(--ds-radius-full); box-shadow: var(--ds-elevation-float);
+}
+.ds-tab {
+  display: flex; align-items: center; gap: var(--ds-space-8);
+  height: 48px; min-width: 48px; padding: 0 14px; border-radius: var(--ds-radius-full);
+  color: var(--ds-icon-muted); justify-content: center;
+  transition: background-color var(--ds-duration-base) var(--ds-ease-out);
+}
+.ds-tab span { display: none; font: var(--ds-type-label-strong); }
+.ds-tab[aria-current="page"] { background: var(--ds-bg-inverse); color: var(--ds-text-on-inverse); }
+.ds-tab[aria-current="page"] span { display: inline; }
+
+.ds-iconbtn {
+  display: grid; place-items: center; width: 44px; height: 44px; border-radius: var(--ds-radius-full);
+  color: var(--ds-icon-default); background: var(--ds-bg-surface);
+}
+.ds-iconbtn:hover { background: var(--ds-bg-surface-hover); }
+
+/* ── Cards ── */
+.ds-card { background: var(--ds-bg-surface); border-radius: var(--ds-radius-xl); padding: var(--ds-layout-card-padding); }
+.ds-rows { display: flex; flex-direction: column; }
+.ds-row { display: flex; justify-content: space-between; gap: var(--ds-space-16); padding: var(--ds-space-12) 0; }
+.ds-row + .ds-row { box-shadow: inset 0 1px 0 var(--ds-border-subtle); }
+.ds-row dt { color: var(--ds-text-secondary); }
+.ds-row dd { margin: 0; font: var(--ds-type-body-medium); text-align: right; }
+
+/* ── Kirish (S1 desktop: brand panel 640 + auth column 400) ── */
+.ds-auth { min-height: 100dvh; display: grid; grid-template-columns: 1fr; background: var(--ds-bg-canvas); }
+.ds-auth-brand { display: none; }
+.ds-auth-main { display: grid; place-items: center; padding: var(--ds-space-24) var(--ds-space-16); }
+.ds-auth-box { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: var(--ds-space-24); }
+@media (min-width: 1024px) {
+  .ds-auth { grid-template-columns: 640px 1fr; }
+  .ds-auth-brand {
+    display: flex; flex-direction: column; justify-content: space-between;
+    padding: var(--ds-space-80); background: var(--ds-bg-inverse); color: var(--ds-text-on-inverse);
+  }
+}
+
+/* ── Onboarding (S1 mobile: body pad 32/16, gap 28) ── */
+.ds-onb { max-width: 480px; margin: 0 auto; padding: var(--ds-space-32) var(--ds-space-16) calc(120px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 28px; }
+.ds-onb-title { font: 600 40px/44px var(--ds-font-sans); letter-spacing: var(--ds-type-display-hero-tracking); } /* Figma: off-scale 40/44 (between H1 28 and Hero 48) */
+.ds-motif { display: flex; align-items: flex-end; gap: 6px; height: 58px; }
+.ds-motif i { width: 28px; border-radius: 14px; }
+.ds-options { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ds-space-12); }
+.ds-option {
+  display: flex; flex-direction: column; gap: var(--ds-space-24); text-align: left;
+  padding: var(--ds-space-16); border-radius: var(--ds-radius-xl);
+  background: var(--ds-bg-surface); color: var(--ds-text-primary);
+  transition: background-color var(--ds-duration-base) var(--ds-ease-out);
+}
+.ds-option > div { display: flex; align-items: center; justify-content: space-between; }
+.ds-option p { color: var(--ds-text-secondary); font: var(--ds-type-label-default); }
+.ds-option[aria-checked="true"] { background: var(--ds-bg-inverse); color: var(--ds-text-on-inverse); }
+.ds-option[aria-checked="true"] p { color: var(--ds-text-on-inverse); }
+.ds-option:focus-visible { box-shadow: var(--ds-focus-ring); outline: none; }
+.ds-radio { width: 22px; height: 22px; border-radius: var(--ds-radius-full); box-shadow: inset 0 0 0 1.5px var(--ds-icon-muted); display: grid; place-items: center; }
+/* Figma draws the checked mark 14×22 (squashed instance) — built as the intended 22×22 here */
+.ds-option[aria-checked="true"] .ds-radio { background: var(--ds-green-300); box-shadow: none; color: var(--ds-bg-inverse); }
+
+.ds-capacity { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-12); padding: var(--ds-space-12) var(--ds-space-16); border-radius: var(--ds-radius-xl); background: var(--ds-bg-surface); }
+.ds-capacity > div:first-child { display: flex; flex-direction: column; gap: 2px; }
+.ds-stepper { display: flex; align-items: center; gap: var(--ds-space-8); padding: var(--ds-space-4); border-radius: var(--ds-radius-full); background: var(--ds-bg-subtle); }
+.ds-stepper button { width: 44px; height: 44px; border-radius: var(--ds-radius-full); background: var(--ds-bg-surface); font: var(--ds-type-body-strong); }
+.ds-stepper button:disabled { color: var(--ds-text-disabled); cursor: not-allowed; }
+.ds-stepper output { width: 40px; text-align: center; font: var(--ds-type-body-strong); font-variant-numeric: tabular-nums; }
+
+.ds-bottombar { position: fixed; left: 0; right: 0; bottom: 0; padding: var(--ds-space-16) var(--ds-space-16) calc(var(--ds-space-16) + env(safe-area-inset-bottom)); background: linear-gradient(transparent, var(--ds-bg-canvas) 24px); }
+.ds-bottombar > * { max-width: 448px; margin: 0 auto; }
+@media (min-width: 1024px) {
+  .ds-onb { padding-top: var(--ds-space-80); padding-bottom: var(--ds-space-80); }
+  .ds-bottombar { position: static; padding: 0; background: none; }
+  .ds-bottombar > * { max-width: none; }
+}
+
+/* Telegram dark: tokens.css falls back to light values when a client doesn't expose a --tg-theme-* var,
+   which mixes light surfaces with dark text. Fall back to our dark semantics instead. */
+.studio[data-platform="telegram"][data-theme="dark"] {
+  --ds-bg-canvas: var(--tg-theme-bg-color, var(--ds-neutral-950));
+  --ds-bg-surface: var(--tg-theme-secondary-bg-color, var(--ds-neutral-900));
+  --ds-bg-elevated: var(--tg-theme-section-bg-color, var(--ds-neutral-850));
+  --ds-text-primary: var(--tg-theme-text-color, var(--ds-neutral-50));
+  --ds-text-tertiary: var(--tg-theme-hint-color, var(--ds-neutral-400));
+  --ds-text-link: var(--tg-theme-link-color, var(--ds-green-300));
+  --ds-text-danger: var(--tg-theme-destructive-text-color, var(--ds-red-400));
+}

@@ -16,9 +16,15 @@ export const panelUrl = () => process.env.TELEGRAM_MINIAPP_URL || `${SITE_URL}/p
 
 /* Webhook secret: explicit env wins; otherwise derived from the token (HMAC, 64 hex chars),
    so the minimum setup is one secret. Rotating the token rotates this too — setup re-registers it. */
+const TOKEN_RE = /^\d+:[\w-]{30,}$/;
+export const botToken = () => {
+  const t = process.env.TELEGRAM_BOT_TOKEN?.trim();
+  return t && TOKEN_RE.test(t) ? t : null;
+};
+
 export function botConfig() {
-  const token = process.env.TELEGRAM_BOT_TOKEN?.trim();
-  if (!token || !/^\d+:[\w-]{30,}$/.test(token)) return null;
+  const token = botToken();
+  if (!token) return null;
   const explicit = process.env.TELEGRAM_WEBHOOK_SECRET?.trim();
   if (explicit && !SECRET_RE.test(explicit)) return null;
   const webhookSecret = explicit || createHmac("sha256", token).update("datelle-webhook-v1").digest("hex");

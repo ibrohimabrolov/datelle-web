@@ -110,9 +110,10 @@ export async function currentUser(): Promise<SessionUser | null> {
     .select({ id: schema.users.id, phone: schema.users.phone, name: schema.users.name, role: schema.users.role, expiresAt: schema.sessions.expiresAt, sid: schema.sessions.id })
     .from(schema.sessions)
     .innerJoin(schema.users, eq(schema.users.id, schema.sessions.userId))
-    .where(and(eq(schema.sessions.id, sha256(token)), gt(schema.sessions.expiresAt, new Date())))
+    .where(and(eq(schema.sessions.id, sha256(token)), eq(schema.sessions.scope, "site"), gt(schema.sessions.expiresAt, new Date())))
     .limit(1);
-  if (!row) return null;
+  // site sessions are only created after OTP, so phone is always set — guard anyway
+  if (!row?.phone) return null;
   // sliding expiry: extend once less than half the lifetime is left
   if (row.expiresAt.getTime() - Date.now() < (SESSION_DAYS / 2) * 86_400_000) {
     const expiresAt = new Date(Date.now() + SESSION_DAYS * 86_400_000);

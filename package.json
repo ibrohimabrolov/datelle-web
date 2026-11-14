@@ -12,6 +12,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "tsx --env-file=.env.local src/server/seed.ts",
     "test:api": "tsx --env-file=.env.local --test tests/api.test.ts",
+    "test:panel": "tsx --env-file=.env.local --test tests/panel.test.ts",
     "test": "tsx --test tests/unit.test.ts tests/telegram.test.ts",
     "db:deploy": "tsx --env-file=.env.local scripts/predeploy.ts",
     "bot:setup": "tsx --env-file=.env.local scripts/telegram-setup.ts --force"

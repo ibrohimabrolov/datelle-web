@@ -26,6 +26,13 @@
 - Base components: Button, IconButton, TextField, SearchField, Switch, Checkbox, Chip, SegmentedControl, StatusPill, Alert, Toast, ConfirmDialog, PanelHeader, BottomSheet.
 - **Done when:** unit tests for both signatures (valid / tampered / expired); tenant isolation test skeleton; Storybook-free component page `/panel/_ui` (dev only) matches Figma components 1:1.
 
+**Status 2026-11-14 (`studio/foundation`):**
+- [x] Migration `0001_studio.sql` — 7 tables + `users.telegram_id`, nullable `phone`, `sessions.scope` (site/panel: a panel token never works on the marketplace). DB-level guards: one owner per studio, capacity 1–20, total ≥ 0, payment > 0.
+- [x] Auth: `/api/panel/auth/{telegram,widget,logout,config,dev}`, cookie `dt_panel` (prod: `SameSite=None; Partitioned` for Telegram Web iframes), `requireStudio()` (non-member → 404, wrong role → 403), `/api/panel/me`, `/api/panel/onboarding` (advisory lock — double tap can't create two studios; 90-day founding trial), `/api/panel/studio`.
+- [x] `/panel` shell: provider (Mini App signs in from initData on every open), Sidebar ≥1024 / floating TabBar <1024, icons exported 1:1 from Figma, Telegram theme + MainButton, Kirish (S1 desktop) and Onboarding (S1) screens, Sozlamalar (read-only), placeholders for Phase 3–5 pages.
+- [x] Tests: 13 panel API tests (auth, tampering, CSRF, scope, logout replay, validation, tenancy 404, manager role, one-owner constraint, cron digest), axe WCAG 2.2 AA clean on all screens at 390 and 1440.
+- [ ] Remaining base components move into the phases that first use them (Chip/Segment → Calendar, DataTable/Toast/ConfirmDialog → Orders).
+
 ## Phase 2 — Onboarding, settings, team (`studio/team`)
 
 Onboarding (Mini App), Sozlamalar (owner / manager views), invites (`t.me/<bot>?startapp=inv_…`, 7 days, one-time), remove member (confirm). **Done when:** API tests for invite reuse/expiry and role guards.
@@ -47,7 +54,8 @@ KPI (month paid + delta, total balance, next 30 days), next 7 days, balance list
 Webhook `/start`, daily 20:00 Tashkent (15:00 UTC) cron with tomorrow's events + balance to collect; settings toggles respected. **Done when:** cron dry-run test; no message for empty days.
 
 - [x] Foundation pulled forward (`studio/telegram`, 2026-11-14): signatures, webhook, `/start` + invite, digest composer, cron fan-out, build-time setup, 16 unit tests — see `TELEGRAM.md`.
-- [ ] Real `loadDigests` query + mute toggle (after Phase 1 schema).
+- [x] Real `loadDigests` query (2026-11-14) — tomorrow's active orders, balance from live payments, owner + managers with `reminders_on`.
+- [ ] Mute toggle in Sozlamalar → Eslatmalar (Phase 2).
 
 ## Phase 7 — QA & release
 
