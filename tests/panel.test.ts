@@ -417,12 +417,11 @@ describe("dashboard", () => {
   const owner = new Client();
   const manager = new Client();
   let studioId = "";
-  let userId = "";
   const today = new Date(Date.now() + 5 * 3600e3).toISOString().slice(0, 10);
   const plus = (n: number) => new Date(Date.parse(`${today}T00:00:00Z`) + n * 86_400e3).toISOString().slice(0, 10);
 
   before(async () => {
-    userId = (await owner.devLogin(tgId(), "Dash")).json.user.id;
+    await owner.devLogin(tgId(), "Dash");
     studioId = (await owner.req("/api/panel/onboarding", { body: { name: "Dash Studio", category: "dekor", dailyCapacity: 3 } })).json.studio.id;
     const m = (await manager.devLogin(tgId(), "Mgr")).json.user;
     await pool.query("insert into studio_members (studio_id, user_id, role) values ($1, $2, 'manager')", [studioId, m.id]);
