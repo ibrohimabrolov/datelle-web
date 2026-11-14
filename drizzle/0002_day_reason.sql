@@ -1,0 +1,2 @@
+ALTER TABLE "studio_days" ADD COLUMN "reason" text;--> statement-breakpoint
+ALTER TABLE "studio_days" ADD CONSTRAINT "studio_days_reason" CHECK ("studio_days"."reason" is null or "studio_days"."reason" in ('tamir', 'dam', 'shaxsiy', 'boshqa'));

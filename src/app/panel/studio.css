@@ -86,6 +86,7 @@
 .ds-helper[data-error] { color: var(--ds-status-danger); }
 
 /* ── Alert (inline) ── */
+.ds-alert[data-tone="warning"] { background: var(--ds-status-warning-bg); color: var(--ds-status-warning); }
 .ds-alert {
   display: flex; gap: var(--ds-space-8); padding: var(--ds-space-12) var(--ds-space-16);
   border-radius: var(--ds-radius-lg); font: var(--ds-type-label-default);
@@ -244,3 +245,190 @@
   --ds-text-link: var(--tg-theme-link-color, var(--ds-green-300));
   --ds-text-danger: var(--tg-theme-destructive-text-color, var(--ds-red-400));
 }
+
+/* ═════════ Phase 3 · Calendar ═════════ */
+
+/* IconButton Secondary (Figma IconButton: 44, bg/elevated + 1px border/default) */
+.ds-iconbtn[data-style="secondary"] { background: var(--ds-bg-elevated); box-shadow: inset 0 0 0 1px var(--ds-border-default); }
+.ds-iconbtn[data-style="secondary"]:hover { background: var(--ds-bg-surface-hover); }
+.ds-iconbtn[data-style="ghost"] { background: none; }
+.ds-iconbtn[data-style="ghost"]:hover { background: var(--ds-state-hover); }
+.ds-iconbtn:focus-visible { box-shadow: var(--ds-focus-ring); outline: none; }
+
+/* Header: caps studio name over the month (Label/Caps + H1) */
+.ds-cal-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--ds-space-16); }
+.ds-cal-head > div:first-child { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ds-cal-head .ds-year { color: var(--ds-text-secondary); }
+.ds-cal-actions { display: flex; align-items: center; gap: var(--ds-space-8); }
+.ds-cal-meta { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-16); flex-wrap: wrap; }
+.ds-cal-meta .ds-due { color: var(--ds-money-due); }
+.ds-legend { display: flex; flex-wrap: wrap; gap: 14px; color: var(--ds-text-secondary); font: var(--ds-type-label-default); }
+.ds-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.ds-legend i { width: 10px; height: 10px; border-radius: var(--ds-radius-full); }
+@media (min-width: 1024px) {
+  .ds-cal-head > div:first-child { gap: var(--ds-space-4); }
+  .ds-cal-head .ds-year { color: inherit; }
+  .ds-cal-meta .ds-due { color: var(--ds-text-secondary); }
+  .ds-legend { gap: var(--ds-space-16); }
+  .ds-legend span { gap: var(--ds-space-8); }
+}
+
+/* ── Month grid ── */
+.ds-grid { display: flex; flex-direction: column; gap: var(--ds-space-4); }
+.ds-grid [role="row"] { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; }
+.ds-grid .ds-wd { font: var(--ds-type-label-caps); letter-spacing: var(--ds-type-label-caps-tracking); text-transform: uppercase; color: var(--ds-text-tertiary); text-align: center; padding-bottom: var(--ds-space-4); }
+.ds-grid .ds-wd abbr { text-decoration: none; }
+.ds-gridcard { background: var(--ds-bg-surface); border-radius: var(--ds-radius-2xl); padding: 14px var(--ds-space-4) var(--ds-space-8); }
+
+/* DayCell (mobile, Figma 3:39: 46×52 stadium, number Body/Medium + dots) */
+.ds-day {
+  position: relative; justify-self: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--ds-space-4);
+  width: 46px; height: 52px; border-radius: var(--ds-radius-full);
+  font: var(--ds-type-body-medium); color: var(--ds-day-free-text); font-variant-numeric: tabular-nums;
+  transition: background-color var(--ds-duration-fast) var(--ds-ease-out);
+}
+.ds-day .ds-dots { display: flex; gap: 3px; height: 4px; }
+.ds-day .ds-dots i { width: 4px; height: 4px; border-radius: var(--ds-radius-full); background: var(--ds-day-dot); }
+.ds-day[data-status="limited"] { background: var(--ds-day-limited-bg); color: var(--ds-day-limited-text); }
+.ds-day[data-status="limited"] .ds-dots i { background: var(--ds-day-limited-text); }
+.ds-day[data-status="booked"] { background: var(--ds-day-booked-bg); color: var(--ds-day-booked-text); }
+.ds-day[data-status="booked"] .ds-dots i { background: var(--ds-day-booked-text); }
+.ds-day[data-status="blocked"] { background: var(--ds-day-blocked-bg); color: var(--ds-day-blocked-text); }
+.ds-day[data-today] { font: var(--ds-type-body-strong); box-shadow: inset 0 0 0 1.5px var(--ds-day-today-border); }
+.ds-day[data-selected] { background: var(--ds-day-selected-bg); color: var(--ds-text-on-inverse); font: var(--ds-type-body-strong); box-shadow: none; }
+.ds-day[data-selected] .ds-dots i { background: var(--ds-text-on-inverse); }
+.ds-day:hover:not([aria-selected="true"]) { background-image: linear-gradient(var(--ds-state-hover), var(--ds-state-hover)); }
+.ds-day:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
+.ds-day[data-past]:not([aria-selected="true"]) { opacity: 0.56; }
+
+/* DayCell Large (desktop, Figma 3:79: 148×112, r16, pad 12, gap 8, event chips r8) */
+@media (min-width: 1024px) {
+  .ds-gridcard { background: none; padding: 0; border-radius: 0; }
+  .ds-grid { gap: var(--ds-space-8); }
+  .ds-grid [role="row"] { gap: var(--ds-space-8); }
+  .ds-grid .ds-wd { text-align: left; padding: 0 var(--ds-space-12); }
+  .ds-day {
+    justify-self: stretch; width: auto; height: 112px; align-items: stretch; justify-content: flex-start; gap: var(--ds-space-8);
+    padding: var(--ds-space-12); border-radius: var(--ds-radius-lg); background: var(--ds-bg-surface);
+    font: var(--ds-type-label-default); text-align: left; overflow: hidden;
+  }
+  .ds-day .ds-dots { display: none; }
+  .ds-day .ds-dhead { display: flex; align-items: center; justify-content: space-between; min-height: 18px; }
+  .ds-day .ds-num { font: var(--ds-type-label-default); }
+  .ds-day .ds-cap { font: var(--ds-type-label-strong); }
+  .ds-day .ds-chip {
+    display: block; padding: var(--ds-space-4) var(--ds-space-8); border-radius: var(--ds-radius-sm);
+    background: var(--ds-bg-elevated); color: var(--ds-text-primary); font: var(--ds-type-label-default);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .ds-day[data-status="limited"] .ds-chip { color: var(--ds-day-limited-text); }
+  .ds-day[data-status="booked"] .ds-chip { background: color-mix(in srgb, var(--ds-day-booked-chip) 16%, transparent); color: var(--ds-day-booked-text); }
+  .ds-day[data-status="blocked"] .ds-chip { background: none; padding-left: 0; color: var(--ds-day-blocked-text); }
+  .ds-day[data-today] { font: var(--ds-type-label-default); box-shadow: none; }
+  .ds-day[data-today] .ds-num {
+    display: grid; place-items: center; width: 24px; height: 24px; margin: -3px 0; border-radius: var(--ds-radius-full);
+    background: var(--ds-day-selected-bg); color: var(--ds-day-selected-text); font: var(--ds-type-label-strong);
+  }
+  .ds-day[data-selected] { background: var(--ds-bg-surface); color: var(--ds-day-free-text); font: var(--ds-type-label-default); box-shadow: 0 0 0 2px var(--ds-border-inverse); }
+  .ds-day[data-selected][data-status="limited"] { background: var(--ds-day-limited-bg); color: var(--ds-day-limited-text); }
+  .ds-day[data-selected][data-status="booked"] { background: var(--ds-day-booked-bg); color: var(--ds-day-booked-text); }
+  .ds-day[data-selected][data-status="blocked"] { background: var(--ds-day-blocked-bg); color: var(--ds-day-blocked-text); }
+  .ds-day[data-outside] { visibility: hidden; }
+}
+.ds-day[data-outside] { pointer-events: none; }
+@media (max-width: 1023.98px) { .ds-day .ds-chip, .ds-day .ds-cap, .ds-day .ds-todaytag { display: none; } }
+.ds-todaytag { font: var(--ds-type-label-strong); color: var(--ds-text-brand); }
+
+/* ── Order card (Figma OrderCard: r24, pad 12/16/12/12, gap 14; date tile 52×56 r16 tinted by event) ── */
+.ds-ordercard { display: flex; align-items: center; gap: 14px; padding: var(--ds-space-12) var(--ds-space-16) var(--ds-space-12) var(--ds-space-12); border-radius: var(--ds-radius-xl); background: var(--ds-bg-surface); }
+.ds-datetile { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: none; width: 52px; height: 56px; border-radius: var(--ds-radius-lg); }
+.ds-datetile b { font: var(--ds-type-heading-h2); font-variant-numeric: tabular-nums; }
+.ds-datetile small { font: var(--ds-type-label-caps); letter-spacing: var(--ds-type-label-caps-tracking); text-transform: uppercase; }
+.ds-datetile[data-tone="wedding"] { background: var(--ds-event-wedding-bg); color: var(--ds-event-wedding-text); }
+.ds-datetile[data-tone="engagement"] { background: var(--ds-event-engagement-bg); color: var(--ds-event-engagement-text); }
+.ds-datetile[data-tone="birthday"] { background: var(--ds-event-birthday-bg); color: var(--ds-event-birthday-text); }
+.ds-datetile[data-tone="other"] { background: var(--ds-event-other-bg); color: var(--ds-event-other-text); }
+.ds-ordercard .ds-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ds-ordercard .ds-info strong { font: var(--ds-type-body-strong); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-ordercard .ds-info span { font: var(--ds-type-label-default); color: var(--ds-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-money { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex: none; color: var(--ds-money-due); }
+.ds-money b { font: var(--ds-type-number-money); letter-spacing: var(--ds-type-number-money-tracking); font-variant-numeric: tabular-nums; }
+.ds-money small { font: var(--ds-type-label-caps); letter-spacing: var(--ds-type-label-caps-tracking); text-transform: uppercase; }
+.ds-money[data-overdue] { color: var(--ds-money-overdue); }
+.ds-paid { display: inline-flex; align-items: center; gap: var(--ds-space-4); font: var(--ds-type-label-strong); color: var(--ds-text-brand); flex: none; }
+
+/* Capacity meter (Figma Capacity: 14×6 segments, gap 3, + Label/Strong) */
+.ds-capmeter { display: inline-flex; align-items: center; gap: var(--ds-space-8); font: var(--ds-type-label-strong); color: var(--ds-text-secondary); white-space: nowrap; }
+.ds-capmeter span { display: flex; gap: 3px; }
+.ds-capmeter i { width: 14px; height: 6px; border-radius: 3px; background: var(--ds-border-default); }
+.ds-capmeter i[data-used] { background: var(--ds-text-tertiary); }
+.ds-capmeter[data-status="limited"] { color: var(--ds-day-limited-text); }
+.ds-capmeter[data-status="limited"] i[data-used] { background: var(--ds-day-limited-text); }
+.ds-capmeter[data-status="booked"] { color: var(--ds-day-booked-bg); }
+.ds-capmeter[data-status="booked"] i[data-used] { background: var(--ds-day-booked-bg); }
+.ds-pill { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 var(--ds-space-12); border-radius: var(--ds-radius-full); background: var(--ds-day-blocked-bg); color: var(--ds-day-blocked-text); font: var(--ds-type-label-strong); }
+
+/* ── Overlay: side panel ≥1024 (480, Figma Side panel) / bottom sheet <1024 (Figma Bottom sheet) ── */
+.ds-scrim { position: fixed; inset: 0; z-index: 40; background: var(--ds-bg-overlay); animation: ds-fade var(--ds-duration-base) var(--ds-ease-out); }
+.ds-overlay {
+  position: fixed; z-index: 41; left: 0; right: 0; bottom: 0; max-height: 92dvh; overflow-y: auto; overscroll-behavior: contain;
+  display: flex; flex-direction: column; gap: var(--ds-space-16);
+  padding: 10px var(--ds-space-16) calc(var(--ds-space-24) + env(safe-area-inset-bottom));
+  background: var(--ds-bg-canvas); border-radius: var(--ds-layout-sheet-radius) var(--ds-layout-sheet-radius) 0 0; box-shadow: var(--ds-elevation-sheet);
+  animation: ds-sheet-in var(--ds-duration-slow) var(--ds-ease-out);
+}
+.ds-overlay:focus { outline: none; }
+.ds-grabber { align-self: center; width: 36px; height: 4px; border-radius: 2px; background: var(--ds-border-strong); flex: none; }
+@media (min-width: 1024px) {
+  .ds-overlay {
+    left: auto; top: 0; width: var(--ds-layout-panel-width); max-height: none; gap: 20px;
+    padding: var(--ds-space-24); border-radius: 0; background: var(--ds-bg-elevated); box-shadow: var(--ds-elevation-panel);
+    animation-name: ds-panel-in;
+  }
+  .ds-grabber { display: none; }
+}
+@keyframes ds-fade { from { opacity: 0; } }
+@keyframes ds-sheet-in { from { transform: translateY(24px); opacity: 0; } }
+@keyframes ds-panel-in { from { transform: translateX(24px); opacity: 0; } }
+
+/* PanelHeader (Figma: Title H3 + 44 close) */
+.ds-panelhead { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-8); min-height: 44px; }
+@media (max-width: 1023.98px) { .ds-panelhead { display: none; } }
+
+.ds-dayhead { display: flex; align-items: center; gap: var(--ds-space-12); }
+.ds-dayhead > b { font: var(--ds-type-display-numeral); letter-spacing: var(--ds-type-display-numeral-tracking); font-variant-numeric: tabular-nums; min-width: 62px; }
+.ds-dayhead > div { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.ds-divider { height: 1px; background: var(--ds-border-default); border: 0; margin: 0; flex: none; }
+.ds-stack { display: flex; flex-direction: column; gap: var(--ds-space-8); }
+.ds-note { padding: var(--ds-space-12) var(--ds-space-16); border-radius: var(--ds-radius-md); background: var(--ds-bg-surface); font: var(--ds-type-label-default); color: var(--ds-text-secondary); }
+.ds-panel-foot { margin-top: auto; display: flex; flex-direction: column; gap: var(--ds-space-8); padding-top: var(--ds-space-8); }
+
+/* Chip (Figma Chip: 44h pill, pad 0 16; selected = bg/inverse) */
+.ds-chips { display: flex; flex-wrap: wrap; gap: var(--ds-space-8); }
+.ds-chip-btn { height: 44px; padding: 0 var(--ds-space-16); border-radius: var(--ds-radius-full); background: var(--ds-bg-surface); font: var(--ds-type-label-default); color: var(--ds-text-primary); }
+.ds-chip-btn:hover { background: var(--ds-bg-surface-hover); }
+.ds-chip-btn[aria-checked="true"] { background: var(--ds-bg-inverse); color: var(--ds-text-on-inverse); font: var(--ds-type-label-strong); }
+.ds-chip-btn:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
+
+/* Toast (Figma Toast: bg/inverse, r12, pad 12/16, gap 12, action on-inverse-success) */
+.ds-toast {
+  position: fixed; z-index: 50; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+  display: flex; align-items: center; gap: var(--ds-space-12); max-width: calc(100vw - 32px);
+  padding: var(--ds-space-12) var(--ds-space-16); border-radius: var(--ds-radius-md);
+  background: var(--ds-bg-inverse); color: var(--ds-text-on-inverse); font: var(--ds-type-label-strong); box-shadow: var(--ds-elevation-float);
+  animation: ds-sheet-in var(--ds-duration-base) var(--ds-ease-out);
+}
+.ds-toast button { padding: var(--ds-space-4) var(--ds-space-8); margin: -4px -8px -4px 0; border-radius: var(--ds-radius-sm); color: var(--ds-text-on-inverse-success); font: var(--ds-type-label-strong); }
+@media (min-width: 1024px) { .ds-toast { bottom: var(--ds-space-32); margin-left: calc(var(--ds-layout-sidebar-width) / 2); } }
+
+/* FAB (mobile, Figma: 56 brand circle, bottom-right next to the tab bar) */
+.ds-fab {
+  position: fixed; z-index: 21; right: var(--ds-space-16); bottom: calc(var(--ds-space-16) + env(safe-area-inset-bottom));
+  display: grid; place-items: center; width: 56px; height: 56px; border-radius: var(--ds-radius-full);
+  background: var(--ds-brand-solid); color: var(--ds-text-on-brand); box-shadow: var(--ds-elevation-float);
+}
+.ds-fab:active { background: var(--ds-brand-pressed); }
+.ds-fab:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
+@media (min-width: 1024px) { .ds-fab { display: none; } }
+@media (max-width: 1023.98px) { .ds-tabbar { left: var(--ds-space-16); transform: none; } }

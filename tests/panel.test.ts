@@ -207,3 +207,82 @@ describe("onboarding and tenancy", () => {
     await assert.rejects(pool.query("insert into studio_members (studio_id, user_id, role) values ($1, $2, 'owner')", [studioId, intruder.id]), /studio_members_one_owner/);
   });
 });
+
+describe("calendar", () => {
+  const owner = new Client();
+  const stranger = new Client();
+  let studioId = "";
+  let userId = "";
+  const today = new Date(Date.now() + 5 * 3600e3).toISOString().slice(0, 10);
+  const plus = (n: number) => new Date(Date.parse(`${today}T00:00:00Z`) + n * 86_400e3).toISOString().slice(0, 10);
+  const target = plus(10);
+  const month = target.slice(0, 7);
+
+  before(async () => {
+    userId = (await owner.devLogin(tgId(), "Cal")).json.user.id;
+    studioId = (await owner.req("/api/panel/onboarding", { body: { name: "Cal Studio", category: "dekor", dailyCapacity: 2 } })).json.studio.id;
+    await stranger.devLogin(tgId(), "Stranger");
+    await stranger.req("/api/panel/onboarding", { body: { name: "Other", category: "dekor", dailyCapacity: 3 } });
+    const ins = (date: string, client: string, total: number, status = "active") =>
+      pool.query(
+        "insert into orders (studio_id, code, event_date, event_type, venue, client_name, client_phone, total, status, created_by) values ($1, $2, $3, 'toy', 'Bahor', $4, '+998901234567', $5, $6, $7) returning id",
+        [studioId, `DS-C${Math.floor(Math.random() * 1e9)}`, date, client, total, status, userId],
+      );
+    const a = (await ins(target, "Nodira", 5_000_000)).rows[0].id;
+    await ins(target, "Bekor", 1_000_000, "cancelled");
+    await pool.query("insert into order_payments (order_id, amount, paid_on, created_by) values ($1, 2000000, current_date, $2)", [a, userId]);
+  });
+
+  test("month view: status, load, balance; cancelled orders ignored", async () => {
+    const r = await owner.req(`/api/panel/calendar?month=${month}`);
+    assert.equal(r.status, 200, JSON.stringify(r.json));
+    assert.equal(r.json.capacity, 2);
+    const d = r.json.days.find((x: { date: string }) => x.date === target);
+    assert.equal(d.load, 1);
+    assert.equal(d.status, "limited"); // capacity 2, one order → "1 joy"
+    assert.deepEqual(d.orders.map((o: { client: string; balance: number }) => [o.client, o.balance]), [["Nodira", 3_000_000]]);
+    assert.ok(r.json.summary.events >= 1 && r.json.summary.due >= 1);
+  });
+
+  test("bad month → 422, stranger sees only their own (empty) calendar", async () => {
+    assert.equal((await owner.req("/api/panel/calendar?month=2026-13")).status, 422);
+    const s = await stranger.req(`/api/panel/calendar?month=${month}`);
+    assert.equal(s.json.days.length, 0);
+    const peek = await stranger.req(`/api/panel/calendar?month=${month}`, { headers: { "x-studio-id": studioId } });
+    assert.equal(peek.status, 404);
+  });
+
+  test("close a day with orders → warning; reason required; audit written", async () => {
+    const noReason = await owner.req(`/api/panel/days/${target}`, { method: "PUT", body: { blocked: true } });
+    assert.equal(noReason.status, 422);
+    assert.ok(noReason.json.error.fields.reason);
+
+    const r = await owner.req(`/api/panel/days/${target}`, { method: "PUT", body: { blocked: true, reason: "tamir", note: "Zal taʼmirda" } });
+    assert.equal(r.status, 200, JSON.stringify(r.json));
+    assert.equal(r.json.day.status, "blocked");
+    assert.equal(r.json.day.reason, "tamir");
+    assert.deepEqual(r.json.warnings, ["has_orders"]);
+    const { rows } = await pool.query("select action from studio_events where studio_id = $1 and entity = 'day'", [studioId]);
+    assert.deepEqual(rows.map((x) => x.action), ["block"]);
+  });
+
+  test("stranger cannot close our day (404), past days cannot be closed, junk dates 404", async () => {
+    const r = await stranger.req(`/api/panel/days/${plus(11)}`, { method: "PUT", body: { blocked: true, reason: "dam" }, headers: { "x-studio-id": studioId } });
+    assert.equal(r.status, 404);
+    const past = await owner.req(`/api/panel/days/${plus(-1)}`, { method: "PUT", body: { blocked: true, reason: "dam" } });
+    assert.equal(past.status, 422);
+    assert.equal((await owner.req(`/api/panel/days/2026-02-30`, { method: "PUT", body: { blocked: false } })).status, 404);
+  });
+
+  test("reopen removes the row and status falls back to orders", async () => {
+    const r = await owner.req(`/api/panel/days/${target}`, { method: "PUT", body: { blocked: false } });
+    assert.equal(r.json.day.status, "limited");
+    assert.deepEqual(r.json.warnings, []);
+    const { rows } = await pool.query("select count(*)::int as n from studio_days where studio_id = $1", [studioId]);
+    assert.equal(rows[0].n, 0);
+    // reopening an already-open day is a no-op: no extra audit row
+    await owner.req(`/api/panel/days/${target}`, { method: "PUT", body: { blocked: false } });
+    const { rows: ev } = await pool.query("select action from studio_events where studio_id = $1 and entity = 'day' order by created_at", [studioId]);
+    assert.deepEqual(ev.map((x) => x.action), ["block", "unblock"]);
+  });
+});

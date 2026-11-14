@@ -267,10 +267,14 @@ export const studioDays = pgTable(
     studioId: uuid("studio_id").notNull().references(() => studios.id, { onDelete: "cascade" }),
     day: date("day", { mode: "string" }).notNull(),
     blocked: boolean("blocked").notNull().default(false),
+    reason: text("reason"), // tamir | dam | shaxsiy | boshqa (DAY_REASONS)
     note: text("note"),
     updatedAt: ts("updated_at").notNull().defaultNow(),
   },
-  (t) => [primaryKey({ columns: [t.studioId, t.day] })],
+  (t) => [
+    primaryKey({ columns: [t.studioId, t.day] }),
+    check("studio_days_reason", sql`${t.reason} is null or ${t.reason} in ('tamir', 'dam', 'shaxsiy', 'boshqa')`),
+  ],
 );
 
 export const orders = pgTable(

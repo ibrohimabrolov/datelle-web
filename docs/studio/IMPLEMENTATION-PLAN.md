@@ -41,6 +41,14 @@ Onboarding (Mini App), Sozlamalar (owner / manager views), invites (`t.me/<bot>?
 
 Month grid (DayCell / DayCellLarge, states incl. "1 joy"), day sheet (mobile) / side panel (desktop), close/open day with reason + undo toast, capacity warning (not blocking). **Done when:** `day_status` unit tests (capacity 1 and 3); keyboard navigation across the grid.
 
+**Status 2026-11-14 (`studio/calendar`):**
+- [x] `src/lib/studio/calendar.ts` — `dayStatus` (free / has / limited / booked / blocked), `monthWeeks`, reasons, event tones; 5 unit tests (capacity 1 and 3, blocked wins, Monday-first weeks, block window).
+- [x] `GET /api/panel/calendar?month=` (days with data only, balance from live payments, summary "N tadbir · M ta qoldiq"), `PUT /api/panel/days/:date` (reason required to close, today…+730 days, row deleted on reopen, audit only on real change, `has_orders` warning). Migration `0002_day_reason.sql`.
+- [x] UI per Figma: DayCell (mobile) / DayCell Large (desktop) from one element, side panel 480 / bottom sheet, Kunni yopish (reason chips + note), Kun · yopiq → Kunni ochish, toast with undo, legend per breakpoint, "Bugun" list on mobile, FAB, month cache + neighbour prefetch, deep links `?oy=&sana=` (bot reminder opens the day).
+- [x] Keyboard: arrows / Home / End / PageUp / PageDown across months, Enter opens, Esc closes and returns focus to the day; Telegram BackButton closes the sheet.
+- [x] Tests: 5 calendar API tests (status, tenancy 404, reason validation, past-day guard, audit no-op), axe 0 violations (grid, panel, sheet, close form), flows green on dev and production build.
+- Copy fix vs Figma: "Mijozlar bu sanani band deb koʻradi" → "Bu kunga yangi buyurtma qoʻshilsa, ogohlantirish chiqadi…" (Studio has no client side).
+
 ## Phase 4 — Orders & payments (`studio/orders`)
 
 List (segments, search, cursor pagination, bulk select), DataTable (desktop) / OrderCard (mobile), create/edit form (validation, saving, unsaved guard), detail panel, payments (add, undo, owner soft delete), cancel/done with confirm, history (audit). **Done when:** balance/overpayment unit tests; soft delete restores balance; audit written for every money/status change.
