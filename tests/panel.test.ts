@@ -566,3 +566,113 @@ describe("settings & team", () => {
     assert.equal((await two.req("/api/panel/dashboard", { headers: { "x-studio-id": studioId } })).status, 403);
   });
 });
+
+describe("finished events keep their day", () => {
+  const owner = new Client();
+  before(async () => {
+    await owner.devLogin(tgId(), "Done");
+    await owner.req("/api/panel/onboarding", { body: { name: "Done Studio", category: "dekor", dailyCapacity: 1 } });
+  });
+
+  test("a done order stays on the calendar, still fills capacity; cancelling frees the day", async () => {
+    const date = "2026-12-12";
+    const o = (await owner.req("/api/panel/orders", { body: { clientName: "Bajarildi", clientPhone: "901234567", eventDate: date, eventType: "toy", total: 1_000_000 } })).json.order;
+    await owner.req(`/api/panel/orders/${o.id}/status`, { body: { to: "done" } });
+    const day = async () => (await owner.req("/api/panel/calendar?month=2026-12")).json.days.find((d: { date: string }) => d.date === date);
+    assert.equal((await day()).status, "booked");
+    assert.deepEqual((await day()).orders.map((x: { client: string }) => x.client), ["Bajarildi"]);
+    const second = await owner.req("/api/panel/orders", { body: { clientName: "Ikkinchi", clientPhone: "901234567", eventDate: date, eventType: "toy", total: 1_000_000 } });
+    assert.ok(second.json.warnings.includes("capacity_exceeded"));
+    await owner.req(`/api/panel/orders/${second.json.order.id}/status`, { body: { to: "cancelled" } });
+    await owner.req(`/api/panel/orders/${o.id}/status`, { body: { to: "active" } });
+    await owner.req(`/api/panel/orders/${o.id}/status`, { body: { to: "cancelled" } });
+    assert.equal((await day())?.status ?? "free", "free");
+  });
+});
+
+/* Phase 7 audit: every /api/panel endpoint × {anonymous, outsider, manager} — one table, so a new route can't ship unguarded */
+describe("authorization matrix", () => {
+  const a = new Client(); // owner of A
+  const m = new Client(); // manager of A
+  const b = new Client(); // owner of B (outsider to A)
+  let A = "";
+  let B = "";
+  let order = "";
+  let payment = "";
+  let invite = "";
+  let managerId = "";
+
+  before(async () => {
+    const studio = async (c: Client, name: string) => {
+      await c.devLogin(tgId(), name);
+      const r = await c.req("/api/panel/onboarding", { body: { name: `${name} Studio`, category: "dekor", dailyCapacity: 2 } });
+      assert.equal(r.status, 201, JSON.stringify(r.json));
+      return r.json.studio.id as string;
+    };
+    A = await studio(a, "Ali");
+    B = await studio(b, "Bek");
+    const o = await a.req("/api/panel/orders", { body: { clientName: "Matrix", clientPhone: "901234567", eventDate: "2026-12-20", eventType: "toy", total: 5_000_000, advance: { amount: 1_000_000 } } });
+    order = o.json.order.id;
+    payment = (await a.req(`/api/panel/orders/${order}`)).json.order.payments[0].id;
+    const inv = await a.req("/api/panel/invites", { body: {} });
+    await m.devLogin(tgId(), "Mena");
+    await m.req("/api/panel/invites/accept", { body: { token: /(?:inv_|[?&]t=)([A-Za-z0-9_-]+)/.exec(inv.json.link)![1] } });
+    invite = (await a.req("/api/panel/invites", { body: {} })).json.id;
+    managerId = (await a.req("/api/panel/members")).json.members.find((x: { role: string }) => x.role === "manager").userId;
+  });
+
+  type Call = { name: string; method: string; path: () => string; body?: unknown; owner?: boolean };
+  const calls: Call[] = [
+    { name: "calendar", method: "GET", path: () => "/api/panel/calendar?month=2026-12" },
+    { name: "day", method: "PUT", path: () => "/api/panel/days/2026-12-21", body: { blocked: true, reason: "dam" } },
+    { name: "summary", method: "GET", path: () => "/api/panel/summary" },
+    { name: "orders list", method: "GET", path: () => "/api/panel/orders" },
+    { name: "order", method: "GET", path: () => `/api/panel/orders/${order}` },
+    { name: "order edit", method: "PATCH", path: () => `/api/panel/orders/${order}`, body: { venue: "X" } },
+    { name: "order status", method: "POST", path: () => `/api/panel/orders/${order}/status`, body: { to: "done" } },
+    { name: "order events", method: "GET", path: () => `/api/panel/orders/${order}/events` },
+    { name: "payment add", method: "POST", path: () => `/api/panel/orders/${order}/payments`, body: { amount: 1000, method: "cash" } },
+    { name: "payment delete", method: "DELETE", path: () => `/api/panel/payments/${payment}`, body: {} },
+    { name: "studio", method: "GET", path: () => "/api/panel/studio" },
+    { name: "my reminders", method: "PATCH", path: () => "/api/panel/members/me", body: { remindersOn: true } },
+    { name: "dashboard", method: "GET", path: () => "/api/panel/dashboard", owner: true },
+    { name: "studio edit", method: "PATCH", path: () => "/api/panel/studio", body: { name: "Hack" }, owner: true },
+    { name: "members", method: "GET", path: () => "/api/panel/members", owner: true },
+    { name: "member remove", method: "DELETE", path: () => `/api/panel/members/${managerId}`, body: {}, owner: true },
+    { name: "invites", method: "GET", path: () => "/api/panel/invites", owner: true },
+    { name: "invite create", method: "POST", path: () => "/api/panel/invites", body: {}, owner: true },
+    { name: "invite revoke", method: "DELETE", path: () => `/api/panel/invites/${invite}`, body: {}, owner: true },
+  ];
+
+  test("anonymous → 401 everywhere", async () => {
+    const anon = new Client();
+    for (const c of calls) assert.equal((await anon.req(c.path(), { method: c.method, body: c.body })).status, 401, c.name);
+    for (const p of ["/api/panel/me", "/api/panel/invites/preview?t=x"]) assert.equal((await anon.req(p)).status, 401, p);
+  });
+
+  test("outsider naming studio A → 404 (A's existence isn't confirmed)", async () => {
+    for (const c of calls) assert.equal((await b.req(c.path(), { method: c.method, body: c.body, headers: { "x-studio-id": A } })).status, 404, c.name);
+  });
+
+  test("outsider inside their own studio can't reach A's records by id", async () => {
+    const h = { "x-studio-id": B };
+    for (const c of calls.filter((c) => /order |order$|payment|events|invite revoke|member remove/.test(c.name)))
+      assert.equal((await b.req(c.path(), { method: c.method, body: c.body, headers: h })).status, 404, c.name);
+    const { rows } = await pool.query("select venue, status from orders where id = $1", [order]);
+    assert.deepEqual(rows[0], { venue: null, status: "active" });
+  });
+
+  test("manager → 403 on owner-only, allowed elsewhere", async () => {
+    for (const c of calls.filter((c) => c.owner)) assert.equal((await m.req(c.path(), { method: c.method, body: c.body })).status, 403, c.name);
+    for (const c of calls.filter((c) => !c.owner && c.method === "GET")) assert.equal((await m.req(c.path())).status, 200, c.name);
+  });
+
+  test("mutations need JSON from our own origin", async () => {
+    const plain = await fetch(`${BASE}/api/panel/orders/${order}/payments`, { method: "POST", headers: { cookie: a.cookie, "content-type": "text/plain", origin: BASE }, body: JSON.stringify({ amount: 1000, method: "cash" }) });
+    assert.ok([403, 415].includes(plain.status), String(plain.status));
+    const foreign = await a.req(`/api/panel/orders/${order}/payments`, { body: { amount: 1000, method: "cash" }, origin: "https://evil.example" });
+    assert.equal(foreign.status, 403);
+    const { rows } = await pool.query("select count(*)::int as n from order_payments where order_id = $1", [order]);
+    assert.equal(rows[0].n, 1);
+  });
+});

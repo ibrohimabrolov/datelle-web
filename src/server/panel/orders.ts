@@ -157,7 +157,7 @@ export async function orderCounts(ctx: StudioCtx) {
 /* ── create ── */
 async function dayWarnings(studioId: string, capacity: number, date: string, excludeOrder?: string) {
   const { rows } = await db.execute<{ load: string; blocked: boolean | null }>(sql`
-    select (select count(*) from orders where studio_id = ${studioId} and event_date = ${date} and status = 'active'
+    select (select count(*) from orders where studio_id = ${studioId} and event_date = ${date} and status in ('active', 'done')
               ${excludeOrder ? sql`and id <> ${excludeOrder}` : sql``}) as load,
            (select blocked from studio_days where studio_id = ${studioId} and day = ${date}) as blocked`);
   const w: string[] = [];

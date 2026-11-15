@@ -106,7 +106,8 @@ export function DashboardScreen() {
               <Delta month={data.month} />
               <MiniBars points={data.revenue.months.slice(-6)} />
             </article>
-            <article className="ds-kpi" data-tone="due">
+            {/* money-due colour only when something is actually owed — an amber "0" reads as a warning */}
+            <article className="ds-kpi" data-tone={data.debt.total > 0 ? "due" : undefined}>
               <h2 className="ds-caps">Qoldiq</h2>
               <p className="ds-kpi-val">
                 <b>{groupThousands(data.debt.total)}</b>

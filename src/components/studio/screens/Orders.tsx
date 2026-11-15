@@ -200,7 +200,7 @@ export function OrdersScreen() {
                     </button>
                   </th>
                   <th scope="col">Mijoz</th>
-                  <th scope="col">Telefon</th>
+                  <th scope="col" className="c-phone">Telefon</th>
                   <th scope="col">Joy · tur</th>
                   <th scope="col" data-num aria-sort={ariaSort("total")}>
                     <button onClick={() => sortBy("total")}>

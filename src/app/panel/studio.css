@@ -365,7 +365,7 @@
 .ds-capmeter i[data-used] { background: var(--ds-text-tertiary); }
 .ds-capmeter[data-status="limited"] { color: var(--ds-day-limited-text); }
 .ds-capmeter[data-status="limited"] i[data-used] { background: var(--ds-day-limited-text); }
-.ds-capmeter[data-status="booked"] { color: var(--ds-day-booked-bg); }
+.ds-capmeter[data-status="booked"] { color: var(--ds-text-brand); } /* text needs 4.5:1 — the fill token is only 3.2:1 in dark */
 .ds-capmeter[data-status="booked"] i[data-used] { background: var(--ds-day-booked-bg); }
 .ds-pill { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 var(--ds-space-12); border-radius: var(--ds-radius-full); background: var(--ds-day-blocked-bg); color: var(--ds-day-blocked-text); font: var(--ds-type-label-strong); }
 
@@ -609,7 +609,7 @@ textarea.ds-input { height: auto; min-height: 48px; padding-top: 13px; padding-b
 .ds-kpi .ds-mini i[data-now] { background: var(--ds-green-300); }
 
 .ds-cols { display: grid; grid-template-columns: 1fr; gap: var(--ds-space-16); }
-@media (min-width: 1024px) { .ds-cols { grid-template-columns: minmax(0, 1.7fr) minmax(340px, 1fr); } }
+@media (min-width: 1280px) { .ds-cols { grid-template-columns: minmax(0, 1.7fr) minmax(340px, 1fr); } } /* 1024–1279: side by side squeezed names to "R…" — stack instead */
 .ds-panelcard { display: flex; flex-direction: column; gap: var(--ds-space-16); padding: var(--ds-space-24); border-radius: var(--ds-radius-xl); background: var(--ds-bg-surface); min-width: 0; }
 .ds-cardhead { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-12); }
 .ds-cardhead a { font: var(--ds-type-label-strong); color: var(--ds-text-brand); border-radius: var(--ds-radius-sm); }
@@ -744,9 +744,9 @@ textarea.ds-input { height: auto; min-height: 48px; padding-top: 13px; padding-b
 /* Obuna: plain row on desktop, brand card on mobile (Figma 7:548) */
 .ds-plan { display: flex; align-items: center; gap: var(--ds-space-16); min-height: 72px; padding: var(--ds-space-12) 20px; border-radius: var(--ds-radius-xl); background: var(--ds-bg-surface); }
 @media (max-width: 1023.98px) {
-  .ds-plan { background: var(--ds-brand-solid); color: var(--ds-text-on-inverse); padding: 20px; }
-  .ds-plan .ds-li-title { color: var(--ds-text-on-inverse); font: var(--ds-type-body-strong); }
-  .ds-plan .ds-li-sub { color: var(--ds-text-on-inverse); opacity: 0.86; }
+  .ds-plan { background: var(--ds-brand-solid); color: var(--ds-text-on-brand); padding: 20px; }
+  .ds-plan .ds-li-title { color: var(--ds-text-on-brand); font: var(--ds-type-body-strong); }
+  .ds-plan .ds-li-sub { color: var(--ds-text-on-brand); }
   .ds-plan .ds-tag { background: var(--ds-bg-elevated); color: var(--ds-text-brand); }
 }
 .ds-modal-foot[data-split] { flex-direction: column-reverse; }
@@ -767,3 +767,22 @@ a.ds-btn[aria-disabled] { pointer-events: none; opacity: 0.5; }
 .ds-invite-foot { display: flex; flex-direction: column; gap: var(--ds-space-8); padding-top: var(--ds-space-24); }
 .ds-invite-state { flex: 1; display: grid; place-items: center; }
 .ds-invite-icon { display: grid; place-items: center; width: 64px; height: 64px; border-radius: var(--ds-radius-full); background: var(--ds-bg-surface); color: var(--ds-icon-muted); }
+
+/* ── Phase 7 QA: narrow desktop (1024–1279) and small phones ── */
+@media (max-width: 1279.98px) {
+  /* phone moves to the order panel; money columns never truncate */
+  .ds-table .c-phone { display: none; }
+  .ds-table th, .ds-table td { padding: 0 var(--ds-space-12); }
+  .ds-table .c-date { width: 20%; }
+  .ds-table .c-client { width: 22%; }
+  .ds-table .c-place { width: 24%; }
+  .ds-table .c-sum, .ds-table .c-due { width: 17%; }
+}
+@media (min-width: 1024px) and (max-width: 1279.98px) {
+  .ds-kpi .ds-kpi-val { flex-wrap: wrap; row-gap: 0; }
+  .ds-kpi .ds-kpi-val b { font-size: 28px; line-height: 36px; }
+}
+@media (max-width: 1023.98px) {
+  /* the 6-month mini bars sit top-right: keep the amount clear of them, let "soʻm" wrap */
+  .ds-kpi[data-tone="inverse"] .ds-kpi-val { flex-wrap: wrap; row-gap: 0; padding-right: 76px; }
+}

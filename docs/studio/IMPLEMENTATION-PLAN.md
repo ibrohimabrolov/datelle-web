@@ -89,6 +89,15 @@ Webhook `/start`, daily 20:00 Tashkent (15:00 UTC) cron with tomorrow's events +
 
 Playwright demo flow (onboarding → calendar → order + advance → day "1 joy" → dashboard balance up), axe on every route, Light/Dark + Telegram theme check, 1:1 Figma review → merge to `main`.
 
+**Status 2026-11-15 (QA on the production build, `studio/team`):**
+- [x] Demo flow, desktop 1440 + mobile 390: onboarding → Kalendar → order + 3 mln advance → day "1 joy" → Dashboard (tushum 3 mln, qoldiq 6 mln, sidebar badge 1) → pay the rest → Bajarildi → tushum 9 mln, qoldiq 0; deep links (`/buyurtmalar/:id`, `?sana=`) survive reload; manager joins by invite, books the same day → "Band", owner sees the debt; 0 console errors.
+- [x] Sweep: 9 routes + Kirish + Onboarding × 6 widths (360/390/768/1024/1280/1440) × light/dark = 132 checks — axe WCAG 2.2 AA 0, no horizontal overflow, no console errors. Telegram dark separately.
+- [x] Authorization matrix test (19 endpoints × anonymous 401 / outsider 404 / manager 403 + CSRF) — panel API 44/44, unit 32/32, marketplace 25/25.
+- [x] Figma review (Desktop + Mobile pages side by side): layouts, type, colour and states match.
+- Fixed in QA: a finished (Bajarildi) order vanished from the calendar and freed its slot → now only cancelled orders free a day; unknown `/panel/*` URLs fell through to the marketplace 404 → Studio 404 inside the shell; dark-mode contrast of the "Band" meter and the mobile Obuna card; 1024–1279 px: Dashboard columns stack, KPI amounts no longer clipped, orders table drops the phone column so money never truncates; mobile KPI amount no longer runs under the mini bars; zero debt is no longer amber.
+- Deliberate gaps vs Figma (v1.1): table checkboxes + bulk bar and the month filter in Buyurtmalar (no bulk actions exist yet; Kalendar covers "what's in December"); 3 reminder toggles → 1 (only the evening digest exists); mobile header shows the settings gear instead of the avatar.
+- [ ] Merge PR #8 to `main` (Ibrohim).
+
 ## Needs from Ibrohim (with click-by-click guides when we get there)
 
 1. BotFather: create bot, get token, set Mini App URL, `/setdomain`.

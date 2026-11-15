@@ -30,8 +30,9 @@ export async function monthView(ctx: StudioCtx, month: string) {
     db.execute<OrderRow>(sql`
       select o.id, o.event_date::text, o.client_name, o.venue, o.event_type, o.total,
              coalesce((select sum(p.amount) from order_payments p where p.order_id = o.id and p.deleted_at is null), 0) as paid
+      -- a finished event still happened on that day: only cancelled orders free it
       from orders o
-      where o.studio_id = ${studioId} and o.status = 'active' and o.event_date between ${from} and ${to}
+      where o.studio_id = ${studioId} and o.status in ('active', 'done') and o.event_date between ${from} and ${to}
       order by o.event_date, o.created_at`),
     db
       .select({ day: schema.studioDays.day, blocked: schema.studioDays.blocked, reason: schema.studioDays.reason, note: schema.studioDays.note })
