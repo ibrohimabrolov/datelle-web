@@ -12,6 +12,7 @@ export function Button({
   icon,
   children,
   disabled,
+  className,
   ...rest
 }: {
   variant?: "primary" | "secondary" | "ghost" | "destructive";
@@ -24,7 +25,7 @@ export function Button({
   return (
     <button
       type="button"
-      className="ds-btn"
+      className={className ? `ds-btn ${className}` : "ds-btn"}
       data-style={variant}
       data-size={size}
       data-block={block || undefined}

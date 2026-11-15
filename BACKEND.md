@@ -110,7 +110,6 @@ Internal tool for studios — separate tables (`studios`, `studio_members`, `stu
 | POST | `/api/panel/auth/logout` | cookie | deletes the session row |
 | GET | `/api/panel/me` | cookie | user + studios with role |
 | POST | `/api/panel/onboarding` `{name, category, dailyCapacity}` | cookie | creates studio + owner; 409 if the user already owns one |
-| GET | `/api/panel/studio` | member | `x-studio-id` optional; not a member → 404 |
 | GET | `/api/panel/calendar?month=YYYY-MM` | member | days with data: status, load, reason/note, orders with balance; summary |
 | PUT | `/api/panel/days/:date` `{blocked, reason?, note?}` | member | close needs a reason (tamir/dam/shaxsiy/boshqa), today…+730; `warnings: ["has_orders"]` |
 | GET / POST | `/api/panel/orders` | member | list `?view&q&sort&dir&page` (30/page, counts) · create `{client…, total, advance?}` → `warnings` |
@@ -119,6 +118,14 @@ Internal tool for studios — separate tables (`studios`, `studio_members`, `stu
 | POST | `/api/panel/orders/:id/payments` | member | `{amount, method, paidOn?}`; `overpaid` warning |
 | GET | `/api/panel/orders/:id/events` | member | history (order + its payments) |
 | DELETE | `/api/panel/payments/:id` | owner (manager: own, ≤10 min) | soft delete |
+| GET / PATCH | `/api/panel/studio` | member · owner | details + plan/trial · edit `{name?, category?, dailyCapacity?}` (audit diff) |
+| GET | `/api/panel/members` | owner | members with role, last seen, `isYou` |
+| DELETE | `/api/panel/members/:userId` | owner | 409 for self / owner; ends their access at once |
+| PATCH | `/api/panel/members/me` `{remindersOn}` | member | own evening reminder |
+| GET / POST | `/api/panel/invites` | owner | active invites · new one-time link (7 days, 30/day/studio); only sha256 stored |
+| DELETE | `/api/panel/invites/:id` | owner | revoke |
+| GET | `/api/panel/invites/preview?t=` | cookie | `{studio, inviter, role, status: ok/used/expired/member}`; 404 unknown |
+| POST | `/api/panel/invites/accept` `{token}` | cookie | atomic claim → manager; 410 `invite_used` / `invite_expired`; returns me + `studioId` |
 | GET | `/api/panel/summary` | member | `{counts: {debt, active}}` |
 | GET | `/api/panel/dashboard` | owner | month received + same-period delta, debt (overdue, top 5), next 7, next 30, revenue weeks/months/years, setup flags |
 | POST | `/api/telegram/webhook` | secret header | bot updates |

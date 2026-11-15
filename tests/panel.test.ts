@@ -469,3 +469,100 @@ describe("dashboard", () => {
     assert.equal((await s.req("/api/panel/dashboard", { headers: { "x-studio-id": studioId } })).status, 404);
   });
 });
+
+describe("settings & team", () => {
+  const owner = new Client();
+  const joiner = new Client();
+  const other = new Client();
+  let studioId = "";
+  const tokenOf = (link: string) => /(?:inv_|[?&]t=)([A-Za-z0-9_-]+)/.exec(link)![1];
+
+  before(async () => {
+    await owner.devLogin(tgId(), "Sardor");
+    studioId = (await owner.req("/api/panel/onboarding", { body: { name: "Team Studio", category: "dekor", dailyCapacity: 3 } })).json.studio.id;
+    await joiner.devLogin(tgId(), "Madina");
+    await other.devLogin(tgId(), "Begona");
+  });
+
+  test("owner edits the studio; audit keeps old → new; validation per field", async () => {
+    const r = await owner.req("/api/panel/studio", { method: "PATCH", body: { name: "Studio Gulzor", dailyCapacity: 4 } });
+    assert.equal(r.status, 200, JSON.stringify(r.json));
+    assert.equal(r.json.studio.name, "Studio Gulzor");
+    assert.equal(r.json.studio.dailyCapacity, 4);
+    const bad = await owner.req("/api/panel/studio", { method: "PATCH", body: { dailyCapacity: 50 } });
+    assert.equal(bad.status, 422);
+    const { rows } = await pool.query("select diff from studio_events where studio_id = $1 and entity = 'studio' and action = 'update'", [studioId]);
+    assert.deepEqual(rows[0].diff.name, ["Team Studio", "Studio Gulzor"]);
+  });
+
+  test("invite: preview → accept (one-time) → joiner is a manager of the right studio", async () => {
+    const inv = await owner.req("/api/panel/invites", { body: {} });
+    assert.equal(inv.status, 201);
+    const token = tokenOf(inv.json.link);
+    const { rows } = await pool.query("select token_hash from studio_invites where id = $1", [inv.json.id]);
+    assert.notEqual(rows[0].token_hash, token); // only the hash is stored
+
+    const pre = await joiner.req(`/api/panel/invites/preview?t=${token}`);
+    assert.deepEqual([pre.json.studio.name, pre.json.inviter, pre.json.status], ["Studio Gulzor", "Sardor", "ok"]);
+
+    const acc = await joiner.req("/api/panel/invites/accept", { body: { token } });
+    assert.equal(acc.status, 200, JSON.stringify(acc.json));
+    assert.equal(acc.json.joined, true);
+    assert.deepEqual(acc.json.studios.map((s: { id: string; role: string }) => [s.id, s.role]), [[studioId, "manager"]]);
+
+    // again by the same person: idempotent; by someone else: gone
+    assert.equal((await joiner.req("/api/panel/invites/accept", { body: { token } })).json.joined, false);
+    const reuse = await other.req("/api/panel/invites/accept", { body: { token } });
+    assert.equal(reuse.status, 410);
+    assert.equal(reuse.json.error.code, "invite_used");
+    assert.equal((await other.req(`/api/panel/invites/preview?t=${token}`)).json.status, "used");
+    assert.equal((await other.req(`/api/panel/invites/preview?t=junk`)).status, 404);
+  });
+
+  test("expired and revoked invites are refused", async () => {
+    const a = await owner.req("/api/panel/invites", { body: {} });
+    await pool.query("update studio_invites set expires_at = now() - interval '1 minute' where id = $1", [a.json.id]);
+    assert.equal((await other.req("/api/panel/invites/accept", { body: { token: tokenOf(a.json.link) } })).json.error.code, "invite_expired");
+    const b = await owner.req("/api/panel/invites", { body: {} });
+    const listed = await owner.req("/api/panel/invites");
+    assert.ok(listed.json.invites.some((i: { id: string }) => i.id === b.json.id));
+    await owner.req(`/api/panel/invites/${b.json.id}`, { method: "DELETE", body: {} });
+    assert.equal((await other.req("/api/panel/invites/accept", { body: { token: tokenOf(b.json.link) } })).status, 410);
+  });
+
+  test("roles: a manager can't invite, list or remove members, or edit the studio", async () => {
+    assert.equal((await joiner.req("/api/panel/invites", { body: {} })).status, 403);
+    assert.equal((await joiner.req("/api/panel/members")).status, 403);
+    assert.equal((await joiner.req("/api/panel/studio", { method: "PATCH", body: { name: "Hack" } })).status, 403);
+  });
+
+  test("members: list with roles; owner can't remove self; removing a manager revokes access", async () => {
+    const m = await owner.req("/api/panel/members");
+    assert.deepEqual(m.json.members.map((x: { role: string; isYou: boolean }) => [x.role, x.isYou]), [["owner", true], ["manager", false]]);
+    const ownerId = m.json.members[0].userId;
+    const mgrId = m.json.members[1].userId;
+    assert.equal((await owner.req(`/api/panel/members/${ownerId}`, { method: "DELETE", body: {} })).status, 409);
+    const r = await owner.req(`/api/panel/members/${mgrId}`, { method: "DELETE", body: {} });
+    assert.equal(r.json.members.length, 1);
+    assert.equal((await joiner.req("/api/panel/calendar?month=2026-11", { headers: { "x-studio-id": studioId } })).status, 404);
+  });
+
+  test("each member toggles their own reminder; the cron respects it", async () => {
+    const r = await owner.req("/api/panel/members/me", { method: "PATCH", body: { remindersOn: false } });
+    assert.deepEqual(r.json, { remindersOn: false });
+    const me = await owner.req("/api/panel/me");
+    assert.equal(me.json.studios[0].remindersOn, false);
+    await owner.req("/api/panel/members/me", { method: "PATCH", body: { remindersOn: true } });
+  });
+
+  test("a person in two studios switches with x-studio-id", async () => {
+    const two = new Client();
+    await two.devLogin(tgId(), "Ikki");
+    const own = (await two.req("/api/panel/onboarding", { body: { name: "Own", category: "floristika", dailyCapacity: 2 } })).json.studio.id;
+    const inv = await owner.req("/api/panel/invites", { body: {} });
+    await two.req("/api/panel/invites/accept", { body: { token: tokenOf(inv.json.link) } });
+    assert.equal((await two.req("/api/panel/studio", { headers: { "x-studio-id": own } })).json.role, "owner");
+    assert.equal((await two.req("/api/panel/studio", { headers: { "x-studio-id": studioId } })).json.role, "manager");
+    assert.equal((await two.req("/api/panel/dashboard", { headers: { "x-studio-id": studioId } })).status, 403);
+  });
+});

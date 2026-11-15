@@ -31,6 +31,7 @@ export type TelegramWebApp = {
   BackButton: { show(): void; hide(): void; onClick(cb: () => void): void; offClick(cb: () => void): void };
   /* "Sozlamalar" item in the Mini App ⋯ menu (Bot API 7.0+) */
   SettingsButton?: { show(): void; hide(): void; onClick(cb: () => void): void; offClick(cb: () => void): void };
+  openTelegramLink?(url: string): void;
   HapticFeedback?: { notificationOccurred(t: "error" | "success" | "warning"): void };
 };
 

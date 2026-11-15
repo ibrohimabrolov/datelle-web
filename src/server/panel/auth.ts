@@ -105,6 +105,7 @@ export async function memberships(userId: string) {
       category: schema.studios.category,
       dailyCapacity: schema.studios.dailyCapacity,
       role: schema.studioMembers.role,
+      remindersOn: schema.studioMembers.remindersOn,
     })
     .from(schema.studioMembers)
     .innerJoin(schema.studios, eq(schema.studios.id, schema.studioMembers.studioId))
@@ -130,7 +131,8 @@ export async function requireStudio(req: NextRequest, opts: { role?: MemberRole 
   }
   if (opts.role === "owner" && m.role !== "owner") throw new HttpError(403, "forbidden", "Bu amal faqat studiya egasiga ruxsat etilgan");
 
-  const { role, ...studio } = m;
+  const { role, remindersOn: _r, ...studio } = m;
+  void _r;
   return { user, studio, role };
 }
 

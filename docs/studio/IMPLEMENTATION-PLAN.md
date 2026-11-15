@@ -37,6 +37,13 @@
 
 Onboarding (Mini App), Sozlamalar (owner / manager views), invites (`t.me/<bot>?startapp=inv_…`, 7 days, one-time), remove member (confirm). **Done when:** API tests for invite reuse/expiry and role guards.
 
+**Status 2026-11-15 (`studio/team`):**
+- [x] `src/server/panel/team.ts` — studio patch (owner, audit diff), members (+ last seen, `isYou`), remove (not self / owner), per-member evening reminder, invites: 18-byte token, only sha256 stored, 7 days, one-time atomic claim, revoke, preview (`ok/used/expired/member`), 30/day/studio.
+- [x] Sozlamalar per Figma 22:10541 / 7:548 — Studiya (Nomi / Yoʻnalish modals, capacity stepper with coalesced save), Studiyalaringiz switcher (only when >1), Jamoa (owner only: list, Chiqarish confirm, pending invites with Bekor qilish, Menejer qoʻshish modal → Nusxalash / Telegram'da yuborish), Eslatma, Obuna, Hisob (Chiqish hidden in Telegram). Manager: read-only studio, no team.
+- [x] `/panel/taklif` per Figma 19:476 / 34:2219 — preview, Qoʻshilish (Telegram MainButton), Rad etish; used / expired / invalid / already-member states. Token survives the login step; an answered token is never resurrected by a reload (Telegram keeps `start_param`).
+- [x] Tests: panel API 38 (7 new: studio edit + audit, invite preview/accept/reuse 410, expired/revoked, manager 403s, members + remove → 404, reminders, two-studio switch), E2E owner invites → manager joins on mobile → Kalendar, no Dashboard → owner removes → manager lands on onboarding; axe 0 on all new screens incl. Telegram dark.
+- Figma deviation: desktop draws 3 reminder toggles, only the evening digest exists → one switch (mobile copy). Add the other two when the bot sends them.
+
 ## Phase 3 — Calendar (`studio/calendar`)
 
 Month grid (DayCell / DayCellLarge, states incl. "1 joy"), day sheet (mobile) / side panel (desktop), close/open day with reason + undo toast, capacity warning (not blocking). **Done when:** `day_status` unit tests (capacity 1 and 3); keyboard navigation across the grid.
@@ -76,7 +83,7 @@ Webhook `/start`, daily 20:00 Tashkent (15:00 UTC) cron with tomorrow's events +
 
 - [x] Foundation pulled forward (`studio/telegram`, 2026-11-14): signatures, webhook, `/start` + invite, digest composer, cron fan-out, build-time setup, 16 unit tests — see `TELEGRAM.md`.
 - [x] Real `loadDigests` query (2026-11-14) — tomorrow's active orders, balance from live payments, owner + managers with `reminders_on`.
-- [ ] Mute toggle in Sozlamalar → Eslatmalar (Phase 2).
+- [x] Mute toggle in Sozlamalar → Eslatma (Phase 2, 2026-11-15) — per member, `PATCH /api/panel/members/me`.
 
 ## Phase 7 — QA & release
 
