@@ -186,23 +186,55 @@
 .ds-row dt { color: var(--ds-text-secondary); }
 .ds-row dd { margin: 0; font: var(--ds-type-body-medium); text-align: right; }
 
-/* ── Kirish v2 (S1 desktop: inset surface card 624 · radius 3xl · 3D hero 320 + auth column 400).
-   Surface instead of inverse: the old panel flipped to near-white in dark mode. ── */
-.ds-auth { min-height: 100dvh; display: grid; grid-template-columns: 1fr; background: var(--ds-bg-canvas); }
-.ds-auth-brand { display: none; }
-.ds-auth-main { display: grid; place-items: center; padding: var(--ds-space-24) var(--ds-space-16); }
-.ds-auth-box { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: var(--ds-space-24); }
+/* ── Kirish v3 (Figma 22:10519): green/900 stage → centered card 1040×680 (bg/canvas, radius 3xl, pad 12)
+   = media panel 480 (bg/surface, radius xl, pad 32, 3 auto-advancing 3D slides) + form column (360, centered).
+   Below 1024 the stage and media drop away: plain canvas + form. ── */
+.ds-auth { min-height: 100dvh; display: grid; place-items: center; background: var(--ds-bg-canvas); }
+.ds-auth-card { display: contents; }
+.ds-auth-media { display: none; }
+.ds-auth-main { display: grid; place-items: center; width: 100%; padding: var(--ds-space-24) var(--ds-space-16); }
+.ds-auth-box { width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: var(--ds-space-24); }
 .ds-auth-box .ds-art { width: 96px; height: 96px; }
+.ds-auth-note { font: var(--ds-type-label-default); color: var(--ds-text-tertiary); }
 @media (min-width: 1024px) {
-  .ds-auth { grid-template-columns: 624px 1fr; padding: var(--ds-space-16); }
-  .ds-auth-brand {
-    display: flex; flex-direction: column; justify-content: space-between; gap: var(--ds-space-32);
-    padding: var(--ds-space-48); border-radius: var(--ds-radius-3xl);
-    background: var(--ds-bg-surface); color: var(--ds-text-primary);
+  .ds-auth {
+    padding: var(--ds-space-48);
+    background:
+      radial-gradient(90% 110% at 55% 115%, color-mix(in oklab, var(--ds-green-700) 90%, transparent), transparent 70%),
+      var(--ds-green-900);
   }
-  .ds-auth-hero { display: flex; justify-content: center; }
-  .ds-auth-hero .ds-art { width: min(320px, 36dvh); height: min(320px, 36dvh); }
-  .ds-auth-copy { display: flex; flex-direction: column; gap: var(--ds-space-12); }
+  .ds-auth-card {
+    display: flex; width: min(1040px, 100%); height: min(680px, calc(100dvh - 96px)); min-height: 560px;
+    padding: var(--ds-space-12); border-radius: var(--ds-radius-3xl); background: var(--ds-bg-canvas);
+  }
+  .ds-auth-main { flex: 1; padding: var(--ds-space-48); }
+  .ds-auth-media {
+    position: relative; display: flex; flex-direction: column; gap: var(--ds-space-32); flex: none; width: 480px;
+    padding: var(--ds-space-32); border-radius: var(--ds-radius-xl); background: var(--ds-bg-surface); color: var(--ds-text-primary);
+  }
+  .ds-auth-media .ds-brandline { padding: 0; gap: var(--ds-space-12); }
+  .ds-slides { flex: 1; display: grid; min-height: 0; }
+  .ds-slide {
+    grid-area: 1 / 1; display: flex; flex-direction: column; justify-content: space-between; gap: var(--ds-space-24); min-height: 0;
+    opacity: 0; visibility: hidden; transition: opacity 400ms var(--ds-ease-out), visibility 0s 400ms;
+  }
+  .ds-slide[data-active] { opacity: 1; visibility: visible; transition: opacity 400ms var(--ds-ease-out), visibility 0s; }
+  .ds-slide-hero { flex: 1; min-height: 0; display: grid; place-items: center; }
+  .ds-slide-hero .ds-art { width: min(280px, 100%); height: auto; aspect-ratio: 1; transform: scale(0.94); transition: transform 600ms var(--ds-ease-out); }
+  .ds-slide[data-active] .ds-slide-hero .ds-art { transform: none; }
+  .ds-slide-copy { display: flex; flex-direction: column; gap: var(--ds-space-8); padding-bottom: 32px; /* dots row: 24 gap + 8 pill */ transform: translateY(8px); transition: transform 400ms var(--ds-ease-out); }
+  .ds-slide[data-active] .ds-slide-copy { transform: none; }
+  .ds-slide-copy b { font: 600 24px/30px var(--ds-font-sans); letter-spacing: -0.02em; } /* Landing/Card Title */
+  .ds-slide-copy span { font: var(--ds-type-body-default); color: var(--ds-text-secondary); }
+  /* Dots: 8px pill (active 24), 16px apart; each button is a 24px-tall target that tiles edge-to-edge (WCAG 2.5.8) */
+  .ds-dots { position: absolute; left: calc(var(--ds-space-32) - 8px); bottom: calc(var(--ds-space-32) - 8px); display: flex; }
+  .ds-dots button { display: grid; place-items: center; height: 24px; padding: 0 8px; border-radius: var(--ds-radius-full); }
+  .ds-dots button::after { content: ""; width: 8px; height: 8px; border-radius: var(--ds-radius-full); background: var(--ds-text-tertiary); opacity: 0.4; transition: width 400ms var(--ds-ease-out), background-color 400ms, opacity 400ms; }
+  .ds-dots button[aria-current="true"]::after { width: 24px; background: var(--ds-brand-solid); opacity: 1; }
+  .ds-dots button:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
+}
+@media (min-width: 1024px) and (prefers-reduced-motion: reduce) {
+  .ds-slide, .ds-slide[data-active], .ds-slide-hero .ds-art, .ds-slide-copy, .ds-dots button::after { transition: none; transform: none; }
 }
 
 /* ── Onboarding (S1 mobile: body pad 32/16, gap 28) ── */
@@ -660,8 +692,8 @@ textarea.ds-input { height: auto; min-height: 48px; padding-top: 13px; padding-b
 
 .ds-alert[data-tone="danger"] { align-items: flex-start; padding: 14px var(--ds-space-16) 14px 14px; border-radius: var(--ds-radius-lg); }
 .ds-alert[data-tone="danger"] > div { display: flex; flex-direction: column; gap: 2px; }
-.ds-alert[data-tone="danger"] b { font: var(--ds-type-label-strong); color: var(--ds-text-primary); }
-.ds-alert[data-tone="danger"] span { font: var(--ds-type-body-default); color: var(--ds-text-secondary); }
+.ds-alert[data-tone="danger"] > div > b { font: var(--ds-type-label-strong); color: var(--ds-text-primary); }
+.ds-alert[data-tone="danger"] > div > span { font: var(--ds-type-body-default); color: var(--ds-text-secondary); }
 .ds-alert-icon { display: grid; place-items: center; flex: none; width: 20px; height: 20px; border-radius: var(--ds-radius-full); background: var(--ds-status-danger-solid); color: var(--ds-text-on-danger); font: 700 12px/1 var(--ds-font-sans); }
 
 /* Revenue chart — single series, one hue; current period one step darker (validated: ΔL ≥ 0.06, light end 4.41:1 on surface) */
