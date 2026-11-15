@@ -10,6 +10,7 @@ import { groupThousands } from "@/lib/studio/orders";
 import { Button } from "../Button";
 import { useDataVersion } from "../data";
 import { StudioIcon } from "../icons";
+import { StateBlock } from "../StateBlock";
 import { OrderCard } from "../OrderCard";
 import { OrderDetail } from "../OrderDetail";
 import { OrderForm } from "../OrderForm";
@@ -74,7 +75,7 @@ export function DashboardScreen() {
         </div>
         <div className="ds-cal-actions">
           <span className="ds-desktop-only">
-            <Button icon={<StudioIcon name="plus" />} onClick={() => setLayer({ kind: "new" })} disabled={!ctx}>
+            <Button icon={<StudioIcon name="plus" />} onClick={() => setLayer({ kind: "new" })} disabled={!ctx || Boolean(error && !data)}>
               Buyurtma qoʻshish
             </Button>
           </span>
@@ -83,15 +84,9 @@ export function DashboardScreen() {
       </header>
 
       {error && !data ? (
-        <div className="ds-card ds-stack" role="alert">
-          <p className="ds-body-strong">Dashboardni yuklab boʻlmadi</p>
-          <p className="ds-body ds-secondary">{error}</p>
-          <div>
-            <Button variant="secondary" onClick={() => setNonce((n) => n + 1)}>
-              Qayta urinish
-            </Button>
-          </div>
-        </div>
+        <StateBlock alert art="xato" title="Maʼlumot yuklanmadi" action={{ label: "Qayta urinish", icon: <StudioIcon name="refresh-cw" />, onClick: () => setNonce((n) => n + 1) }}>
+          Internet aloqasini tekshiring. Kiritilgan buyurtmalar serverda saqlangan.
+        </StateBlock>
       ) : !data ? (
         <Skeleton />
       ) : (

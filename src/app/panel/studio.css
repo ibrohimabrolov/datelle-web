@@ -33,6 +33,7 @@
 @media (min-width: 1024px) {
   .ds-h1 { font: var(--ds-type-heading-h1-desktop); letter-spacing: var(--ds-type-heading-h1-desktop-tracking); }
 }
+.studio [hidden] { display: none !important; }
 .ds-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 /* ── Button (Figma Button: Style × Size L 52 / M 44, radius full) ── */
@@ -185,17 +186,23 @@
 .ds-row dt { color: var(--ds-text-secondary); }
 .ds-row dd { margin: 0; font: var(--ds-type-body-medium); text-align: right; }
 
-/* ── Kirish (S1 desktop: brand panel 640 + auth column 400) ── */
+/* ── Kirish v2 (S1 desktop: inset surface card 624 · radius 3xl · 3D hero 320 + auth column 400).
+   Surface instead of inverse: the old panel flipped to near-white in dark mode. ── */
 .ds-auth { min-height: 100dvh; display: grid; grid-template-columns: 1fr; background: var(--ds-bg-canvas); }
 .ds-auth-brand { display: none; }
 .ds-auth-main { display: grid; place-items: center; padding: var(--ds-space-24) var(--ds-space-16); }
 .ds-auth-box { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: var(--ds-space-24); }
+.ds-auth-box .ds-art { width: 96px; height: 96px; }
 @media (min-width: 1024px) {
-  .ds-auth { grid-template-columns: 640px 1fr; }
+  .ds-auth { grid-template-columns: 624px 1fr; padding: var(--ds-space-16); }
   .ds-auth-brand {
-    display: flex; flex-direction: column; justify-content: space-between;
-    padding: var(--ds-space-80); background: var(--ds-bg-inverse); color: var(--ds-text-on-inverse);
+    display: flex; flex-direction: column; justify-content: space-between; gap: var(--ds-space-32);
+    padding: var(--ds-space-48); border-radius: var(--ds-radius-3xl);
+    background: var(--ds-bg-surface); color: var(--ds-text-primary);
   }
+  .ds-auth-hero { display: flex; justify-content: center; }
+  .ds-auth-hero .ds-art { width: min(320px, 36dvh); height: min(320px, 36dvh); }
+  .ds-auth-copy { display: flex; flex-direction: column; gap: var(--ds-space-12); }
 }
 
 /* ── Onboarding (S1 mobile: body pad 32/16, gap 28) ── */
@@ -461,7 +468,12 @@
 .ds-search input { height: 44px; width: 100%; padding: 0 var(--ds-space-16) 0 44px; border: 0; border-radius: var(--ds-radius-full); background: var(--ds-bg-surface); box-shadow: inset 0 0 0 1px var(--ds-border-control); font: var(--ds-type-body-default); color: var(--ds-text-primary); outline: none; }
 .ds-search input::placeholder { color: var(--ds-text-tertiary); }
 .ds-search input:focus { box-shadow: inset 0 0 0 1.5px var(--ds-border-focus); }
-.ds-search input::-webkit-search-cancel-button { cursor: pointer; }
+.ds-search input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; display: none; }
+.ds-search:has(.ds-search-clear) input { padding-right: 44px; }
+.ds-search .ds-search-clear { position: absolute; right: var(--ds-space-8); display: grid; place-items: center; width: 28px; height: 28px; border-radius: var(--ds-radius-full); color: var(--ds-icon-muted); }
+.ds-search .ds-search-clear svg { position: static; }
+.ds-search .ds-search-clear:hover { background: var(--ds-state-hover); color: var(--ds-text-primary); }
+.ds-search .ds-search-clear:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
 @media (min-width: 1024px) { .ds-search { width: 280px; } }
 
 .ds-list-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--ds-space-16); }
@@ -500,6 +512,24 @@
 a.ds-ordercard, button.ds-ordercard { width: 100%; text-align: left; transition: background-color var(--ds-duration-fast) var(--ds-ease-out); }
 a.ds-ordercard:hover, button.ds-ordercard:hover { background: var(--ds-bg-surface-hover); }
 a.ds-ordercard:focus-visible, button.ds-ordercard:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
+
+/* ── State block · 3D (Figma S2/S3/S4 xato · topilmadi · qoldiq yoʻq) ── */
+.ds-art { display: block; flex: none; width: 120px; height: 120px; object-fit: contain; user-select: none; -webkit-user-drag: none; }
+.ds-stateblock {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: var(--ds-space-12); padding: var(--ds-space-48) var(--ds-space-24);
+  min-height: min(56dvh, 480px); text-align: center;
+}
+.ds-stateblock-text { display: flex; flex-direction: column; gap: var(--ds-space-8); width: 100%; max-width: 480px; }
+.ds-stateblock h2 { font: var(--ds-type-heading-h2); letter-spacing: var(--ds-type-heading-h2-tracking); color: var(--ds-text-primary); text-wrap: balance; }
+.ds-stateblock p { font: var(--ds-type-body-default); color: var(--ds-text-secondary); text-wrap: pretty; }
+.ds-stateblock > .ds-btn { margin-top: var(--ds-space-12); }
+@media (min-width: 1024px) {
+  .ds-stateblock { gap: var(--ds-space-24); padding: var(--ds-space-24); min-height: min(64dvh, 640px); }
+  .ds-stateblock .ds-art { width: 200px; height: 200px; }
+  .ds-stateblock h2 { font: var(--ds-type-heading-h1); letter-spacing: var(--ds-type-heading-h1-tracking); }
+  .ds-stateblock > .ds-btn { margin-top: 0; }
+}
 
 /* Empty state */
 .ds-empty { display: flex; flex-direction: column; align-items: center; gap: var(--ds-space-8); padding: var(--ds-space-48) var(--ds-space-24); text-align: center; }

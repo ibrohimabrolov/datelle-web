@@ -6,10 +6,12 @@ import { Button } from "../Button";
 import { StudioIcon } from "../icons";
 import { usePanel, type Me } from "../PanelProvider";
 import { telegramLoginPopup } from "../telegram";
+import { Illustration } from "../StateBlock";
 
 type Config = { botId: number | null; botUsername: string | null; devLogin: boolean };
 
-/* S1 · Kirish (Figma 22:10519). Desktop: brand panel + auth column. Mini App never lands here — it signs in from initData. */
+/* S1 · Kirish v2 (Figma 22:10519 · xato 117:15987). Desktop: inset surface card with 3D hero + auth column.
+   Mini App never lands here — it signs in from initData. */
 export function KirishScreen() {
   const { state, setMe } = usePanel();
   const [cfg, setCfg] = useState<Config | null>(null);
@@ -31,7 +33,7 @@ export function KirishScreen() {
       if (!user) return; // closed the popup — not an error
       setMe(await api<Me>("/api/panel/auth/widget", { body: user }));
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Telegram bilan bogʻlanib boʻlmadi. Qayta urinib koʻring.");
+      setError(e instanceof ApiError ? e.message : "Qayta urinib koʻring. Brauzer uchinchi tomon cookie'larini bloklamaganini tekshiring.");
     } finally {
       setBusy(null);
     }
@@ -60,25 +62,38 @@ export function KirishScreen() {
           </span>
           <span className="ds-body-strong">Datelle Studio</span>
         </div>
-        <p className="ds-hero">
-          Sanalar, buyurtmalar
-          <br />
-          va pul — bir joyda
-        </p>
-        <p className="ds-body">Dekor studiyalari va floristlar uchun</p>
+        <div className="ds-auth-hero">
+          <Illustration art="kalendar" />
+        </div>
+        <div className="ds-auth-copy">
+          <p className="ds-hero">
+            Sanalar, buyurtmalar
+            <br />
+            va pul — bir joyda
+          </p>
+          <p className="ds-body ds-secondary">Dekor studiyalari va floristlar uchun</p>
+        </div>
       </section>
 
       <main className="ds-auth-main">
         <div className="ds-auth-box">
-          <div className="ds-mobile-only">
-            <span className="ds-mark" data-size="lg" aria-hidden>
-              D
-            </span>
-          </div>
+          {error ? <Illustration art="xato" /> : <Illustration art="kalendar" className="ds-mobile-only" />}
           <div style={{ display: "flex", flexDirection: "column", gap: "var(--ds-space-8)" }}>
             <h1 className="ds-h1">Kirish</h1>
             <p className="ds-body ds-secondary">Telegram akkauntingiz orqali</p>
           </div>
+
+          {error && (
+            <div className="ds-alert" data-tone="danger" role="alert">
+              <span className="ds-alert-icon" aria-hidden>
+                !
+              </span>
+              <div>
+                <b>Telegram bilan bogʻlanib boʻlmadi</b>
+                <span>{error}</span>
+              </div>
+            </div>
+          )}
 
           <Button
             size="l"
@@ -86,17 +101,12 @@ export function KirishScreen() {
             loading={busy === "tg" || !cfg || state.status !== "anon"}
             disabled={Boolean(unavailable) || busy === "dev"}
             onClick={signInTelegram}
-            icon={<StudioIcon name="send" variant="Filled" />}
+            icon={<StudioIcon name={error ? "refresh-cw" : "send"} variant={error ? "Line" : "Filled"} />}
           >
-            Telegram orqali kirish
+            {error ? "Qayta urinish" : "Telegram orqali kirish"}
           </Button>
 
           {unavailable && <p className="ds-helper">Telegram orqali kirish hali sozlanmagan</p>}
-          {error && (
-            <p className="ds-alert" role="alert">
-              {error}
-            </p>
-          )}
 
           {cfg?.botUsername && (
             <p className="ds-label" style={{ display: "flex", gap: "var(--ds-space-8)", flexWrap: "wrap" }}>
