@@ -41,8 +41,7 @@ function Slides() {
   const [tick, setTick] = useState(0); // restarts the timer after a manual pick
   const ref = useRef<HTMLElement>(null);
   useEffect(() => {
-    if (paused || window.matchMedia("(prefers-reduced-motion: reduce)").matches)
-      return;
+    if (paused || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const t = setInterval(() => {
       if (!document.hidden) setI((n) => (n + 1) % SLIDES.length);
     }, SLIDE_MS);
@@ -57,9 +56,7 @@ function Slides() {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
-      onBlur={(e) =>
-        !ref.current?.contains(e.relatedTarget as Node) && setPaused(false)
-      }
+      onBlur={(e) => !ref.current?.contains(e.relatedTarget as Node) && setPaused(false)}
     >
       <div className="ds-brandline">
         <span className="ds-mark" data-size="lg" aria-hidden>
@@ -129,11 +126,7 @@ export function KirishScreen() {
       if (!user) return; // closed the popup — not an error
       setMe(await api<Me>("/api/panel/auth/widget", { body: user }));
     } catch (e) {
-      setError(
-        e instanceof ApiError
-          ? e.message
-          : "Qayta urinib koʻring. Brauzer uchinchi tomon cookie'larini bloklamaganini tekshiring.",
-      );
+      setError(e instanceof ApiError ? e.message : "Qayta urinib koʻring. Brauzer uchinchi tomon cookie'larini bloklamaganini tekshiring.");
     } finally {
       setBusy(null);
     }
@@ -164,22 +157,8 @@ export function KirishScreen() {
 
         <main className="ds-auth-main">
           <div className="ds-auth-box">
-            <Illustration
-              art={error ? "xato" : "kalendar"}
-              className="ds-mobile-only"
-            />
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "var(--ds-space-8)",
-              }}
-            >
-              <h1 className="ds-h1">Kirish</h1>
-              <p className="ds-body ds-secondary">
-                Telegram akkauntingiz orqali
-              </p>
-            </div>
+            <Illustration art={error ? "xato" : "kalendar"} className="ds-mobile-only" />
+            <h1 className="ds-h1">Kirish</h1>
 
             {error && (
               <div className="ds-alert" data-tone="danger" role="alert">
@@ -199,24 +178,15 @@ export function KirishScreen() {
               loading={busy === "tg" || !cfg || state.status !== "anon"}
               disabled={Boolean(unavailable) || busy === "dev"}
               onClick={signInTelegram}
-              icon={
-                <StudioIcon
-                  name={error ? "refresh-cw" : "send"}
-                  variant={error ? "Line" : "Filled"}
-                />
-              }
+              icon={<StudioIcon name={error ? "refresh-cw" : "send"} variant={error ? "Line" : "Filled"} />}
             >
               {error ? "Qayta urinish" : "Telegram orqali kirish"}
             </Button>
 
             {unavailable ? (
-              <p className="ds-helper">
-                Telegram orqali kirish hali sozlanmagan
-              </p>
-            ) : (
-              <p className="ds-auth-note">
-                Bu qurilmada 30 kun kirgan holda qolasiz
-              </p>
+              <p className="ds-helper">Telegram orqali kirish hali sozlanmagan</p>
+            ) : error ? null : (
+              <p className="ds-auth-note">Bu qurilmada 30 kun kirgan holda qolasiz</p>
             )}
 
             {cfg?.botUsername && (
@@ -229,24 +199,14 @@ export function KirishScreen() {
                 }}
               >
                 <span className="ds-secondary">Studiya yoʻqmi?</span>
-                <a
-                  className="ds-label-strong ds-brand"
-                  href={`https://t.me/${cfg.botUsername}`}
-                  target="_blank"
-                  rel="noreferrer"
-                >
+                <a className="ds-label-strong ds-brand" href={`https://t.me/${cfg.botUsername}`} target="_blank" rel="noreferrer">
                   @{cfg.botUsername} ni oching
                 </a>
               </p>
             )}
 
             {cfg?.devLogin && state.status === "anon" && (
-              <Button
-                variant="ghost"
-                onClick={signInDev}
-                loading={busy === "dev"}
-                disabled={busy === "tg"}
-              >
+              <Button variant="ghost" onClick={signInDev} loading={busy === "dev"} disabled={busy === "tg"}>
                 Test sifatida kirish
               </Button>
             )}

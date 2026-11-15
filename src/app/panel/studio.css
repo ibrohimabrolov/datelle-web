@@ -186,7 +186,7 @@
 .ds-row dt { color: var(--ds-text-secondary); }
 .ds-row dd { margin: 0; font: var(--ds-type-body-medium); text-align: right; }
 
-/* ── Kirish v3 (Figma 22:10519): green/900 stage → centered card 1040×680 (bg/canvas, radius 3xl, pad 12)
+/* ── Kirish v3 (Figma 22:10519): gradient + grid stage → centered card 1040×680 (bg/canvas, radius 3xl, pad 12)
    = media panel 480 (bg/surface, radius xl, pad 32, 3 auto-advancing 3D slides) + form column (360, centered).
    Below 1024 the stage and media drop away: plain canvas + form. ── */
 .ds-auth { min-height: 100dvh; display: grid; place-items: center; background: var(--ds-bg-canvas); }
@@ -197,17 +197,25 @@
 .ds-auth-box .ds-art { width: 96px; height: 96px; }
 .ds-auth-note { font: var(--ds-type-label-default); color: var(--ds-text-tertiary); }
 @media (min-width: 1024px) {
+  /* Stage: 160° green/950 → 900 → 700 + 48px grid (white 6%), radially faded so it never competes with the card */
   .ds-auth {
-    padding: var(--ds-space-48);
-    background:
-      radial-gradient(90% 110% at 55% 115%, color-mix(in oklab, var(--ds-green-700) 90%, transparent), transparent 70%),
-      var(--ds-green-900);
+    position: relative; isolation: isolate; overflow: hidden; padding: var(--ds-space-48);
+    background: linear-gradient(160deg, var(--ds-green-950) 0%, var(--ds-green-900) 45%, var(--ds-green-700) 100%);
+  }
+  .ds-auth::before {
+    content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background-image:
+      linear-gradient(to right, rgb(255 255 255 / 0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(255 255 255 / 0.06) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse 75% 85% at 50% 50%, #000 0%, rgb(0 0 0 / 0.8) 55%, transparent 100%);
   }
   .ds-auth-card {
     display: flex; width: min(1040px, 100%); height: min(680px, calc(100dvh - 96px)); min-height: 560px;
     padding: var(--ds-space-12); border-radius: var(--ds-radius-3xl); background: var(--ds-bg-canvas);
   }
-  .ds-auth-main { flex: 1; padding: var(--ds-space-48); }
+  .ds-auth-main { flex: 1; padding: var(--ds-space-48) var(--ds-space-64); }
+  .ds-auth-box { max-width: none; }
   .ds-auth-media {
     position: relative; display: flex; flex-direction: column; gap: var(--ds-space-32); flex: none; width: 480px;
     padding: var(--ds-space-32); border-radius: var(--ds-radius-xl); background: var(--ds-bg-surface); color: var(--ds-text-primary);
