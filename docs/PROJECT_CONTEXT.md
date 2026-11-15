@@ -1,6 +1,6 @@
 # Datelle — loyiha konteksti (handoff)
 
-> Yangi chatda shu fayldan boshlang. Oxirgi yangilanish: 2026-11-11.
+> Yangi chatda shu fayldan boshlang. Oxirgi yangilanish: 2026-11-15.
 > Kod: `github.com/ibrohimabrolov/datelle-web` (private) · Jonli sayt: https://datelle-web.vercel.app
 
 > **⚡ 2026-11-11 — yoʻnalish oʻzgardi.** Hozirgi mahsulot — ***Datelle Studio***: dekor studiyalari va floristlar uchun **faqat ichki tizim** (mijoz tomoni yoʻq). MVP: Kalendar · Buyurtma va pul (avans/qoldiq) · egasi uchun Dashboard. Bitta web app: desktop brauzer + Telegram Mini App. Pul — studiya obunasi. Mahsulot rejasi: **`claude/Datelle-MVP-SCOPE.md`** (v0.2) · texnik dizayn: **`claude/Datelle-STUDIO-TECH.md`**. Quyidagi 1–9-boʻlimlar mavjud mijoz saytini (marketplace) tasvirlaydi — u jonli, lekin muzlatilgan.
@@ -68,7 +68,7 @@
 | `ADMIN_PASSWORD` | Ibrohim qoʻygan oddiy demo parol — **real ishga tushirishdan oldin almashtirish** |
 | `SMS_PROVIDER` | `demo` (kod ekranda chiqadi). Real ishda `eskiz` |
 | `OTP_PEPPER` | hali qoʻyilmagan — `eskiz` yoqilganda **majburiy** |
-| `TELEGRAM_BOT_TOKEN`, `CRON_SECRET`, `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME` (+ ixtiyoriy `TELEGRAM_WEBHOOK_SECRET`, `TELEGRAM_MINIAPP_URL`) | *(Datelle Studio bot, hali qoʻyilmagan)* — Ibrohim oʻzi qoʻyadi, faqat Production. Yoʻq boʻlsa bot/cron 503, build oʻtkazib yuboradi — `docs/studio/TELEGRAM.md` |
+| `TELEGRAM_BOT_TOKEN`, `CRON_SECRET`, `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME` (+ ixtiyoriy `TELEGRAM_WEBHOOK_SECRET`, `TELEGRAM_MINIAPP_URL`) | *(Datelle Studio bot)* — Ibrohim Production'ga qoʻydi (2026-11-14); BotFather `/setdomain` → datelle-web.vercel.app qilingan. Yoʻq boʻlsa bot/cron 503, build oʻtkazib yuboradi — `docs/studio/TELEGRAM.md` |
 
 ---
 
@@ -223,7 +223,7 @@ pending/confirmed → cancelled (mijoz)
 2. **25 ta studiya roʻyxati → 15 ta demo** (2-hafta). Javoblar gipotezalar jadvaliga (scope 1-boʻlim). Eng muhim savollar: qarz/qoldiq ogʻrigʻi (H2), rekvizit (H4) va jamoa (H5) — qaysi biri kuchliroq.
 3. **Go / no-go** — ≥ 5 "ha" → scope v0.3 → MVP kodi tech doc 9-boʻlim tartibida (3–5-hafta).
 4. **Maʼlumotlar joylashuvi** — birinchi founding partner real mijoz maʼlumotini kiritishidan **oldin** bazani Oʻzbekistondagi provayderga koʻchirish.
-5. **BotFather** — bot yaratish (username'ni hozir band qilish), Vercel env'ga `TELEGRAM_BOT_TOKEN`, `CRON_SECRET`, `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME`; `/setdomain` — domen aniq boʻlganda (Ibrohim, yoʻriqnoma 2026-11-14 chatda). Kod tayyor: PR `studio/telegram`.
+5. **Datelle Studio kodi** — 1–5-bosqichlar va 2-bosqich tayyor (PR #8). Qolgan: 7-bosqich QA (toʻliq demo oqimi, Figma 1:1 koʻrik) → Ibrohim PR #8 ni main'ga qoʻshadi. Bot env va `/setdomain` qilingan (2026-11-14).
 6. **Domen** — Login Widget va sotuv uchun barqaror domen (`datelle.uz` yoki `studio.datelle.uz`).
 7. Marketplace boʻyicha (muzlatilgan): zadatok matnlari, SMS (Eskiz), Payme/Click, foto yuklash, shaxsiy admin akkauntlari, Home illyustratsiyalari, Vercel Hobby → Pro — faqat marketplace'ga qaytilsa.
 
