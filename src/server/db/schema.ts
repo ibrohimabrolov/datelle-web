@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
-  bigint, boolean, date, index, integer, jsonb, numeric, pgEnum, pgTable, primaryKey, text, timestamp, uniqueIndex, uuid,
+  bigint, boolean, check, date, index, integer, jsonb, numeric, pgEnum, pgTable, primaryKey, text, timestamp, uniqueIndex, uuid,
 } from "drizzle-orm/pg-core";
 
 /* ───────────────────────────────────────────────
@@ -23,13 +23,17 @@ export const requestStatus = pgEnum("request_status", [
 ]);
 export const actor = pgEnum("actor", ["client", "vendor", "system", "admin"]);
 export const applicationStatus = pgEnum("application_status", ["new", "reviewing", "approved", "rejected"]);
+export const sessionScope = pgEnum("session_scope", ["site", "panel"]);
 
 const ts = (name: string) => timestamp(name, { withTimezone: true, mode: "date" });
 
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
-  phone: text("phone").notNull().unique(), // +998XXXXXXXXX
+  phone: text("phone").unique(), // +998XXXXXXXXX — null for Telegram-only (Datelle Studio) users
   name: text("name"),
+  telegramId: bigint("telegram_id", { mode: "number" }).unique(),
+  telegramUsername: text("telegram_username"),
+  photoUrl: text("photo_url"),
   role: userRole("role").notNull().default("client"),
   createdAt: ts("created_at").notNull().defaultNow(),
 });
@@ -42,6 +46,8 @@ export const sessions = pgTable(
     expiresAt: ts("expires_at").notNull(),
     createdAt: ts("created_at").notNull().defaultNow(),
     userAgent: text("user_agent"),
+    /* "site" = marketplace (dt_session), "panel" = Datelle Studio (dt_panel). A token never works in the other area. */
+    scope: sessionScope("scope").notNull().default("site"),
   },
   (t) => [index("sessions_user_idx").on(t.userId)],
 );
@@ -192,4 +198,143 @@ export const rateLimits = pgTable(
     count: integer("count").notNull().default(0),
   },
   (t) => [primaryKey({ columns: [t.key, t.windowStart] })],
+);
+
+/* ───────────────────────────────────────────────
+   Datelle Studio — internal tool for studios (claude/Datelle-STUDIO-TECH.md §2)
+   Multi-tenant: every row belongs to a studio. Derived numbers (balance, day load,
+   dashboard) are always computed from orders + order_payments — no counters, no drift.
+   ─────────────────────────────────────────────── */
+
+export const studioPlan = pgEnum("studio_plan", ["founding", "standard"]);
+export const memberRole = pgEnum("member_role", ["owner", "manager"]);
+export const orderStatus = pgEnum("order_status", ["active", "done", "cancelled"]);
+export const paymentMethod = pgEnum("payment_method", ["cash", "card", "transfer"]);
+
+export const studios = pgTable(
+  "studios",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull(),
+    category: category("category").notNull(),
+    dailyCapacity: integer("daily_capacity").notNull().default(3),
+    vendorId: uuid("vendor_id").references(() => vendors.id, { onDelete: "set null" }), // future link to the marketplace
+    plan: studioPlan("plan").notNull().default("founding"),
+    trialEndsAt: date("trial_ends_at", { mode: "string" }),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    updatedAt: ts("updated_at").notNull().defaultNow(),
+  },
+  (t) => [check("studios_capacity_range", sql`${t.dailyCapacity} between 1 and 20`)],
+);
+
+export const studioMembers = pgTable(
+  "studio_members",
+  {
+    studioId: uuid("studio_id").notNull().references(() => studios.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    role: memberRole("role").notNull(),
+    remindersOn: boolean("reminders_on").notNull().default(true),
+    createdAt: ts("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.studioId, t.userId] }),
+    index("studio_members_user_idx").on(t.userId),
+    // exactly one owner per studio
+    uniqueIndex("studio_members_one_owner").on(t.studioId).where(sql`role = 'owner'`),
+  ],
+);
+
+export const studioInvites = pgTable(
+  "studio_invites",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    studioId: uuid("studio_id").notNull().references(() => studios.id, { onDelete: "cascade" }),
+    role: memberRole("role").notNull().default("manager"),
+    tokenHash: text("token_hash").notNull().unique(), // sha256 — raw token only in the link
+    createdBy: uuid("created_by").notNull().references(() => users.id),
+    expiresAt: ts("expires_at").notNull(),
+    usedBy: uuid("used_by").references(() => users.id),
+    usedAt: ts("used_at"),
+    createdAt: ts("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("studio_invites_studio_idx").on(t.studioId)],
+);
+
+/* Row only for a day that differs from "open". */
+export const studioDays = pgTable(
+  "studio_days",
+  {
+    studioId: uuid("studio_id").notNull().references(() => studios.id, { onDelete: "cascade" }),
+    day: date("day", { mode: "string" }).notNull(),
+    blocked: boolean("blocked").notNull().default(false),
+    reason: text("reason"), // tamir | dam | shaxsiy | boshqa (DAY_REASONS)
+    note: text("note"),
+    updatedAt: ts("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.studioId, t.day] }),
+    check("studio_days_reason", sql`${t.reason} is null or ${t.reason} in ('tamir', 'dam', 'shaxsiy', 'boshqa')`),
+  ],
+);
+
+export const orders = pgTable(
+  "orders",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    studioId: uuid("studio_id").notNull().references(() => studios.id, { onDelete: "cascade" }),
+    code: text("code").notNull().unique(), // DS-104271 — shown to humans
+    eventDate: date("event_date", { mode: "string" }).notNull(),
+    eventType: text("event_type").notNull(), // EVENT_TYPES slug; validated in the API, text so studios can grow the list
+    venue: text("venue"),
+    guests: integer("guests"),
+    clientName: text("client_name").notNull(),
+    clientPhone: text("client_phone").notNull(),
+    total: bigint("total", { mode: "number" }).notNull(),
+    status: orderStatus("status").notNull().default("active"),
+    notes: text("notes"),
+    createdBy: uuid("created_by").notNull().references(() => users.id),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    updatedAt: ts("updated_at").notNull().defaultNow(),
+    cancelledAt: ts("cancelled_at"),
+  },
+  (t) => [
+    index("orders_studio_date_idx").on(t.studioId, t.eventDate),
+    index("orders_studio_status_idx").on(t.studioId, t.status),
+    check("orders_total_nonneg", sql`${t.total} >= 0`),
+    check("orders_guests_pos", sql`${t.guests} is null or ${t.guests} > 0`),
+  ],
+);
+
+/* Money rows are never physically deleted — soft delete keeps the audit honest */
+export const orderPayments = pgTable(
+  "order_payments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    orderId: uuid("order_id").notNull().references(() => orders.id, { onDelete: "cascade" }),
+    amount: bigint("amount", { mode: "number" }).notNull(),
+    paidOn: date("paid_on", { mode: "string" }).notNull(),
+    method: paymentMethod("method").notNull().default("cash"),
+    note: text("note"),
+    createdBy: uuid("created_by").notNull().references(() => users.id),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    deletedAt: ts("deleted_at"),
+    deletedBy: uuid("deleted_by").references(() => users.id),
+  },
+  (t) => [index("order_payments_order_idx").on(t.orderId), check("order_payments_amount_pos", sql`${t.amount} > 0`)],
+);
+
+/* Append-only audit */
+export const studioEvents = pgTable(
+  "studio_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    studioId: uuid("studio_id").notNull().references(() => studios.id, { onDelete: "cascade" }),
+    actorId: uuid("actor_id").references(() => users.id, { onDelete: "set null" }),
+    entity: text("entity").notNull(), // order | payment | day | member | studio | invite
+    entityId: text("entity_id").notNull(),
+    action: text("action").notNull(), // create | update | status | delete
+    diff: jsonb("diff").$type<Record<string, unknown>>(),
+    createdAt: ts("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("studio_events_entity_idx").on(t.studioId, t.entity, t.entityId, t.createdAt)],
 );

@@ -15,12 +15,15 @@ export class ApiError extends Error {
   }
 }
 
-export async function api<T>(url: string, init?: { method?: "GET" | "POST"; body?: unknown; signal?: AbortSignal }): Promise<T> {
+/* Headers every call carries — the panel sets x-studio-id for the active studio */
+export const apiDefaults: Record<string, string> = {};
+
+export async function api<T>(url: string, init?: { method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE"; body?: unknown; signal?: AbortSignal }): Promise<T> {
   let res: Response;
   try {
     res = await fetch(url, {
       method: init?.method ?? (init?.body !== undefined ? "POST" : "GET"),
-      headers: init?.body !== undefined ? { "content-type": "application/json" } : undefined,
+      headers: { ...apiDefaults, ...(init?.body !== undefined ? { "content-type": "application/json" } : {}) },
       body: init?.body !== undefined ? JSON.stringify(init.body) : undefined,
       signal: init?.signal,
       credentials: "same-origin",
