@@ -115,7 +115,7 @@ tests/                 # unit.test.ts, api.test.ts
 BACKEND.md             # backend batafsil: env, model, API, admin, deploy
 ```
 
-Datelle Studio kodi (rolling PR #8 `studio/team`, hali main'da emas): `src/app/panel/` (layout + `(app)` shell, `kirish`, `onboarding`), `src/components/studio/` (PanelProvider, Shell, Button, icons, telegram, screens/*), `src/server/panel/` (auth, service), `src/server/telegram/` (bot), `src/app/api/panel/*`, `/api/telegram/webhook`, `/api/cron/daily`; dizayn tizimi `src/studio/tokens.css` + `src/app/panel/studio.css`; jadvallar `drizzle/0001_studio.sql`. API jadvali — `BACKEND.md` oxirida.
+Datelle Studio kodi (**main'da, jonli** — https://datelle-web.vercel.app/panel, 2026-11-15): `src/app/panel/` (layout + `(app)` shell, `kirish`, `onboarding`), `src/components/studio/` (PanelProvider, Shell, Button, icons, telegram, screens/*), `src/server/panel/` (auth, service), `src/server/telegram/` (bot), `src/app/api/panel/*`, `/api/telegram/webhook`, `/api/cron/daily`; dizayn tizimi `src/studio/tokens.css` + `src/app/panel/studio.css`; jadvallar `drizzle/0001_studio.sql`. API jadvali — `BACKEND.md` oxirida.
 
 ---
 
@@ -214,6 +214,7 @@ pending/confirmed → cancelled (mijoz)
 - **2026-11-14:** 5-bosqich — Dashboard (`studio/dashboard`, PR #7, #6 ni oʻz ichiga oladi): KPI (bu oy tushum + oʻtgan oyning shu kunlariga nisbatan oʻzgarish, qoldiq, keyingi 30 kun), keyingi 7 kun, qoldiq bor (kechikkanlar ogohlantirishi), Tushum grafigi (Hafta/Oy/Yil), boʻsh holatda 4 qadamli sozlash roʻyxati. Faqat egasi koʻradi (menejer 403). Tushum = haqiqatan olingan pul (toʻlov sanasi boʻyicha). Mobile'da Sozlamalar: header'da tishli gʻildirak + Telegram ⋯ menyusi. Testlar: unit 32, panel API 31, marketplace 25, axe 0.
 - **2026-11-15:** 2-bosqich — Sozlamalar va jamoa (`studio/team`, PR #8, #7 ni oʻz ichiga oladi): studiya nomi/yoʻnalishi/sigʻimini tahrirlash (faqat egasi, audit), menejer taklifi — bir martalik link 7 kun (bazada faqat hash), "Nusxalash" / "Telegram'da yuborish", faol takliflarni bekor qilish, menejerni chiqarish (tasdiq bilan, kirishi darhol yopiladi), har kim oʻz kechki eslatmasini yoqadi/oʻchiradi, bir nechta studiya boʻlsa almashtirish. Yangi `/panel/taklif` ekrani: studiya + kim taklif qildi + menejer huquqlari, "Qoʻshilish" → Kalendar (Dashboard yoʻq); link eskirgan/ishlatilgan/notoʻgʻri holatlari. Figma'dan chetlanish: desktop'da 3 ta eslatma toggle chizilgan, botda faqat kechki bor → bitta toggle. Testlar: unit 32, panel API 38, marketplace 25, axe 0, E2E (egasi taklif qiladi → menejer qoʻshiladi → chiqariladi).
 - **2026-11-15:** 7-bosqich — QA (production build'da): toʻliq demo oqimi desktop + mobile'da oxirigacha oʻtdi (onboarding → buyurtma + avans → "1 joy" → Dashboard → toʻlov → Bajarildi; menejer taklif bilan qoʻshilib, oʻsha kunni band qiladi). 11 ta sahifa × 6 ta ekran kengligi × light/dark = 132 tekshiruv — axe 0, gorizontal scroll yoʻq, console xatosi yoʻq. Ruxsatlar jadvali testi (19 endpoint: mehmon 401 / begona studiya 404 / menejer 403 / CSRF) — panel API 44. QA'da tuzatildi: Bajarildi buyurtma kalendardan yoʻqolib, joyni boʻshatib qoʻyardi; notoʻgʻri `/panel/...` havolasi marketplace 404'iga tushardi; dark mode'da 2 ta kontrast; 1024–1279px'da Dashboard ustunlari va jadvaldagi summalar kesilardi. Figma'dan ataylab qoldirilgan (v1.1): jadval checkbox + bulk, Buyurtmalar'da oy filtri.
+- **2026-11-15:** Datelle Studio v1 **main'ga qoʻshildi va jonli** (PR #8, 13:27). Jonli tekshiruv: baza ishlayapti (migratsiyalar qoʻllandi), bot @datelle_bot ulangan, test-kirish oʻchiq, cron sirsiz 401, `/panel` sahifalari ochiladi, mijoz sayti oʻzgarmagan. Jami: 14 commit, 99 fayl, ~13 500 qator.
 - **v1.1 kandidatlari:** jamoani tadbirlarga taqsimlash, rekvizit hisobi, xarajatlar — demolar tartibni hal qiladi.
 
 ---
@@ -224,7 +225,7 @@ pending/confirmed → cancelled (mijoz)
 2. **25 ta studiya roʻyxati → 15 ta demo** (2-hafta). Javoblar gipotezalar jadvaliga (scope 1-boʻlim). Eng muhim savollar: qarz/qoldiq ogʻrigʻi (H2), rekvizit (H4) va jamoa (H5) — qaysi biri kuchliroq.
 3. **Go / no-go** — ≥ 5 "ha" → scope v0.3 → MVP kodi tech doc 9-boʻlim tartibida (3–5-hafta).
 4. **Maʼlumotlar joylashuvi** — birinchi founding partner real mijoz maʼlumotini kiritishidan **oldin** bazani Oʻzbekistondagi provayderga koʻchirish.
-5. **Datelle Studio kodi** — barcha bosqichlar va QA tayyor (PR #8). Qolgan: Ibrohim PR #8 ni main'ga qoʻshadi (merge), keyin jonli saytda Telegram orqali bir marta sinab koʻradi. Bot env va `/setdomain` qilingan (2026-11-14).
+5. **Datelle Studio v1 jonli** (PR #8 merge, 2026-11-15). Keyingi: Ibrohim @datelle_bot → `/start` → studiya + 1 buyurtma bilan jonli sinov; Vercel Hobby tijoriy foydalanishga ruxsat bermaydi — birinchi pullik studiyadan oldin Pro'ga oʻtish; real mijoz maʼlumotidan oldin bazani Oʻzbekistonga koʻchirish (4-band).
 6. **Domen** — Login Widget va sotuv uchun barqaror domen (`datelle.uz` yoki `studio.datelle.uz`).
 7. Marketplace boʻyicha (muzlatilgan): zadatok matnlari, SMS (Eskiz), Payme/Click, foto yuklash, shaxsiy admin akkauntlari, Home illyustratsiyalari, Vercel Hobby → Pro — faqat marketplace'ga qaytilsa.
 
