@@ -189,13 +189,38 @@
 /* ── Kirish v3 (Figma 22:10519): gradient + grid stage → centered card 1040×680 (bg/canvas, radius 3xl, pad 12)
    = media panel 480 (bg/surface, radius xl, pad 32, 3 auto-advancing 3D slides) + form column (360, centered).
    Below 1024 the stage and media drop away: plain canvas + form. ── */
-.ds-auth { min-height: 100dvh; display: grid; place-items: center; background: var(--ds-bg-canvas); }
+.ds-auth { position: relative; min-height: 100dvh; display: grid; place-items: center; background: var(--ds-bg-canvas); }
 .ds-auth-card { display: contents; }
 .ds-auth-media { display: none; }
 .ds-auth-main { display: grid; place-items: center; width: 100%; padding: var(--ds-space-24) var(--ds-space-16); }
 .ds-auth-box { width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: var(--ds-space-24); }
 .ds-auth-box .ds-art { width: 96px; height: 96px; }
 .ds-auth-note { font: var(--ds-type-label-default); color: var(--ds-text-tertiary); }
+
+/* Top bar: language + theme. Two segmented pills, both 40px (pad 3 + border 1 + 32 items).
+   Canvas (mobile): surface pill, white active. Green stage (desktop): translucent white pill, white active. */
+.ds-auth-tools { position: absolute; top: var(--ds-space-16); right: var(--ds-space-16); z-index: 1; display: flex; gap: var(--ds-space-8); }
+.ds-seg {
+  display: flex; gap: 2px; height: 40px; padding: 3px; border-radius: var(--ds-radius-full);
+  background: var(--ds-bg-surface); border: 1px solid transparent;
+}
+.ds-seg button {
+  display: grid; place-items: center; min-width: 40px; height: 32px; padding: 0 var(--ds-space-12); border-radius: var(--ds-radius-full);
+  font: var(--ds-type-label-strong); color: var(--ds-text-secondary); transition: background-color 150ms, color 150ms;
+}
+.ds-seg button:has(svg) { padding: 0; }
+.ds-seg button[aria-pressed="true"] { background: var(--ds-bg-elevated); color: var(--ds-text-primary); box-shadow: 0 1px 2px rgb(0 0 0 / 0.08); }
+.ds-seg button:not([aria-pressed="true"]):not(:disabled):hover { color: var(--ds-text-primary); }
+.ds-seg button:disabled { color: var(--ds-text-disabled); cursor: not-allowed; }
+.ds-seg button:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
+@media (min-width: 1024px) {
+  .ds-auth-tools { top: var(--ds-space-24); right: var(--ds-space-24); }
+  .ds-auth .ds-seg { background: rgb(255 255 255 / 0.08); border-color: rgb(255 255 255 / 0.14); backdrop-filter: blur(12px); }
+  .ds-auth .ds-seg button { color: rgb(255 255 255 / 0.72); }
+  .ds-auth .ds-seg button:not([aria-pressed="true"]):not(:disabled):hover { color: var(--ds-neutral-0); }
+  .ds-auth .ds-seg button:disabled { color: rgb(255 255 255 / 0.36); }
+  .ds-auth .ds-seg button[aria-pressed="true"] { background: var(--ds-neutral-0); color: var(--ds-neutral-950); box-shadow: none; }
+}
 .ds-auth-alt { align-self: flex-start; font: var(--ds-type-label-strong); color: var(--ds-text-brand); padding: 3px 0; border-radius: var(--ds-radius-sm); }
 .ds-auth-alt:hover { text-decoration: underline; text-underline-offset: 3px; }
 .ds-auth-alt:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
