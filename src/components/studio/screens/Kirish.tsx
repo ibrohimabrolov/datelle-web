@@ -155,11 +155,11 @@ export function KirishScreen() {
 
   return (
     <div className="ds-auth">
-      <AuthTools />
       <div className="ds-auth-card">
         <Slides />
 
         <main className="ds-auth-main">
+          <AuthTools />
           <div className="ds-auth-box">
             <Illustration art={error ? "xato" : "kalendar"} className="ds-mobile-only" />
             <h1 className="ds-h1">Kirish</h1>
