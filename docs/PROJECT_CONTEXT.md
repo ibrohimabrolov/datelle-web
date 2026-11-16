@@ -181,7 +181,7 @@ pending/confirmed → cancelled (mijoz)
    ```
 4. `npm run db:deploy` (migratsiya + seed) → `npm run dev` yoki `npm run build && PORT=3100 npm start`.
 5. Tekshirish: `npx tsc --noEmit`, `npx eslint src scripts tests`, `npm test`, server ishlab turganda `npm run test:api`.
-6. Yangi ish → alohida branch'da, tekshirilgach `main`ga. **`main`ga push = jonli saytga chiqadi.**
+6. Yangi ish → alohida branch'da, tekshirilgach `main`ga. **`main`ga push = jonli saytga chiqadi.** 2026-11-16 dan Ibrohim ruxsati bilan Claude PR'ni oʻzi merge qiladi (`gh api -X PUT …/pulls/N/merge`) — faqat testlar + axe yashil va Vercel preview `success` boʻlganda; merge'dan keyin production deploy va `/api/health` tekshiriladi. Neon Free: 10 branch limiti — merge qilingan PR'ning `preview/…` branch'ini oʻchirish kerak (Claude eslatadi).
 7. Jonli tekshiruv: `curl https://datelle-web.vercel.app/api/health` → `{"db":"up"}`; deploy holati: `gh api repos/ibrohimabrolov/datelle-web/commits/<sha>/statuses`.
 8. Sxema oʻzgarsa: `schema.ts` → `npm run db:generate` → yangi `drizzle/*.sql` commit qilinadi; Vercel build uni avtomatik qoʻllaydi.
 
