@@ -32,7 +32,7 @@ async function main() {
   await t("setWebhook", {
     url: `${SITE_URL}${WEBHOOK_PATH}`,
     secret_token: cfg.webhookSecret,
-    allowed_updates: ["message"],
+    allowed_updates: ["message", "callback_query"],
     max_connections: 10,
   });
   await t("setMyCommands", { commands: BOT_COMMANDS });

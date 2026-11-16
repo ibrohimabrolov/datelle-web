@@ -35,3 +35,5 @@ export const cronSecret = () => {
   const s = process.env.CRON_SECRET?.trim();
   return s && s.length >= 16 ? s : null;
 };
+
+export const botUsername = () => process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME?.trim().replace(/^@/, "") || null;

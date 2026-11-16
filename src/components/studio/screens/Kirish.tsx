@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { api, ApiError } from "@/lib/api";
+import { BotLogin } from "../BotLogin";
 import { Button } from "../Button";
 import { StudioIcon } from "../icons";
 import { usePanel, type Me } from "../PanelProvider";
@@ -110,6 +111,7 @@ export function KirishScreen() {
   const [cfg, setCfg] = useState<Config | null>(null);
   const [busy, setBusy] = useState<"tg" | "dev" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [mode, setMode] = useState<"idle" | "bot">("idle");
 
   useEffect(() => {
     api<Config>("/api/panel/auth/config")
@@ -148,7 +150,7 @@ export function KirishScreen() {
     }
   }
 
-  const unavailable = cfg && !cfg.botId;
+  const unavailable = cfg && (!cfg.botId || !cfg.botUsername);
 
   return (
     <div className="ds-auth">
@@ -160,33 +162,48 @@ export function KirishScreen() {
             <Illustration art={error ? "xato" : "kalendar"} className="ds-mobile-only" />
             <h1 className="ds-h1">Kirish</h1>
 
-            {error && (
-              <div className="ds-alert" data-tone="danger" role="alert">
-                <span className="ds-alert-icon" aria-hidden>
-                  !
-                </span>
-                <div>
-                  <b>Telegram bilan bogʻlanib boʻlmadi</b>
-                  <span>{error}</span>
-                </div>
-              </div>
-            )}
+            {mode === "bot" ? (
+              <BotLogin onDone={setMe} onCancel={() => setMode("idle")} />
+            ) : (
+              <>
+                {error && (
+                  <div className="ds-alert" data-tone="danger" role="alert">
+                    <span className="ds-alert-icon" aria-hidden>
+                      !
+                    </span>
+                    <div>
+                      <b>Telegram bilan bogʻlanib boʻlmadi</b>
+                      <span>{error}</span>
+                    </div>
+                  </div>
+                )}
 
-            <Button
-              size="l"
-              block
-              loading={busy === "tg" || !cfg || state.status !== "anon"}
-              disabled={Boolean(unavailable) || busy === "dev"}
-              onClick={signInTelegram}
-              icon={<StudioIcon name={error ? "refresh-cw" : "send"} variant={error ? "Line" : "Filled"} />}
-            >
-              {error ? "Qayta urinish" : "Telegram orqali kirish"}
-            </Button>
+                {/* Primary: confirm in our bot (reliable). Secondary: Telegram's phone-number popup. */}
+                <Button
+                  size="l"
+                  block
+                  loading={!cfg || state.status !== "anon"}
+                  disabled={Boolean(unavailable) || busy !== null}
+                  onClick={() => {
+                    setError(null);
+                    setMode("bot");
+                  }}
+                  icon={<StudioIcon name="send" variant="Filled" />}
+                >
+                  Telegram orqali kirish
+                </Button>
 
-            {unavailable ? (
-              <p className="ds-helper">Telegram orqali kirish hali sozlanmagan</p>
-            ) : error ? null : (
-              <p className="ds-auth-note">Bu qurilmada 30 kun kirgan holda qolasiz</p>
+                {unavailable ? (
+                  <p className="ds-helper">Telegram orqali kirish hali sozlanmagan</p>
+                ) : (
+                  <>
+                    {!error && <p className="ds-auth-note">Bu qurilmada 30 kun kirgan holda qolasiz</p>}
+                    <button type="button" className="ds-auth-alt" onClick={signInTelegram} disabled={busy !== null || !cfg}>
+                      {busy === "tg" ? "Telegram oynasi ochiq…" : "Telefon raqam bilan kirish"}
+                    </button>
+                  </>
+                )}
+              </>
             )}
 
             {cfg?.botUsername && (

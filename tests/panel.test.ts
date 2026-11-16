@@ -108,6 +108,89 @@ describe("auth", () => {
   });
 });
 
+describe("desktop bot sign-in", () => {
+  const hookSecret = createHmac("sha256", PANEL_TEST_BOT_TOKEN).update("datelle-webhook-v1").digest("hex");
+  const webhook = (update: object) =>
+    fetch(`${BASE}/api/telegram/webhook`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-telegram-bot-api-secret-token": hookSecret },
+      body: JSON.stringify({ update_id: 1, ...update }),
+    }).then((r) => r.json());
+  const startMsg = (from: number, start: string) => ({ message: { message_id: 1, chat: { id: from, type: "private" }, from: { id: from, first_name: "Dilnoza" }, text: `/start ${start}` } });
+  const press = (from: number, data: string) => ({
+    callback_query: { id: "cb1", from: { id: from, first_name: "Dilnoza", username: "dilnoza_flowers" }, data, message: { message_id: 7, chat: { id: from, type: "private" } } },
+  });
+  // browser keeps both dt_login and dt_panel
+  async function browser() {
+    const jar = new Map<string, string>();
+    return async (path: string, body: unknown = {}) => {
+      const res = await fetch(BASE + path, {
+        method: "POST",
+        headers: { "content-type": "application/json", origin: BASE, cookie: [...jar].map(([k, v]) => `${k}=${v}`).join("; ") },
+        body: JSON.stringify(body),
+      });
+      for (const c of res.headers.getSetCookie()) {
+        const [kv] = c.split(";");
+        const [k, v] = kv.split("=");
+        if (v) jar.set(k, v);
+        else jar.delete(k);
+      }
+      return { status: res.status, json: await res.json(), jar };
+    };
+  }
+
+  test("bot approval signs in the creating browser exactly once", async () => {
+    const post = await browser();
+    const created = await post("/api/panel/auth/bot");
+    assert.equal(created.status, 200, JSON.stringify(created.json));
+    assert.match(created.json.start, /^login_[A-Za-z0-9_-]{22}$/);
+    assert.match(created.json.code, /^\d{4}$/);
+    assert.ok(created.json.url.endsWith(created.json.start));
+    assert.equal((await post("/api/panel/auth/bot/poll")).json.state, "pending");
+
+    const id = tgId();
+    const ask = await webhook(startMsg(id, created.json.start));
+    assert.equal(ask.method, "sendMessage");
+    assert.match(ask.text, new RegExp(created.json.code));
+    const okData = ask.reply_markup.inline_keyboard[0][0].callback_data;
+
+    // somebody else pressing the button changes nothing
+    const stranger = await webhook(press(tgId(), okData));
+    assert.equal(stranger.method, "editMessageText");
+    assert.match(stranger.text, /eskirgan/);
+    assert.equal((await post("/api/panel/auth/bot/poll")).json.state, "pending");
+
+    const done = await webhook(press(id, okData));
+    assert.match(done.text, /tasdiqlandi/);
+
+    // another browser can't claim it — no dt_login cookie
+    const other = await browser();
+    assert.equal((await other("/api/panel/auth/bot/poll")).json.state, "missing");
+
+    const won = await post("/api/panel/auth/bot/poll");
+    assert.equal(won.json.state, "approved");
+    assert.equal(won.json.me.user.username, "dilnoza_flowers");
+    assert.ok(won.jar.get("dt_panel"));
+    assert.ok(!won.jar.has("dt_login"));
+    const me = await fetch(`${BASE}/api/panel/me`, { headers: { cookie: `dt_panel=${won.jar.get("dt_panel")}` } });
+    assert.equal(me.status, 200);
+    // replaying the start link after approval does nothing
+    assert.match((await webhook(startMsg(id, created.json.start))).text, /eskirgan/);
+  });
+
+  test("declined request stops the browser; unknown links are handled", async () => {
+    const post = await browser();
+    const created = await post("/api/panel/auth/bot");
+    const id = tgId();
+    const ask = await webhook(startMsg(id, created.json.start));
+    await webhook(press(id, ask.reply_markup.inline_keyboard[0][1].callback_data));
+    assert.equal((await post("/api/panel/auth/bot/poll")).json.state, "declined");
+    assert.match((await webhook(startMsg(id, "login_" + "x".repeat(22)))).text, /eskirgan/);
+    const csrf = await fetch(`${BASE}/api/panel/auth/bot`, { method: "POST", headers: { "content-type": "application/json", origin: "https://evil.example" }, body: "{}" });
+    assert.equal(csrf.status, 403);
+  });
+});
+
 describe("onboarding and tenancy", () => {
   const owner = new Client();
   const other = new Client();

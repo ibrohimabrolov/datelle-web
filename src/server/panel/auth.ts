@@ -1,6 +1,6 @@
 import "server-only";
 import { createHash, randomBytes } from "node:crypto";
-import { and, asc, eq, gt } from "drizzle-orm";
+import { and, asc, eq, gt, sql } from "drizzle-orm";
 import { cookies } from "next/headers";
 import type { NextRequest } from "next/server";
 import { db, schema } from "../db";
@@ -17,7 +17,7 @@ const DAY = 86_400_000;
 
 const sha256 = (s: string) => createHash("sha256").update(s).digest("hex");
 const secure = process.env.NODE_ENV === "production";
-const cookieOpts = (expires: Date) =>
+export const cookieOpts = (expires: Date) =>
   ({ httpOnly: true, secure, sameSite: secure ? "none" : "lax", partitioned: secure, path: "/", expires }) as const;
 
 export type PanelUser = { id: string; name: string; username: string | null; photoUrl: string | null; telegramId: number | null };
@@ -40,7 +40,11 @@ export async function upsertTelegramUser(tg: TelegramUser) {
   const [u] = await db
     .insert(schema.users)
     .values(values)
-    .onConflictDoUpdate({ target: schema.users.telegramId, set: { name: values.name, telegramUsername: values.telegramUsername, photoUrl: values.photoUrl } })
+    // Bot updates carry no photo — keep the one the Mini App / Login Widget gave us
+    .onConflictDoUpdate({
+      target: schema.users.telegramId,
+      set: { name: values.name, telegramUsername: values.telegramUsername, photoUrl: sql`coalesce(excluded.photo_url, ${schema.users.photoUrl})` },
+    })
     .returning({ id: schema.users.id });
   return u.id;
 }

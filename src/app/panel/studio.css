@@ -196,6 +196,26 @@
 .ds-auth-box { width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: var(--ds-space-24); }
 .ds-auth-box .ds-art { width: 96px; height: 96px; }
 .ds-auth-note { font: var(--ds-type-label-default); color: var(--ds-text-tertiary); }
+.ds-auth-alt { align-self: flex-start; font: var(--ds-type-label-strong); color: var(--ds-text-brand); padding: 3px 0; border-radius: var(--ds-radius-sm); }
+.ds-auth-alt:hover { text-decoration: underline; text-underline-offset: 3px; }
+.ds-auth-alt:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
+.ds-auth-alt:disabled { color: var(--ds-text-disabled); text-decoration: none; }
+
+/* Bot sign-in (Figma "S1 · Kirish · bot"): QR 136 on white + code 32/40 tabular, surface card radius lg */
+.ds-botlogin { display: flex; flex-direction: column; gap: var(--ds-space-16); }
+.ds-botlogin > .ds-btn[data-style="ghost"] { align-self: center; }
+.ds-botlogin-card {
+  display: flex; align-items: center; gap: var(--ds-space-24); min-height: 104px;
+  padding: var(--ds-space-16); border-radius: var(--ds-radius-lg); background: var(--ds-bg-surface);
+}
+.ds-botlogin-card[data-loading] { background: var(--ds-bg-skeleton); animation: ds-pulse 1.4s ease-in-out infinite; }
+.ds-qr { display: none; flex: none; width: 136px; height: 136px; padding: var(--ds-space-8); border-radius: var(--ds-radius-md); background: #fff; }
+.ds-qr svg { display: block; width: 100%; height: 100%; }
+.ds-botlogin-code { display: flex; flex-direction: column; gap: var(--ds-space-4); }
+.ds-botlogin-code b { font: 600 32px/40px var(--ds-font-sans); letter-spacing: 0.12em; font-variant-numeric: tabular-nums; color: var(--ds-text-primary); }
+.ds-botlogin-status { display: flex; align-items: center; justify-content: center; gap: var(--ds-space-8); font: var(--ds-type-label-default); color: var(--ds-text-secondary); font-variant-numeric: tabular-nums; }
+.ds-botlogin-status .ds-spinner { width: 14px; height: 14px; color: var(--ds-icon-brand); }
+@media (min-width: 1024px) { .ds-qr { display: block; } .ds-botlogin-card { min-height: 168px; } }
 @media (min-width: 1024px) {
   /* Stage: 160° green/950 → 900 → 700 + 48px grid (white 6%), radially faded so it never competes with the card */
   .ds-auth {
@@ -698,10 +718,11 @@ textarea.ds-input { height: auto; min-height: 48px; padding-top: 13px; padding-b
 .ds-event .e-money { font: var(--ds-type-body-strong); color: var(--ds-money-due); text-align: right; font-variant-numeric: tabular-nums; }
 .ds-event .e-money[data-paid] { font: var(--ds-type-label-strong); color: var(--ds-text-secondary); }
 
-.ds-alert[data-tone="danger"] { align-items: flex-start; padding: 14px var(--ds-space-16) 14px 14px; border-radius: var(--ds-radius-lg); }
-.ds-alert[data-tone="danger"] > div { display: flex; flex-direction: column; gap: 2px; }
-.ds-alert[data-tone="danger"] > div > b { font: var(--ds-type-label-strong); color: var(--ds-text-primary); }
-.ds-alert[data-tone="danger"] > div > span { font: var(--ds-type-body-default); color: var(--ds-text-secondary); }
+.ds-alert:is([data-tone="danger"], [data-tone="warning"]):has(> .ds-alert-icon) { align-items: flex-start; padding: 14px var(--ds-space-16) 14px 14px; border-radius: var(--ds-radius-lg); }
+.ds-alert:is([data-tone="danger"], [data-tone="warning"]) > div { display: flex; flex-direction: column; gap: 2px; }
+.ds-alert:is([data-tone="danger"], [data-tone="warning"]) > div > b { font: var(--ds-type-label-strong); color: var(--ds-text-primary); }
+.ds-alert:is([data-tone="danger"], [data-tone="warning"]) > div > span { font: var(--ds-type-body-default); color: var(--ds-text-secondary); }
+.ds-alert[data-tone="warning"] > .ds-alert-icon { background: var(--ds-status-warning-solid); color: var(--ds-neutral-950); }
 .ds-alert-icon { display: grid; place-items: center; flex: none; width: 20px; height: 20px; border-radius: var(--ds-radius-full); background: var(--ds-status-danger-solid); color: var(--ds-text-on-danger); font: 700 12px/1 var(--ds-font-sans); }
 
 /* Revenue chart — single series, one hue; current period one step darker (validated: ΔL ≥ 0.06, light end 4.41:1 on surface) */
