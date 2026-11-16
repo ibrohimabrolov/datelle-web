@@ -96,7 +96,7 @@ Playwright demo flow (onboarding → calendar → order + advance → day "1 joy
 - [x] Figma review (Desktop + Mobile pages side by side): layouts, type, colour and states match.
 - Fixed in QA: a finished (Bajarildi) order vanished from the calendar and freed its slot → now only cancelled orders free a day; unknown `/panel/*` URLs fell through to the marketplace 404 → Studio 404 inside the shell; dark-mode contrast of the "Band" meter and the mobile Obuna card; 1024–1279 px: Dashboard columns stack, KPI amounts no longer clipped, orders table drops the phone column so money never truncates; mobile KPI amount no longer runs under the mini bars; zero debt is no longer amber.
 - Deliberate gaps vs Figma (v1.1): table checkboxes + bulk bar and the month filter in Buyurtmalar (no bulk actions exist yet; Kalendar covers "what's in December"); 3 reminder toggles → 1 (only the evening digest exists); mobile header shows the settings gear instead of the avatar.
-- [ ] Merge PR #8 to `main` (Ibrohim).
+- [x] Merged PR #8 to `main` (Ibrohim, 2026-11-15 13:27). Live check: `/api/health` db up, `/api/panel/auth/config` → @datelle_bot, dev login off, `/api/cron/daily` 401 without secret, `/panel/*` 200, marketplace pages and search unchanged.
 
 ## Needs from Ibrohim (with click-by-click guides when we get there)
 

@@ -33,6 +33,7 @@
 @media (min-width: 1024px) {
   .ds-h1 { font: var(--ds-type-heading-h1-desktop); letter-spacing: var(--ds-type-heading-h1-desktop-tracking); }
 }
+.studio [hidden] { display: none !important; }
 .ds-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 /* ── Button (Figma Button: Style × Size L 52 / M 44, radius full) ── */
@@ -185,17 +186,63 @@
 .ds-row dt { color: var(--ds-text-secondary); }
 .ds-row dd { margin: 0; font: var(--ds-type-body-medium); text-align: right; }
 
-/* ── Kirish (S1 desktop: brand panel 640 + auth column 400) ── */
-.ds-auth { min-height: 100dvh; display: grid; grid-template-columns: 1fr; background: var(--ds-bg-canvas); }
-.ds-auth-brand { display: none; }
-.ds-auth-main { display: grid; place-items: center; padding: var(--ds-space-24) var(--ds-space-16); }
-.ds-auth-box { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: var(--ds-space-24); }
+/* ── Kirish v3 (Figma 22:10519): gradient + grid stage → centered card 1040×680 (bg/canvas, radius 3xl, pad 12)
+   = media panel 480 (bg/surface, radius xl, pad 32, 3 auto-advancing 3D slides) + form column (360, centered).
+   Below 1024 the stage and media drop away: plain canvas + form. ── */
+.ds-auth { min-height: 100dvh; display: grid; place-items: center; background: var(--ds-bg-canvas); }
+.ds-auth-card { display: contents; }
+.ds-auth-media { display: none; }
+.ds-auth-main { display: grid; place-items: center; width: 100%; padding: var(--ds-space-24) var(--ds-space-16); }
+.ds-auth-box { width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: var(--ds-space-24); }
+.ds-auth-box .ds-art { width: 96px; height: 96px; }
+.ds-auth-note { font: var(--ds-type-label-default); color: var(--ds-text-tertiary); }
 @media (min-width: 1024px) {
-  .ds-auth { grid-template-columns: 640px 1fr; }
-  .ds-auth-brand {
-    display: flex; flex-direction: column; justify-content: space-between;
-    padding: var(--ds-space-80); background: var(--ds-bg-inverse); color: var(--ds-text-on-inverse);
+  /* Stage: 160° green/950 → 900 → 700 + 48px grid (white 6%), radially faded so it never competes with the card */
+  .ds-auth {
+    position: relative; isolation: isolate; overflow: hidden; padding: var(--ds-space-48);
+    background: linear-gradient(160deg, var(--ds-green-950) 0%, var(--ds-green-900) 45%, var(--ds-green-700) 100%);
   }
+  .ds-auth::before {
+    content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background-image:
+      linear-gradient(to right, rgb(255 255 255 / 0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(255 255 255 / 0.06) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse 75% 85% at 50% 50%, #000 0%, rgb(0 0 0 / 0.8) 55%, transparent 100%);
+  }
+  .ds-auth-card {
+    display: flex; width: min(1040px, 100%); height: min(680px, calc(100dvh - 96px)); min-height: 560px;
+    padding: var(--ds-space-12); border-radius: var(--ds-radius-3xl); background: var(--ds-bg-canvas);
+  }
+  .ds-auth-main { flex: 1; padding: var(--ds-space-48) var(--ds-space-64); }
+  .ds-auth-box { max-width: none; }
+  .ds-auth-media {
+    position: relative; display: flex; flex-direction: column; gap: var(--ds-space-32); flex: none; width: 480px;
+    padding: var(--ds-space-32); border-radius: var(--ds-radius-xl); background: var(--ds-bg-surface); color: var(--ds-text-primary);
+  }
+  .ds-auth-media .ds-brandline { padding: 0; gap: var(--ds-space-12); }
+  .ds-slides { flex: 1; display: grid; min-height: 0; }
+  .ds-slide {
+    grid-area: 1 / 1; display: flex; flex-direction: column; justify-content: space-between; gap: var(--ds-space-24); min-height: 0;
+    opacity: 0; visibility: hidden; transition: opacity 400ms var(--ds-ease-out), visibility 0s 400ms;
+  }
+  .ds-slide[data-active] { opacity: 1; visibility: visible; transition: opacity 400ms var(--ds-ease-out), visibility 0s; }
+  .ds-slide-hero { flex: 1; min-height: 0; display: grid; place-items: center; }
+  .ds-slide-hero .ds-art { width: min(280px, 100%); height: auto; aspect-ratio: 1; transform: scale(0.94); transition: transform 600ms var(--ds-ease-out); }
+  .ds-slide[data-active] .ds-slide-hero .ds-art { transform: none; }
+  .ds-slide-copy { display: flex; flex-direction: column; gap: var(--ds-space-8); padding-bottom: 32px; /* dots row: 24 gap + 8 pill */ transform: translateY(8px); transition: transform 400ms var(--ds-ease-out); }
+  .ds-slide[data-active] .ds-slide-copy { transform: none; }
+  .ds-slide-copy b { font: 600 24px/30px var(--ds-font-sans); letter-spacing: -0.02em; } /* Landing/Card Title */
+  .ds-slide-copy span { font: var(--ds-type-body-default); color: var(--ds-text-secondary); }
+  /* Dots: 8px pill (active 24), 16px apart; each button is a 24px-tall target that tiles edge-to-edge (WCAG 2.5.8) */
+  .ds-dots { position: absolute; left: calc(var(--ds-space-32) - 8px); bottom: calc(var(--ds-space-32) - 8px); display: flex; }
+  .ds-dots button { display: grid; place-items: center; height: 24px; padding: 0 8px; border-radius: var(--ds-radius-full); }
+  .ds-dots button::after { content: ""; width: 8px; height: 8px; border-radius: var(--ds-radius-full); background: var(--ds-text-tertiary); opacity: 0.4; transition: width 400ms var(--ds-ease-out), background-color 400ms, opacity 400ms; }
+  .ds-dots button[aria-current="true"]::after { width: 24px; background: var(--ds-brand-solid); opacity: 1; }
+  .ds-dots button:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
+}
+@media (min-width: 1024px) and (prefers-reduced-motion: reduce) {
+  .ds-slide, .ds-slide[data-active], .ds-slide-hero .ds-art, .ds-slide-copy, .ds-dots button::after { transition: none; transform: none; }
 }
 
 /* ── Onboarding (S1 mobile: body pad 32/16, gap 28) ── */
@@ -461,7 +508,12 @@
 .ds-search input { height: 44px; width: 100%; padding: 0 var(--ds-space-16) 0 44px; border: 0; border-radius: var(--ds-radius-full); background: var(--ds-bg-surface); box-shadow: inset 0 0 0 1px var(--ds-border-control); font: var(--ds-type-body-default); color: var(--ds-text-primary); outline: none; }
 .ds-search input::placeholder { color: var(--ds-text-tertiary); }
 .ds-search input:focus { box-shadow: inset 0 0 0 1.5px var(--ds-border-focus); }
-.ds-search input::-webkit-search-cancel-button { cursor: pointer; }
+.ds-search input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; display: none; }
+.ds-search:has(.ds-search-clear) input { padding-right: 44px; }
+.ds-search .ds-search-clear { position: absolute; right: var(--ds-space-8); display: grid; place-items: center; width: 28px; height: 28px; border-radius: var(--ds-radius-full); color: var(--ds-icon-muted); }
+.ds-search .ds-search-clear svg { position: static; }
+.ds-search .ds-search-clear:hover { background: var(--ds-state-hover); color: var(--ds-text-primary); }
+.ds-search .ds-search-clear:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
 @media (min-width: 1024px) { .ds-search { width: 280px; } }
 
 .ds-list-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--ds-space-16); }
@@ -500,6 +552,24 @@
 a.ds-ordercard, button.ds-ordercard { width: 100%; text-align: left; transition: background-color var(--ds-duration-fast) var(--ds-ease-out); }
 a.ds-ordercard:hover, button.ds-ordercard:hover { background: var(--ds-bg-surface-hover); }
 a.ds-ordercard:focus-visible, button.ds-ordercard:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
+
+/* ── State block · 3D (Figma S2/S3/S4 xato · topilmadi · qoldiq yoʻq) ── */
+.ds-art { display: block; flex: none; width: 120px; height: 120px; object-fit: contain; user-select: none; -webkit-user-drag: none; }
+.ds-stateblock {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: var(--ds-space-12); padding: var(--ds-space-48) var(--ds-space-24);
+  min-height: min(56dvh, 480px); text-align: center;
+}
+.ds-stateblock-text { display: flex; flex-direction: column; gap: var(--ds-space-8); width: 100%; max-width: 480px; }
+.ds-stateblock h2 { font: var(--ds-type-heading-h2); letter-spacing: var(--ds-type-heading-h2-tracking); color: var(--ds-text-primary); text-wrap: balance; }
+.ds-stateblock p { font: var(--ds-type-body-default); color: var(--ds-text-secondary); text-wrap: pretty; }
+.ds-stateblock > .ds-btn { margin-top: var(--ds-space-12); }
+@media (min-width: 1024px) {
+  .ds-stateblock { gap: var(--ds-space-24); padding: var(--ds-space-24); min-height: min(64dvh, 640px); }
+  .ds-stateblock .ds-art { width: 200px; height: 200px; }
+  .ds-stateblock h2 { font: var(--ds-type-heading-h1); letter-spacing: var(--ds-type-heading-h1-tracking); }
+  .ds-stateblock > .ds-btn { margin-top: 0; }
+}
 
 /* Empty state */
 .ds-empty { display: flex; flex-direction: column; align-items: center; gap: var(--ds-space-8); padding: var(--ds-space-48) var(--ds-space-24); text-align: center; }
@@ -630,8 +700,8 @@ textarea.ds-input { height: auto; min-height: 48px; padding-top: 13px; padding-b
 
 .ds-alert[data-tone="danger"] { align-items: flex-start; padding: 14px var(--ds-space-16) 14px 14px; border-radius: var(--ds-radius-lg); }
 .ds-alert[data-tone="danger"] > div { display: flex; flex-direction: column; gap: 2px; }
-.ds-alert[data-tone="danger"] b { font: var(--ds-type-label-strong); color: var(--ds-text-primary); }
-.ds-alert[data-tone="danger"] span { font: var(--ds-type-body-default); color: var(--ds-text-secondary); }
+.ds-alert[data-tone="danger"] > div > b { font: var(--ds-type-label-strong); color: var(--ds-text-primary); }
+.ds-alert[data-tone="danger"] > div > span { font: var(--ds-type-body-default); color: var(--ds-text-secondary); }
 .ds-alert-icon { display: grid; place-items: center; flex: none; width: 20px; height: 20px; border-radius: var(--ds-radius-full); background: var(--ds-status-danger-solid); color: var(--ds-text-on-danger); font: 700 12px/1 var(--ds-font-sans); }
 
 /* Revenue chart — single series, one hue; current period one step darker (validated: ΔL ≥ 0.06, light end 4.41:1 on surface) */

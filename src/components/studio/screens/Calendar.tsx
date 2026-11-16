@@ -7,6 +7,7 @@ import { addDays, addMonths, isISODate, MONTHS, todayISO, WD_FULL, WD_SHORT, wee
 import { canBlock, DAY_REASONS, dayStatus, freeSlots, monthWeeks, reasonLabel, type DayReason, type DayStatus } from "@/lib/studio/calendar";
 import { Button } from "../Button";
 import { StudioIcon } from "../icons";
+import { StateBlock } from "../StateBlock";
 import { OrderCard } from "../OrderCard";
 import { OrderDetail } from "../OrderDetail";
 import { OrderForm } from "../OrderForm";
@@ -203,14 +204,14 @@ export function CalendarScreen() {
             <Button variant="secondary" onClick={() => open(today)} disabled={!ctx}>
               Bugun
             </Button>
-            <Button icon={<StudioIcon name="plus" />} onClick={() => openLayer({ kind: "new", date: selected ?? undefined })} disabled={!ctx}>
+            <Button icon={<StudioIcon name="plus" />} onClick={() => openLayer({ kind: "new", date: selected ?? undefined })} disabled={!ctx || Boolean(error && !data)}>
               Buyurtma qoʻshish
             </Button>
           </span>
         </div>
       </header>
 
-      <div className="ds-cal-meta">
+      <div className="ds-cal-meta" hidden={Boolean(error && !data)}>
         <p className="ds-body" aria-live="polite">
           {data ? (
             data.summary.events ? (
@@ -229,15 +230,9 @@ export function CalendarScreen() {
       </div>
 
       {error && !data ? (
-        <div className="ds-card ds-stack" role="alert">
-          <p className="ds-body-strong">Kalendarni yuklab boʻlmadi</p>
-          <p className="ds-body ds-secondary">{error}</p>
-          <div>
-            <Button variant="secondary" onClick={reload}>
-              Qayta urinish
-            </Button>
-          </div>
-        </div>
+        <StateBlock alert art="xato" title="Kalendar yuklanmadi" action={{ label: "Qayta urinish", icon: <StudioIcon name="refresh-cw" />, onClick: reload }}>
+          Internet aloqasini tekshiring. Yopilgan kunlar va buyurtmalar saqlangan.
+        </StateBlock>
       ) : (
         <div className="ds-gridcard">
           <div className="ds-grid" role="grid" aria-label={`${monthName(month)} ${month.slice(0, 4)}`} aria-busy={!data || undefined} ref={gridRef} onKeyDown={onGridKey}>
@@ -278,9 +273,9 @@ export function CalendarScreen() {
         </div>
       )}
 
-      <Legend className="ds-mobile-only" />
+      {!(error && !data) && <Legend className="ds-mobile-only" />}
 
-      {todays && (
+      {todays && !(error && !data) && (
         <section className="ds-stack ds-mobile-only" aria-labelledby="today-h" style={{ gap: 10 }}>
           <h2 id="today-h" className="ds-caps ds-tertiary">
             Bugun, {dayTitle(today)}

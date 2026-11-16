@@ -9,6 +9,7 @@ import { groupThousands, isOverdue, ORDER_VIEWS, weekGroup, type OrderView } fro
 import { Button } from "../Button";
 import { fetchList, listCache, useDataVersion, type OrderList, type OrderRow } from "../data";
 import { StudioIcon } from "../icons";
+import { StateBlock } from "../StateBlock";
 import { OrderCard } from "../OrderCard";
 import { OrderDetail } from "../OrderDetail";
 import { OrderForm } from "../OrderForm";
@@ -104,6 +105,12 @@ export function OrdersScreen() {
     debounce.current = setTimeout(() => nav({ q: v.trim() || null, page: null }, path.startsWith(`${BASE}/`) ? BASE : path), 250);
   };
 
+  const clearSearch = () => {
+    clearTimeout(debounce.current);
+    setTerm("");
+    nav({ q: null, page: null }, path.startsWith(`${BASE}/`) ? BASE : path);
+  };
+
   const sortBy = (col: "date" | "total" | "balance") => {
     const curDir = dir ?? (col === "date" ? (view === "past" || view === "cancelled" ? "desc" : "asc") : "desc");
     nav({ sort: col, dir: sort === col ? (curDir === "asc" ? "desc" : "asc") : null, page: null });
@@ -138,12 +145,17 @@ export function OrdersScreen() {
           <div className="ds-search ds-desktop-only" role="search">
             <StudioIcon name="search" />
             <input type="search" aria-label="Ism yoki telefon boʻyicha qidirish" placeholder="Ism yoki telefon" value={term} onChange={(e) => onSearch(e.target.value)} />
+            {term && (
+              <button type="button" className="ds-search-clear" aria-label="Qidiruvni tozalash" onClick={clearSearch}>
+                <StudioIcon name="cross" size={16} />
+              </button>
+            )}
           </div>
           <SettingsLink />
           <button className="ds-iconbtn ds-mobile-only" data-style="secondary" aria-label="Qidirish" aria-expanded={searchOpen} onClick={() => setSearchOpen((o) => !o)}>
             <StudioIcon name="search" />
           </button>
-          <button className="ds-btn ds-desktop-only" data-style="primary" onClick={() => router.push(`${BASE}/yangi${listParams() ? `?${listParams()}` : ""}`)}>
+          <button className="ds-btn ds-desktop-only" data-style="primary" disabled={Boolean(cur.error && !data)} onClick={() => router.push(`${BASE}/yangi${listParams() ? `?${listParams()}` : ""}`)}>
             <StudioIcon name="plus" />
             <span>Buyurtma qoʻshish</span>
           </button>
@@ -154,6 +166,11 @@ export function OrdersScreen() {
         <div className="ds-search ds-mobile-only" role="search">
           <StudioIcon name="search" />
           <input type="search" autoFocus aria-label="Ism yoki telefon boʻyicha qidirish" placeholder="Ism yoki telefon" value={term} onChange={(e) => onSearch(e.target.value)} />
+          {term && (
+            <button type="button" className="ds-search-clear" aria-label="Qidiruvni tozalash" onClick={clearSearch}>
+              <StudioIcon name="cross" size={16} />
+            </button>
+          )}
         </div>
       )}
 
@@ -175,17 +192,17 @@ export function OrdersScreen() {
       </div>
 
       {cur.error && !data ? (
-        <div className="ds-card ds-stack" role="alert">
-          <p className="ds-body-strong">Buyurtmalarni yuklab boʻlmadi</p>
-          <p className="ds-body ds-secondary">{cur.error}</p>
-          <div>
-            <Button variant="secondary" onClick={() => setNonce((n) => n + 1)}>
-              Qayta urinish
-            </Button>
-          </div>
-        </div>
+        <StateBlock alert art="xato" title="Buyurtmalar yuklanmadi" action={{ label: "Qayta urinish", icon: <StudioIcon name="refresh-cw" />, onClick: () => setNonce((n) => n + 1) }}>
+          Internet aloqasini tekshiring. Maʼlumotlaringiz serverda saqlangan.
+        </StateBlock>
       ) : data && data.items.length === 0 ? (
-        <Empty view={view} q={q} onNew={() => router.push(`${BASE}/yangi`)} />
+        <Empty
+          view={view}
+          q={q}
+          onNew={() => router.push(`${BASE}/yangi`)}
+          onClear={clearSearch}
+          onAll={() => nav({ view: null, page: null, sort: null, dir: null })}
+        />
       ) : (
         <>
           {/* desktop table */}
@@ -321,30 +338,32 @@ export function OrdersScreen() {
   );
 }
 
-function Empty({ view, q, onNew }: { view: OrderView; q: string; onNew(): void }) {
-  const [title, text] = q
-    ? ["Topilmadi", `“${q}” boʻyicha buyurtma yoʻq. Ism, telefon yoki joyni tekshiring.`]
-    : view === "debt"
-      ? ["Qoldiq yoʻq", "Hamma buyurtmalar toʻliq toʻlangan."]
-      : view === "upcoming"
-        ? ["Kelgusi buyurtma yoʻq", "Birinchi buyurtmani qoʻshing — u kalendarda ham koʻrinadi."]
-        : view === "past"
-          ? ["Oʻtgan buyurtma yoʻq", "Tadbir oʻtgach, buyurtma shu yerga tushadi."]
-          : ["Bekor qilingan yoʻq", "Bekor qilingan buyurtmalar shu yerda saqlanadi."];
-  return (
-    <div className="ds-empty ds-card">
-      <span className="ds-empty-icon" aria-hidden>
-        <StudioIcon name={q ? "search" : view === "debt" ? "check" : "clipboard-text"} size={24} />
-      </span>
-      <h2 className="ds-h3">{title}</h2>
-      <p className="ds-body ds-secondary">{text}</p>
-      {view === "upcoming" && !q && (
-        <div style={{ marginTop: "var(--ds-space-8)" }}>
-          <Button icon={<StudioIcon name="plus" />} onClick={onNew}>
-            Buyurtma qoʻshish
-          </Button>
-        </div>
-      )}
-    </div>
+function Empty({ view, q, onNew, onClear, onAll }: { view: OrderView; q: string; onNew(): void; onClear(): void; onAll(): void }) {
+  if (q)
+    return (
+      <StateBlock art="topilmadi" title="Topilmadi" action={{ label: "Qidiruvni tozalash", onClick: onClear }}>
+        Ism yoki telefonni tekshiring
+      </StateBlock>
+    );
+  if (view === "debt")
+    return (
+      <StateBlock art="tolangan" title="Hamma toʻlangan" action={{ label: "Barcha buyurtmalar", onClick: onAll }}>
+        Qoldiq bor buyurtma yoʻq. Yangi qoldiq paydo boʻlsa, shu yerda chiqadi.
+      </StateBlock>
+    );
+  if (view === "upcoming")
+    return (
+      <StateBlock art="kalendar" title="Kelgusi buyurtma yoʻq" action={{ label: "Buyurtma qoʻshish", icon: <StudioIcon name="plus" />, onClick: onNew, primary: true }}>
+        Birinchi buyurtmani qoʻshing — u kalendarda ham koʻrinadi.
+      </StateBlock>
+    );
+  return view === "past" ? (
+    <StateBlock art="kalendar" title="Oʻtgan buyurtma yoʻq">
+      Tadbir oʻtgach, buyurtma shu yerga tushadi.
+    </StateBlock>
+  ) : (
+    <StateBlock art="topilmadi" title="Bekor qilingan yoʻq">
+      Bekor qilingan buyurtmalar shu yerda saqlanadi.
+    </StateBlock>
   );
 }
