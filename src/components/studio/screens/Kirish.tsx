@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { api, ApiError } from "@/lib/api";
+import { AuthTools } from "../AuthTools";
 import { BotLogin } from "../BotLogin";
 import { Button } from "../Button";
 import { StudioIcon } from "../icons";
@@ -154,6 +155,7 @@ export function KirishScreen() {
 
   return (
     <div className="ds-auth">
+      <AuthTools />
       <div className="ds-auth-card">
         <Slides />
 
