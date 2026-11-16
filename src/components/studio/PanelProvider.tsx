@@ -8,7 +8,12 @@ import { telegram, type TelegramWebApp } from "./telegram";
 
 export type Role = "owner" | "manager";
 export type Studio = { id: string; name: string; category: "dekor" | "floristika"; dailyCapacity: number; role: Role; remindersOn: boolean };
-export type Me = { user: { id: string; name: string; username: string | null; photoUrl: string | null }; studios: Studio[] };
+export type Me = {
+  user: { id: string; name: string; username: string | null; photoUrl: string | null };
+  studios: Studio[];
+  /* set when the person has no studio because an owner removed them (last 30 days) */
+  removed?: { studio: string; by: { name: string; username: string | null } | null } | null;
+};
 
 type State =
   | { status: "loading" }
@@ -46,6 +51,7 @@ export const homeFor = (role: Role) => (role === "owner" ? `${PANEL}/dashboard` 
 const PUBLIC = [`${PANEL}/kirish`];
 const ONBOARDING = `${PANEL}/onboarding`;
 export const INVITE_PATH = `${PANEL}/taklif`;
+export const REMOVED_PATH = `${PANEL}/yopilgan`;
 const STUDIO_KEY = "ds-studio";
 const INVITE_KEY = "ds-invite";
 /* last accepted/declined token: Telegram keeps start_param (and the URL keeps ?taklif=) for the whole session,
@@ -76,7 +82,10 @@ function routeFor(state: State, path: string, invite: string | null): string | n
   // an invite beats onboarding and home: the person came to join a studio
   if (invite) return path === INVITE_PATH ? null : INVITE_PATH;
   if (path === INVITE_PATH) return state.studio ? homeFor(state.studio.role) : ONBOARDING;
+  // removed from their only studio: explain first; "Oʻz studiyamni ochish" still reaches onboarding
+  if (!state.studio && state.me.removed) return path === REMOVED_PATH || path === ONBOARDING ? null : REMOVED_PATH;
   if (!state.studio) return path === ONBOARDING ? null : ONBOARDING;
+  if (path === REMOVED_PATH) return homeFor(state.studio.role);
   if (path === PANEL || PUBLIC.includes(path) || path === ONBOARDING) return homeFor(state.studio.role);
   if (path.startsWith(`${PANEL}/dashboard`) && state.studio.role !== "owner") return `${PANEL}/kalendar`;
   return null;

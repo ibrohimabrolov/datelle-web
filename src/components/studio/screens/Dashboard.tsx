@@ -10,7 +10,7 @@ import { groupThousands } from "@/lib/studio/orders";
 import { Button } from "../Button";
 import { useDataVersion } from "../data";
 import { StudioIcon } from "../icons";
-import { StateBlock } from "../StateBlock";
+import { Illustration, StateBlock } from "../StateBlock";
 import { OrderCard } from "../OrderCard";
 import { OrderDetail } from "../OrderDetail";
 import { OrderForm } from "../OrderForm";
@@ -355,8 +355,9 @@ function Setup({ data, studio, onNew }: { data: Dash; studio: string; onNew(): v
   const done = steps.filter((s) => s.done).length;
   return (
     <section className="ds-panelcard" aria-labelledby="setup-h">
-      <div className="ds-cardhead" style={{ alignItems: "flex-start" }}>
-        <div className="ds-stack" style={{ gap: "var(--ds-space-4)" }}>
+      <div className="ds-cardhead ds-setup-head">
+        <Illustration art="kalendar" className="ds-setup-art" />
+        <div className="ds-stack" style={{ gap: "var(--ds-space-4)", flex: 1 }}>
           <h2 id="setup-h" className="ds-h3">
             Studiyani ishga tushiring
           </h2>

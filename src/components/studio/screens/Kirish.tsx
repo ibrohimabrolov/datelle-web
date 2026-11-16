@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { api, ApiError } from "@/lib/api";
 import { AuthTools } from "../AuthTools";
 import { BotLogin } from "../BotLogin";
@@ -154,82 +154,88 @@ export function KirishScreen() {
   const unavailable = cfg && (!cfg.botId || !cfg.botUsername);
 
   return (
+    <AuthShell>
+      <Illustration art={error ? "xato" : "kalendar"} className="ds-mobile-only" />
+      <h1 className="ds-h1">Kirish</h1>
+
+      {mode === "bot" ? (
+        <BotLogin onDone={setMe} onCancel={() => setMode("idle")} />
+      ) : (
+        <>
+          {error && (
+            <div className="ds-alert" data-tone="danger" role="alert">
+              <span className="ds-alert-icon" aria-hidden>
+                !
+              </span>
+              <div>
+                <b>Telegram bilan bogʻlanib boʻlmadi</b>
+                <span>{error}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Primary: confirm in our bot (reliable). Secondary: Telegram's phone-number popup. */}
+          <Button
+            size="l"
+            block
+            loading={!cfg || state.status !== "anon"}
+            disabled={Boolean(unavailable) || busy !== null}
+            onClick={() => {
+              setError(null);
+              setMode("bot");
+            }}
+            icon={<StudioIcon name="send" variant="Filled" />}
+          >
+            Telegram orqali kirish
+          </Button>
+
+          {unavailable ? (
+            <p className="ds-helper">Telegram orqali kirish hali sozlanmagan</p>
+          ) : (
+            <>
+              {!error && <p className="ds-auth-note">Bu qurilmada 30 kun kirgan holda qolasiz</p>}
+              <button type="button" className="ds-auth-alt" onClick={signInTelegram} disabled={busy !== null || !cfg}>
+                {busy === "tg" ? "Telegram oynasi ochiq…" : "Telefon raqam bilan kirish"}
+              </button>
+            </>
+          )}
+        </>
+      )}
+
+      {cfg?.botUsername && (
+        <p
+          className="ds-label"
+          style={{
+            display: "flex",
+            gap: "var(--ds-space-8)",
+            flexWrap: "wrap",
+          }}
+        >
+          <span className="ds-secondary">Studiya yoʻqmi?</span>
+          <a className="ds-label-strong ds-brand" href={`https://t.me/${cfg.botUsername}`} target="_blank" rel="noreferrer">
+            @{cfg.botUsername} ni oching
+          </a>
+        </p>
+      )}
+
+      {cfg?.devLogin && state.status === "anon" && (
+        <Button variant="ghost" onClick={signInDev} loading={busy === "dev"} disabled={busy === "tg"}>
+          Test sifatida kirish
+        </Button>
+      )}
+    </AuthShell>
+  );
+}
+
+/* Stage + card + 3D slides + toolbar; the form column content varies (Kirish, Kirish yopilgan). */
+export function AuthShell({ children }: { children: ReactNode }) {
+  return (
     <div className="ds-auth">
       <div className="ds-auth-card">
         <Slides />
-
         <main className="ds-auth-main">
           <AuthTools />
-          <div className="ds-auth-box">
-            <Illustration art={error ? "xato" : "kalendar"} className="ds-mobile-only" />
-            <h1 className="ds-h1">Kirish</h1>
-
-            {mode === "bot" ? (
-              <BotLogin onDone={setMe} onCancel={() => setMode("idle")} />
-            ) : (
-              <>
-                {error && (
-                  <div className="ds-alert" data-tone="danger" role="alert">
-                    <span className="ds-alert-icon" aria-hidden>
-                      !
-                    </span>
-                    <div>
-                      <b>Telegram bilan bogʻlanib boʻlmadi</b>
-                      <span>{error}</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Primary: confirm in our bot (reliable). Secondary: Telegram's phone-number popup. */}
-                <Button
-                  size="l"
-                  block
-                  loading={!cfg || state.status !== "anon"}
-                  disabled={Boolean(unavailable) || busy !== null}
-                  onClick={() => {
-                    setError(null);
-                    setMode("bot");
-                  }}
-                  icon={<StudioIcon name="send" variant="Filled" />}
-                >
-                  Telegram orqali kirish
-                </Button>
-
-                {unavailable ? (
-                  <p className="ds-helper">Telegram orqali kirish hali sozlanmagan</p>
-                ) : (
-                  <>
-                    {!error && <p className="ds-auth-note">Bu qurilmada 30 kun kirgan holda qolasiz</p>}
-                    <button type="button" className="ds-auth-alt" onClick={signInTelegram} disabled={busy !== null || !cfg}>
-                      {busy === "tg" ? "Telegram oynasi ochiq…" : "Telefon raqam bilan kirish"}
-                    </button>
-                  </>
-                )}
-              </>
-            )}
-
-            {cfg?.botUsername && (
-              <p
-                className="ds-label"
-                style={{
-                  display: "flex",
-                  gap: "var(--ds-space-8)",
-                  flexWrap: "wrap",
-                }}
-              >
-                <span className="ds-secondary">Studiya yoʻqmi?</span>
-                <a className="ds-label-strong ds-brand" href={`https://t.me/${cfg.botUsername}`} target="_blank" rel="noreferrer">
-                  @{cfg.botUsername} ni oching
-                </a>
-              </p>
-            )}
-
-            {cfg?.devLogin && state.status === "anon" && (
-              <Button variant="ghost" onClick={signInDev} loading={busy === "dev"} disabled={busy === "tg"}>
-                Test sifatida kirish
-              </Button>
-            )}
-          </div>
+          <div className="ds-auth-box">{children}</div>
         </main>
       </div>
     </div>

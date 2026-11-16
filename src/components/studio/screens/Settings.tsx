@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { api, ApiError } from "@/lib/api";
 import { MONTHS } from "@/lib/dates";
+import { ThemeSwitch } from "../AuthTools";
 import { Button } from "../Button";
 import { useDataVersion, dataChanged } from "../data";
 import { StudioIcon } from "../icons";
@@ -287,6 +288,21 @@ export function SettingsScreen() {
             </li>
           </ul>
         </Section>
+
+        {/* Telegram decides the Mini App theme; the web panel remembers its own (light by default) */}
+        {!tg && (
+          <Section title="Koʻrinish">
+            <ul className="ds-list">
+              <li className="ds-li">
+                <div className="ds-li-main">
+                  <span className="ds-li-title">Mavzu</span>
+                  <span className="ds-li-sub">Shu brauzerda saqlanadi</span>
+                </div>
+                <ThemeSwitch />
+              </li>
+            </ul>
+          </Section>
+        )}
 
         <Section title="Obuna">
           <div className="ds-plan">

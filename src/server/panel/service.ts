@@ -1,5 +1,6 @@
 import "server-only";
-import { and, eq, sql } from "drizzle-orm";
+import { and, desc, eq, gt, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { addDays, todayISO } from "@/lib/dates";
@@ -36,7 +37,30 @@ export async function mePayload(user: Pick<PanelUser, "id">) {
     .from(schema.users)
     .where(eq(schema.users.id, user.id));
   const studios = await memberships(user.id);
-  return { user: { ...u, name: u.name ?? "Foydalanuvchi" }, studios };
+  // No studio left: was this person removed from one recently? (Figma "Kirish yopilgan")
+  const removed = studios.length ? null : await recentRemoval(user.id);
+  return { user: { ...u, name: u.name ?? "Foydalanuvchi" }, studios, removed };
+}
+
+const REMOVAL_WINDOW_DAYS = 30;
+async function recentRemoval(userId: string) {
+  const actor = alias(schema.users, "actor");
+  const [r] = await db
+    .select({ studio: schema.studios.name, byName: actor.name, byUsername: actor.telegramUsername })
+    .from(schema.studioEvents)
+    .innerJoin(schema.studios, eq(schema.studios.id, schema.studioEvents.studioId))
+    .leftJoin(actor, eq(actor.id, schema.studioEvents.actorId))
+    .where(
+      and(
+        eq(schema.studioEvents.entity, "member"),
+        eq(schema.studioEvents.action, "delete"),
+        eq(schema.studioEvents.entityId, userId),
+        gt(schema.studioEvents.createdAt, sql`now() - make_interval(days => ${REMOVAL_WINDOW_DAYS})`),
+      ),
+    )
+    .orderBy(desc(schema.studioEvents.createdAt))
+    .limit(1);
+  return r ? { studio: r.studio, by: r.byName ? { name: r.byName, username: r.byUsername } : null } : null;
 }
 
 /* ── onboarding: one screen, no steps (MVP-SCOPE S1) ── */

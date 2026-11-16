@@ -214,6 +214,8 @@
 .ds-seg button:not([aria-pressed="true"]):not(:disabled):hover { color: var(--ds-text-primary); }
 .ds-seg button:disabled { color: var(--ds-text-disabled); cursor: not-allowed; }
 .ds-seg button:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
+.studio[data-platform="telegram"] .ds-auth-tools { display: none; } /* Telegram owns the Mini App theme */
+.ds-li .ds-seg { background: var(--ds-bg-muted); } /* Sozlamalar row sits on bg/surface — one step darker so the white active pill reads */
 .ds-auth-alt { align-self: flex-start; font: var(--ds-type-label-strong); color: var(--ds-text-brand); padding: 3px 0; border-radius: var(--ds-radius-sm); }
 .ds-auth-alt:hover { text-decoration: underline; text-underline-offset: 3px; }
 .ds-auth-alt:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
@@ -286,8 +288,7 @@
 /* ── Onboarding (S1 mobile: body pad 32/16, gap 28) ── */
 .ds-onb { max-width: 480px; margin: 0 auto; padding: var(--ds-space-32) var(--ds-space-16) calc(120px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 28px; }
 .ds-onb-title { font: 600 40px/44px var(--ds-font-sans); letter-spacing: var(--ds-type-display-hero-tracking); } /* Figma: off-scale 40/44 (between H1 28 and Hero 48) */
-.ds-motif { display: flex; align-items: flex-end; gap: 6px; height: 58px; }
-.ds-motif i { width: 28px; border-radius: 14px; }
+.ds-onb .ds-onb-art { width: 112px; height: 112px; } /* Figma S1 · Onboarding 5:3 */
 .ds-options { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ds-space-12); }
 .ds-option {
   display: flex; flex-direction: column; gap: var(--ds-space-24); text-align: left;
@@ -593,20 +594,22 @@ a.ds-ordercard:focus-visible, button.ds-ordercard:focus-visible { outline: none;
 
 /* ── State block · 3D (Figma S2/S3/S4 xato · topilmadi · qoldiq yoʻq) ── */
 .ds-art { display: block; flex: none; width: 120px; height: 120px; object-fit: contain; user-select: none; -webkit-user-drag: none; }
+/* mobile (Figma "Yuklab boʻlmadi" 34:2197): 3D 140, gap 24, text gap 4 */
 .ds-stateblock {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: var(--ds-space-12); padding: var(--ds-space-48) var(--ds-space-24);
+  gap: var(--ds-space-24); padding: var(--ds-space-48) var(--ds-space-24);
   min-height: min(56dvh, 480px); text-align: center;
 }
-.ds-stateblock-text { display: flex; flex-direction: column; gap: var(--ds-space-8); width: 100%; max-width: 480px; }
-.ds-stateblock h2 { font: var(--ds-type-heading-h2); letter-spacing: var(--ds-type-heading-h2-tracking); color: var(--ds-text-primary); text-wrap: balance; }
+.ds-stateblock .ds-art { width: 140px; height: 140px; }
+.ds-stateblock[data-compact] { min-height: 0; padding: 0; }
+.ds-stateblock-text { display: flex; flex-direction: column; gap: var(--ds-space-4); width: 100%; max-width: 480px; }
+.ds-stateblock :is(h1, h2) { font: var(--ds-type-heading-h2); letter-spacing: var(--ds-type-heading-h2-tracking); color: var(--ds-text-primary); text-wrap: balance; }
 .ds-stateblock p { font: var(--ds-type-body-default); color: var(--ds-text-secondary); text-wrap: pretty; }
-.ds-stateblock > .ds-btn { margin-top: var(--ds-space-12); }
 @media (min-width: 1024px) {
   .ds-stateblock { gap: var(--ds-space-24); padding: var(--ds-space-24); min-height: min(64dvh, 640px); }
   .ds-stateblock .ds-art { width: 200px; height: 200px; }
-  .ds-stateblock h2 { font: var(--ds-type-heading-h1); letter-spacing: var(--ds-type-heading-h1-tracking); }
-  .ds-stateblock > .ds-btn { margin-top: 0; }
+  .ds-stateblock :is(h1, h2) { font: var(--ds-type-heading-h1); letter-spacing: var(--ds-type-heading-h1-tracking); }
+  .ds-stateblock-text { gap: var(--ds-space-8); }
 }
 
 /* Empty state */
@@ -736,11 +739,13 @@ textarea.ds-input { height: auto; min-height: 48px; padding-top: 13px; padding-b
 .ds-event .e-money { font: var(--ds-type-body-strong); color: var(--ds-money-due); text-align: right; font-variant-numeric: tabular-nums; }
 .ds-event .e-money[data-paid] { font: var(--ds-type-label-strong); color: var(--ds-text-secondary); }
 
-.ds-alert:is([data-tone="danger"], [data-tone="warning"]):has(> .ds-alert-icon) { align-items: flex-start; padding: 14px var(--ds-space-16) 14px 14px; border-radius: var(--ds-radius-lg); }
-.ds-alert:is([data-tone="danger"], [data-tone="warning"]) > div { display: flex; flex-direction: column; gap: 2px; }
-.ds-alert:is([data-tone="danger"], [data-tone="warning"]) > div > b { font: var(--ds-type-label-strong); color: var(--ds-text-primary); }
-.ds-alert:is([data-tone="danger"], [data-tone="warning"]) > div > span { font: var(--ds-type-body-default); color: var(--ds-text-secondary); }
+.ds-alert:is([data-tone="danger"], [data-tone="warning"], [data-tone="info"]):has(> .ds-alert-icon) { align-items: flex-start; padding: 14px var(--ds-space-16) 14px 14px; border-radius: var(--ds-radius-lg); }
+.ds-alert:is([data-tone="danger"], [data-tone="warning"], [data-tone="info"]) > div { display: flex; flex-direction: column; gap: 2px; }
+.ds-alert:is([data-tone="danger"], [data-tone="warning"], [data-tone="info"]) > div > b { font: var(--ds-type-label-strong); color: var(--ds-text-primary); }
+.ds-alert:is([data-tone="danger"], [data-tone="warning"], [data-tone="info"]) > div > span { font: var(--ds-type-body-default); color: var(--ds-text-secondary); }
 .ds-alert[data-tone="warning"] > .ds-alert-icon { background: var(--ds-status-warning-solid); color: var(--ds-neutral-950); }
+.ds-alert[data-tone="info"] { background: var(--ds-status-info-bg); color: var(--ds-text-info); }
+.ds-alert[data-tone="info"] > .ds-alert-icon { background: var(--ds-status-info-solid); color: var(--ds-neutral-0); }
 .ds-alert-icon { display: grid; place-items: center; flex: none; width: 20px; height: 20px; border-radius: var(--ds-radius-full); background: var(--ds-status-danger-solid); color: var(--ds-text-on-danger); font: 700 12px/1 var(--ds-font-sans); }
 
 /* Revenue chart — single series, one hue; current period one step darker (validated: ΔL ≥ 0.06, light end 4.41:1 on surface) */
@@ -865,7 +870,7 @@ a.ds-btn[aria-disabled] { pointer-events: none; opacity: 0.5; }
 /* ── S0 · Taklif (Figma 19:476 / 34:2219) ── */
 .ds-invite { min-height: 100dvh; max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; padding: var(--ds-space-48) var(--ds-space-16) calc(var(--ds-space-16) + env(safe-area-inset-bottom)); }
 .ds-invite-body { flex: 1; display: flex; flex-direction: column; align-items: center; gap: var(--ds-space-8); text-align: center; padding-top: var(--ds-space-48); }
-.ds-invite-body .ds-avatar { width: 72px; height: 72px; margin-bottom: var(--ds-space-16); font: var(--ds-type-body-strong); }
+.ds-invite-body .ds-invite-art { width: 128px; height: 128px; margin-bottom: var(--ds-space-16); } /* Figma S0 · Taklif 19:476: 3D 128, gap 24 to title */
 .ds-invite-title { font: var(--ds-type-heading-h1); letter-spacing: var(--ds-type-heading-h1-tracking); }
 .ds-invite-caps { list-style: none; width: 100%; margin: var(--ds-space-24) 0 0; padding: 0 var(--ds-space-16); background: var(--ds-bg-surface); border-radius: var(--ds-radius-xl); text-align: left; }
 .ds-invite-caps li { display: flex; align-items: center; gap: var(--ds-space-12); min-height: 52px; font: var(--ds-type-body-medium); }
@@ -875,7 +880,9 @@ a.ds-btn[aria-disabled] { pointer-events: none; opacity: 0.5; }
 .ds-invite-caps li[data-off] svg { color: var(--ds-icon-muted); }
 .ds-invite-foot { display: flex; flex-direction: column; gap: var(--ds-space-8); padding-top: var(--ds-space-24); }
 .ds-invite-state { flex: 1; display: grid; place-items: center; }
-.ds-invite-icon { display: grid; place-items: center; width: 64px; height: 64px; border-radius: var(--ds-radius-full); background: var(--ds-bg-surface); color: var(--ds-icon-muted); }
+.ds-setup-head { align-items: center; gap: var(--ds-space-16); }
+.ds-setup-art { width: 64px; height: 64px; }
+@media (min-width: 1024px) { .ds-setup-art { width: 88px; height: 88px; } } /* Figma S2 · Dashboard · boʻsh 36:10893 */
 
 /* ── Phase 7 QA: narrow desktop (1024–1279) and small phones ── */
 @media (max-width: 1279.98px) {

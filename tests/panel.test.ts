@@ -628,6 +628,13 @@ describe("settings & team", () => {
     const r = await owner.req(`/api/panel/members/${mgrId}`, { method: "DELETE", body: {} });
     assert.equal(r.json.members.length, 1);
     assert.equal((await joiner.req("/api/panel/calendar?month=2026-11", { headers: { "x-studio-id": studioId } })).status, 404);
+    // the removed person learns why ("Kirish yopilgan"), with the owner to ask
+    const me = await joiner.req("/api/panel/me");
+    assert.equal(me.json.studios.length, 0);
+    assert.equal(me.json.removed.studio, (await owner.req("/api/panel/me")).json.studios[0].name);
+    assert.ok(me.json.removed.by.name);
+    // owners and people with a studio never get the flag
+    assert.equal((await owner.req("/api/panel/me")).json.removed, null);
   });
 
   test("each member toggles their own reminder; the cron respects it", async () => {
