@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash, createHmac } from "node:crypto";
 import { verifyInitData, verifyLoginWidget, verifySecret } from "../src/server/telegram/signature";
-import { formatSum, parseCommand, parseInvite, reminderMessage, reminderText, replyTo, shortDate, type TgUpdate } from "../src/server/telegram/messages";
+import { formatSum, parseCommand, parseInvite, parseLoginCallback, parseLoginStart, reminderMessage, reminderText, replyTo, shortDate, type TgUpdate } from "../src/server/telegram/messages";
 import { botConfig } from "../src/server/telegram/config";
 import { fanOutReminders, type StudioDigest } from "../src/server/telegram/reminders";
 
@@ -186,4 +186,15 @@ test("bot config: off without a real token, webhook secret derived and stable", 
   } finally {
     process.env = env;
   }
+});
+
+test("bot sign-in params: strict shapes only", () => {
+  const id = "A".repeat(21) + "_";
+  assert.equal(parseLoginStart(`login_${id}`), id);
+  assert.equal(parseLoginStart("login_short"), undefined);
+  assert.equal(parseLoginStart(`inv_${id}`), undefined);
+  assert.deepEqual(parseLoginCallback(`lg:ok:${id}`), { approve: true, id });
+  assert.deepEqual(parseLoginCallback(`lg:no:${id}`), { approve: false, id });
+  assert.equal(parseLoginCallback(`lg:maybe:${id}`), null);
+  assert.equal(parseLoginCallback(undefined), null);
 });

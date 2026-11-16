@@ -3,6 +3,7 @@
    one round-trip, no outbound call, nothing to retry. */
 import { NextResponse, type NextRequest } from "next/server";
 import { HttpError, json, route } from "@/server/http";
+import { handleLoginUpdate } from "@/server/panel/botLogin";
 import { botConfig, panelUrl } from "@/server/telegram/config";
 import { replyTo, type TgUpdate } from "@/server/telegram/messages";
 import { verifyWebhookSecret } from "@/server/telegram/signature";
@@ -25,6 +26,12 @@ export const POST = route(async (req: NextRequest) => {
   } catch {
     return json({ ok: true, skipped: "bad_json" });
   }
+
+  const login = await handleLoginUpdate(update, cfg.token).catch((e) => {
+    console.error("[telegram] login update failed", e);
+    return null;
+  });
+  if (login) return NextResponse.json(login, { headers: { "Cache-Control": "no-store" } });
 
   const reply = replyTo(update, panelUrl());
   if (!reply) return json({ ok: true });

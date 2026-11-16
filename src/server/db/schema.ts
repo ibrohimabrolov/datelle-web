@@ -338,3 +338,24 @@ export const studioEvents = pgTable(
   },
   (t) => [index("studio_events_entity_idx").on(t.studioId, t.entity, t.entityId, t.createdAt)],
 );
+
+/* Desktop sign-in through the bot (fallback for the Login Widget, whose confirmation
+   message Telegram does not always deliver). The browser holds `secret` in an httpOnly
+   cookie; the public id travels as /start login_<id>. Approval binds a Telegram user;
+   the browser's next poll consumes it once and gets a panel session. 5-minute life. */
+export const panelLogins = pgTable(
+  "panel_logins",
+  {
+    id: text("id").primaryKey(), // 16 random bytes, base64url — public (deep link)
+    secretHash: text("secret_hash").notNull().unique(), // sha256 of the browser cookie
+    code: text("code").notNull(), // 4 digits shown on both screens to compare
+    startedBy: bigint("started_by", { mode: "number" }), // Telegram user who opened the link
+    tgUser: jsonb("tg_user").$type<{ id: number; first_name: string; last_name?: string; username?: string }>(),
+    approvedAt: ts("approved_at"),
+    declinedAt: ts("declined_at"),
+    consumedAt: ts("consumed_at"),
+    expiresAt: ts("expires_at").notNull(),
+    createdAt: ts("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("panel_logins_expires_idx").on(t.expiresAt)],
+);

@@ -5,10 +5,12 @@ import { MONTHS, WD_SHORT, dayNum, weekdayIdx } from "@/lib/dates";
 
 /* ——— Bot API shapes we use (subset) ——— */
 export type TgChat = { id: number; type: "private" | "group" | "supergroup" | "channel" };
-export type TgMessage = { message_id: number; chat: TgChat; from?: { id: number; first_name: string; language_code?: string }; text?: string };
-export type TgUpdate = { update_id: number; message?: TgMessage };
+export type TgMessage = { message_id: number; chat: TgChat; from?: TgFrom; text?: string };
+export type TgFrom = { id: number; first_name: string; last_name?: string; username?: string; language_code?: string };
+export type TgCallback = { id: string; from: TgFrom; data?: string; message?: { message_id: number; chat: TgChat } };
+export type TgUpdate = { update_id: number; message?: TgMessage; callback_query?: TgCallback };
 
-export type InlineButton = { text: string; web_app: { url: string } } | { text: string; url: string };
+export type InlineButton = { text: string; web_app: { url: string } } | { text: string; url: string } | { text: string; callback_data: string };
 export type SendMessage = {
   chat_id: number;
   text: string;
@@ -37,6 +39,18 @@ export const COPY = {
     "Savol boʻlsa — @datelle_uz",
   ].join("\n"),
   groupOnly: "Men faqat shaxsiy chatda ishlayman.",
+  loginAsk: (code: string) =>
+    [
+      "<b>Kompyuterda Datelle Studio’ga kirish</b>",
+      "",
+      `Kod: <b>${code}</b> — kompyuterdagi kod bilan bir xil boʻlsa, tasdiqlang.`,
+      "Soʻrovni siz yubormagan boʻlsangiz, «Bekor qilish»ni bosing.",
+    ].join("\n"),
+  loginConfirm: "Tasdiqlash",
+  loginCancel: "Bekor qilish",
+  loginDone: "✅ Kirish tasdiqlandi. Kompyuterga qayting — panel oʻzi ochiladi.",
+  loginDeclined: "Kirish bekor qilindi. Hech kim kirmadi.",
+  loginExpired: "Bu kirish havolasi eskirgan. Kompyuterda «Telegram orqali kirish»ni qayta bosing.",
 } as const;
 
 /* Commands shown in the Telegram "/" menu (setMyCommands) */
@@ -60,6 +74,15 @@ export const shortDate = (iso: string) => `${dayNum(iso)}-${MONTHS[Number(iso.sl
 /* Invite tokens travel as /start inv_<token> or Mini App startapp=inv_<token> */
 const INVITE_RE = /^inv_([A-Za-z0-9_-]{16,64})$/;
 export const parseInvite = (param: string | undefined) => (param ? INVITE_RE.exec(param)?.[1] : undefined);
+
+/* Desktop bot sign-in: /start login_<id>, buttons lg:ok:<id> / lg:no:<id> */
+const LOGIN_RE = /^login_([A-Za-z0-9_-]{22})$/;
+export const parseLoginStart = (param: string | undefined) => (param ? LOGIN_RE.exec(param)?.[1] : undefined);
+const LOGIN_CB_RE = /^lg:(ok|no):([A-Za-z0-9_-]{22})$/;
+export function parseLoginCallback(data: string | undefined) {
+  const m = data ? LOGIN_CB_RE.exec(data) : null;
+  return m ? { approve: m[1] === "ok", id: m[2] } : null;
+}
 
 /* "/start@datelle_bot inv_x" → { cmd: "start", arg: "inv_x" } */
 export function parseCommand(text: string | undefined) {

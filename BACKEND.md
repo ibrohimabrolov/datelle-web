@@ -106,6 +106,8 @@ Internal tool for studios — separate tables (`studios`, `studio_members`, `stu
 | GET | `/api/panel/auth/config` | — | `{ botId, botUsername, devLogin }` for the Kirish screen |
 | POST | `/api/panel/auth/telegram` `{initData}` | — | Mini App; HMAC("WebAppData", token), ≤ 24 h; 60/h/IP |
 | POST | `/api/panel/auth/widget` | — | desktop Login Widget payload; SHA256(token) |
+| POST | `/api/panel/auth/bot` | — | desktop bot sign-in: opens a 5-min request, sets `dt_login`; returns `start`, `code`, `url` |
+| POST | `/api/panel/auth/bot/poll` | `dt_login` | `pending` / `declined` / `expired` / `missing`, or `approved` + session cookie (once) |
 | POST | `/api/panel/auth/dev` `{id, firstName?}` | — | only with `PANEL_DEV_LOGIN=1` and never on Vercel |
 | POST | `/api/panel/auth/logout` | cookie | deletes the session row |
 | GET | `/api/panel/me` | cookie | user + studios with role |
