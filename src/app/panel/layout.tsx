@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { PanelProvider, Splash } from "@/components/studio/PanelProvider";
+import { THEME_BOOT } from "@/components/studio/theme";
 import "@/studio/tokens.css";
 import "./studio.css";
 
@@ -21,7 +22,9 @@ export const viewport: Viewport = {
    Static shell; all data comes from /api/panel/* on the client. */
 export default function PanelLayout({ children }: LayoutProps<"/panel">) {
   return (
-    <div className="studio">
+    // data-theme is set before paint by THEME_BOOT (stored choice, light by default); Telegram overrides it in PanelProvider
+    <div className="studio" data-theme="light" suppressHydrationWarning>
+      <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
       <Suspense fallback={<Splash />}>
         <PanelProvider>{children}</PanelProvider>
       </Suspense>
