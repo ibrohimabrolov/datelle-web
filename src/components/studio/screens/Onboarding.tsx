@@ -2,6 +2,7 @@
 
 import { useEffect, useEffectEvent, useRef, useState, type KeyboardEvent } from "react";
 import { api, ApiError } from "@/lib/api";
+import { Illustration } from "../StateBlock";
 import { Button } from "../Button";
 import { Splash, usePanel, type Me, type Studio } from "../PanelProvider";
 
@@ -88,15 +89,7 @@ export function OnboardingScreen() {
         void submit();
       }}
     >
-      <div className="ds-motif" aria-hidden>
-        <i style={{ height: 40, background: "var(--ds-bg-surface)" }} />
-        <i style={{ height: 52, background: "var(--ds-day-booked-bg)" }} />
-        <i style={{ height: 46, background: "var(--ds-day-limited-bg)" }} />
-        <i style={{ height: 52, background: "var(--ds-day-booked-bg)" }} />
-        <i style={{ height: 58, background: "var(--ds-day-selected-bg)" }} />
-        <i style={{ height: 46, background: "var(--ds-day-limited-bg)" }} />
-        <i style={{ height: 40, background: "var(--ds-bg-surface)" }} />
-      </div>
+      <Illustration art="kalendar" className="ds-onb-art" />
 
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--ds-space-8)" }}>
         <h1 className="ds-onb-title">Studiyangiz</h1>

@@ -4,8 +4,8 @@ import { useEffect, useEffectEvent, useState } from "react";
 import { api, ApiError } from "@/lib/api";
 import { Button } from "../Button";
 import { StudioIcon } from "../icons";
+import { Illustration } from "../StateBlock";
 import { Splash, usePanel, type Me } from "../PanelProvider";
-import { initials } from "./Settings";
 
 type Preview = { studio: { id: string; name: string }; inviter: string | null; role: "owner" | "manager"; status: "ok" | "used" | "expired" | "member" };
 type View = { kind: "loading" } | { kind: "preview"; p: Preview } | { kind: "invalid" } | { kind: "error"; message: string };
@@ -73,23 +73,23 @@ export function InviteScreen() {
     const ask = p?.inviter ? `${p.inviter}dan yangi link soʻrang` : "Studiya egasidan yangi link soʻrang";
     const copy =
       view.kind === "invalid"
-        ? { title: "Link notoʻgʻri", body: "Linkni toʻliq nusxalab, qayta oching" }
+        ? { art: "xato" as const, title: "Link notoʻgʻri", body: "Linkni toʻliq nusxalab, qayta oching" }
         : view.kind === "error"
-          ? { title: "Ochib boʻlmadi", body: view.message }
+          ? { art: "xato" as const, title: "Ochib boʻlmadi", body: view.message }
           : p!.status === "member"
-            ? { title: "Siz allaqachon jamoadasiz", body: p!.studio.name }
+            ? { art: "jamoa" as const, title: "Siz allaqachon jamoadasiz", body: p!.studio.name }
             : p!.status === "expired"
-              ? { title: "Link eskirgan", body: ask }
-              : { title: "Link ishlatilgan", body: ask };
+              ? { art: "muddat" as const, title: "Link eskirgan", body: ask }
+              : { art: "muddat" as const, title: "Link ishlatilgan", body: ask };
     return (
       <main className="ds-invite">
         <div className="ds-invite-state">
-          <div className="ds-state">
-            <span className="ds-invite-icon" aria-hidden>
-              <StudioIcon name={p?.status === "member" ? "check" : "lock"} variant="Filled" size={24} />
-            </span>
-            <h1 className="ds-h2">{copy.title}</h1>
-            <p className="ds-body ds-secondary">{copy.body}</p>
+          <div className="ds-stateblock" data-compact>
+            <Illustration art={copy.art} />
+            <div className="ds-stateblock-text">
+              <h1>{copy.title}</h1>
+              <p>{copy.body}</p>
+            </div>
           </div>
         </div>
         <div className="ds-invite-foot">
@@ -113,9 +113,7 @@ export function InviteScreen() {
   return (
     <main className="ds-invite">
       <div className="ds-invite-body">
-        <span className="ds-avatar" aria-hidden>
-          {initials(p.studio.name)}
-        </span>
+        <Illustration art="jamoa" className="ds-invite-art" />
         <h1 className="ds-invite-title">{p.studio.name}</h1>
         <p className="ds-body ds-secondary">{p.inviter ? `${p.inviter} sizni menejer qilib taklif qildi` : "Sizni menejer qilib taklif qilishdi"}</p>
         <ul className="ds-invite-caps" aria-label="Menejer nimalar qila oladi">
