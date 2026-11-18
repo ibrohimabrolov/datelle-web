@@ -1,4 +1,4 @@
-# Datelle — backend (v1)
+# Floreal — backend (v1)
 
 Monolith: Next.js 16 route handlers + Postgres 16 + Drizzle ORM. One repo, one deploy.
 Status: **Phase 1 done** — real availability, phone login (SMS OTP), booking/quote requests, "Bronlarim", partner applications, concierge leads.
@@ -97,7 +97,7 @@ Errors: `{ error: { code, message, fields? } }` — messages are user-facing Uzb
 5. **Photo uploads** for quotes and vendor galleries — needs object storage (S3-compatible, in Uzbekistan).
 
 
-## Datelle Studio (`/panel`, `/api/panel/*`)
+## Floreal (`/panel`, `/api/panel/*`)
 
 Internal tool for studios — separate tables (`studios`, `studio_members`, `studio_invites`, `studio_days`, `orders`, `order_payments`, `studio_events`), separate session (`dt_panel`, `sessions.scope = 'panel'`). Plan and status: `docs/studio/IMPLEMENTATION-PLAN.md`, bot: `docs/studio/TELEGRAM.md`.
 

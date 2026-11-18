@@ -1,4 +1,4 @@
-/* Desktop sign-in through @datelle_bot — step 2: the creating browser polls (every 2 s).
+/* Desktop sign-in through the Telegram bot — step 2: the creating browser polls (every 2 s).
    Approved → panel session cookie + /me payload, exactly once. */
 import type { NextRequest } from "next/server";
 import { assertSameOrigin, clientIp, json, route } from "@/server/http";

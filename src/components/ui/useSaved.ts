@@ -3,7 +3,7 @@
 import { useCallback, useSyncExternalStore } from "react";
 
 /* Saved studios — per-browser convenience, survives reloads. Wrapped: storage can throw. */
-const KEY = "datelle:saved";
+const KEY = "floreal:saved";
 const listeners = new Set<() => void>();
 
 function read(): string[] {

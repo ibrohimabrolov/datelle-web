@@ -72,7 +72,7 @@ test("shared secret compare", () => {
 
 test("commands and invite params", () => {
   assert.deepEqual(parseCommand("/start"), { cmd: "start", arg: undefined });
-  assert.deepEqual(parseCommand("/START@datelle_bot inv_abc"), { cmd: "start", arg: "inv_abc" });
+  assert.deepEqual(parseCommand("/START@floreal_uz_bot inv_abc"), { cmd: "start", arg: "inv_abc" });
   assert.equal(parseCommand("salom"), null);
   assert.equal(parseInvite("inv_abcdefghijklmnop"), "abcdefghijklmnop");
   assert.equal(parseInvite("inv_short"), undefined);

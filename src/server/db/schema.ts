@@ -201,7 +201,7 @@ export const rateLimits = pgTable(
 );
 
 /* ───────────────────────────────────────────────
-   Floreal — internal tool for studios (claude/Datelle-STUDIO-TECH.md §2)
+   Floreal — internal tool for studios (claude/Floreal-STUDIO-TECH.md §2)
    Multi-tenant: every row belongs to a studio. Derived numbers (balance, day load,
    dashboard) are always computed from orders + order_payments — no counters, no drift.
    ─────────────────────────────────────────────── */

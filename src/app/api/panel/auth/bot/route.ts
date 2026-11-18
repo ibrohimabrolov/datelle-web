@@ -1,4 +1,4 @@
-/* Desktop sign-in through @datelle_bot — step 1: open a 5-minute request.
+/* Desktop sign-in through the Telegram bot — step 1: open a 5-minute request.
    Returns the deep-link start param and the code to compare in Telegram. */
 import type { NextRequest } from "next/server";
 import { assertSameOrigin, HttpError, json, route } from "@/server/http";

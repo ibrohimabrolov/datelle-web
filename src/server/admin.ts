@@ -16,7 +16,7 @@ export const ADMIN_COOKIE = "dt_admin";
 const ADMIN_DAYS = 7;
 
 const password = () => process.env.ADMIN_PASSWORD?.trim() || null;
-const secret = (pw: string) => createHash("sha256").update(`datelle-admin:${pw}:${process.env.OTP_PEPPER ?? ""}`).digest();
+const secret = (pw: string) => createHash("sha256").update(`floreal-admin:${pw}:${process.env.OTP_PEPPER ?? ""}`).digest();
 const sign = (pw: string, exp: number) => createHmac("sha256", secret(pw)).update(`admin:${exp}`).digest("hex");
 const same = (a: string, b: string) => {
   const x = createHash("sha256").update(a).digest();

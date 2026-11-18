@@ -1,5 +1,5 @@
 /* Floreal calendar maths. Pure — shared by API, UI and tests.
-   Rules: claude/Datelle-STUDIO-TECH.md §2 (computed, never stored). */
+   Rules: claude/Floreal-STUDIO-TECH.md §2 (computed, never stored). */
 import { addDays, monthDates, weekdayIdx } from "../dates";
 
 export type DayStatus = "free" | "has" | "limited" | "booked" | "blocked";

@@ -27,7 +27,7 @@ export function botConfig() {
   if (!token) return null;
   const explicit = process.env.TELEGRAM_WEBHOOK_SECRET?.trim();
   if (explicit && !SECRET_RE.test(explicit)) return null;
-  const webhookSecret = explicit || createHmac("sha256", token).update("datelle-webhook-v1").digest("hex");
+  const webhookSecret = explicit || createHmac("sha256", token).update("floreal-webhook-v1").digest("hex");
   return { token, webhookSecret };
 }
 

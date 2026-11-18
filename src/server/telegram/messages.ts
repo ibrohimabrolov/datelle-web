@@ -1,5 +1,5 @@
 /* Bot copy and message builders. Pure — no env, no network; unit-tested.
-   Copy follows the UX dictionary in claude/Datelle-MVP-SCOPE.md:
+   Copy follows the UX dictionary in claude/Floreal-MVP-SCOPE.md:
    "Qoldiq" (not "Olinadigan qoldiq"), dates "15-noyabr, sh", short verb-led CTAs. */
 import { MONTHS, WD_SHORT, dayNum, weekdayIdx } from "@/lib/dates";
 
@@ -84,7 +84,7 @@ export function parseLoginCallback(data: string | undefined) {
   return m ? { approve: m[1] === "ok", id: m[2] } : null;
 }
 
-/* "/start@datelle_bot inv_x" → { cmd: "start", arg: "inv_x" } */
+/* "/start@floreal_uz_bot inv_x" → { cmd: "start", arg: "inv_x" } */
 export function parseCommand(text: string | undefined) {
   const m = /^\/([a-z_]+)(?:@\w+)?(?:\s+(\S+))?/i.exec(text?.trim() ?? "");
   return m ? { cmd: m[1].toLowerCase(), arg: m[2] } : null;

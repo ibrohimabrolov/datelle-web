@@ -7,7 +7,7 @@ import { callTelegram } from "../telegram/api";
 import { COPY, parseCommand, parseLoginCallback, parseLoginStart, type TgUpdate } from "../telegram/messages";
 import { cookieOpts } from "./auth";
 
-/* Desktop sign-in through @datelle_bot — see schema.panelLogins.
+/* Desktop sign-in through the Telegram bot — see schema.panelLogins.
    Security: the public id only opens the request in Telegram; logging in needs the
    httpOnly cookie of the browser that created it. The 4-digit code is shown on both
    screens so a forwarded link can't be approved blindly. One approval → one session. */
