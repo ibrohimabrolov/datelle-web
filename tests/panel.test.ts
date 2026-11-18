@@ -1,4 +1,4 @@
-/* Datelle Studio API — integration tests against a running server.
+/* Floreal API — integration tests against a running server.
    Server env: PANEL_DEV_LOGIN=1, TELEGRAM_BOT_TOKEN=<PANEL_TEST_BOT_TOKEN below>.
    Run: BASE=http://localhost:3100 npm run test:panel */
 import { after, before, describe, test } from "node:test";
