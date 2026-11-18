@@ -20,6 +20,11 @@ export const metadata: Metadata = {
   applicationName: BRAND.name,
   openGraph: { type: "website", siteName: BRAND.name, locale: "uz_UZ" },
   twitter: { card: "summary_large_image" },
+  /* Search Console / Yandex Webmaster ownership — the codes live in Vercel env, not in git. */
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION || undefined,
+    yandex: process.env.YANDEX_VERIFICATION || undefined,
+  },
 };
 
 export const viewport = { themeColor: "#1e5a45" };
