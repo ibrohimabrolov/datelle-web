@@ -232,12 +232,15 @@ export function Questions() {
 export function Marquee() {
   return (
     <a className="lp-marquee" href={BOT_URL} target="_blank" rel="noopener" aria-label="Telegram'da boshlash">
-      {[0, 1, 2].map((i) => (
-        <span key={i} style={{ display: "contents" }} aria-hidden>
-          <span>Telegram&apos;da boshlash</span>
-          <i />
-        </span>
-      ))}
+      {/* 3 identical units; the track loops by exactly one unit (−33.333%) */}
+      <span className="lp-marquee__track" aria-hidden>
+        {[0, 1, 2].map((i) => (
+          <span key={i} style={{ display: "contents" }}>
+            <span>Telegram&apos;da boshlash</span>
+            <i />
+          </span>
+        ))}
+      </span>
     </a>
   );
 }
