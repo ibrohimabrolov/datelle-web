@@ -1,4 +1,4 @@
-/* Datelle Studio orders — pure rules shared by API, UI and tests (Tech §2, §5). */
+/* Floreal orders — pure rules shared by API, UI and tests (Tech §2, §5). */
 import { addDays, diffDays, weekdayIdx } from "../dates";
 
 export type OrderStatus = "active" | "done" | "cancelled";

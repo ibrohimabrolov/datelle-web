@@ -46,7 +46,7 @@ export async function requestOtp(phone: string, ip: string) {
     expiresAt: new Date(Date.now() + OTP_TTL_SEC * 1000),
     ip,
   });
-  await sendSms(phone, `Datelle: tasdiqlash kodi ${code}. Kodni hech kimga bermang.`);
+  await sendSms(phone, `Floreal: tasdiqlash kodi ${code}. Kodni hech kimga bermang.`);
   return { resendIn: OTP_RESEND_SEC, ...(echoCode() ? { devCode: code } : {}) };
 }
 

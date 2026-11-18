@@ -7,7 +7,7 @@ import { db, schema } from "../db";
 import { HttpError } from "../http";
 import type { TelegramUser } from "../telegram/signature";
 
-/* Datelle Studio sessions — separate cookie and scope from the marketplace (dt_session).
+/* Floreal sessions — separate cookie and scope from the marketplace (dt_session).
    Telegram Web/Desktop opens Mini Apps in an iframe, so in production the cookie is
    SameSite=None + Partitioned (CHIPS). CSRF stays closed by assertSameOrigin on every write. */
 export const PANEL_COOKIE = "dt_panel";

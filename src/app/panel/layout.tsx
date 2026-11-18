@@ -6,7 +6,7 @@ import "@/studio/tokens.css";
 import "./studio.css";
 
 export const metadata: Metadata = {
-  title: { default: "Datelle Studio", template: "%s · Datelle Studio" },
+  title: { default: "Floreal", template: "%s · Floreal" },
   robots: { index: false, follow: false },
 };
 
@@ -18,7 +18,7 @@ export const viewport: Viewport = {
   ],
 };
 
-/* Datelle Studio — internal tool for studios. Separate design system (.studio scope), separate session (dt_panel).
+/* Floreal — internal tool for studios. Separate design system (.studio scope), separate session (dt_panel).
    Static shell; all data comes from /api/panel/* on the client. */
 export default function PanelLayout({ children }: LayoutProps<"/panel">) {
   return (

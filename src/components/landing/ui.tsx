@@ -1,3 +1,5 @@
+import { LogoMark } from "@/components/ui/Logo";
+import { BRAND } from "@/config/brand";
 import type { ImgHTMLAttributes, ReactNode } from "react";
 import { Arrow18, Arrow20, CheckCircle, CrossCircle } from "./icons";
 
@@ -60,8 +62,8 @@ export function ListItem({ children, type = "check", tone = "default" }: { child
 export function Logo() {
   return (
     <span className="lp-logo">
-      <span className="lp-logo__mark" aria-hidden>D</span>
-      Datelle Studio
+      <LogoMark size={32} />
+      {BRAND.name}
     </span>
   );
 }

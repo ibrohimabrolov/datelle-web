@@ -584,7 +584,7 @@ function InviteDialog({ studioName, onClose, say }: { studioName: string; onClos
     say("Link nusxalandi");
   }
 
-  const text = `${studioName} jamoasiga qoʻshiling — Datelle Studio`;
+  const text = `${studioName} jamoasiga qoʻshiling — Floreal`;
   const share = link ? `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}` : "#";
 
   return (
