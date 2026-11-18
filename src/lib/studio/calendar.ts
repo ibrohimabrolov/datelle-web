@@ -1,4 +1,4 @@
-/* Datelle Studio calendar maths. Pure — shared by API, UI and tests.
+/* Floreal calendar maths. Pure — shared by API, UI and tests.
    Rules: claude/Datelle-STUDIO-TECH.md §2 (computed, never stored). */
 import { addDays, monthDates, weekdayIdx } from "../dates";
 

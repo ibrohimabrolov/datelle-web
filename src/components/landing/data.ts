@@ -30,7 +30,7 @@ export const STATS = [
    so screens, shadows and the stage gradient match the design exactly.
    < 1024px: Landing/Tour · Size=Mobile — one Mini App screen per tab (tour/m/*, 240×432 visible part @2x) on a CSS stage. */
 export const TOUR = [
-  { id: "bosh", label: "Bosh sahifa", alt: "Datelle Studio bosh sahifasi: kompyuterda tushum, qoldiq va keyingi 7 kun, yonida telefondagi kalendar", caption: "Bosh sahifa: bu oy tushum, umumiy qoldiq va keyingi 7 kun — bir qarashda." },
+  { id: "bosh", label: "Bosh sahifa", alt: "Floreal bosh sahifasi: kompyuterda tushum, qoldiq va keyingi 7 kun, yonida telefondagi kalendar", caption: "Bosh sahifa: bu oy tushum, umumiy qoldiq va keyingi 7 kun — bir qarashda." },
   { id: "kalendar", label: "Kalendar", alt: "Oylik kalendar: boʻsh, 1 joy va band kunlar; telefonda tanlangan kunning buyurtmalari", caption: "Kalendar: qaysi kun boʻsh, qaysi biri band — bir qarashda. Kunni bir bosishda yopasiz." },
   { id: "buyurtmalar", label: "Buyurtmalar", alt: "Buyurtmalar roʻyxati va buyurtma paneli: mijoz, sana, avans va qoldiq", caption: "Buyurtma: mijoz, sana, avans va qoldiq — bitta panelda. Toʻlovni bir bosishda qoʻshasiz." },
   { id: "telefonda", label: "Telefonda", alt: "Telegram ichida: buyurtmalar, bosh sahifa va botning kechki eslatmasi", caption: "Telefonda: hammasi Telegram ichida. Har kuni 20:00 da bot ertangi tadbirlarni eslatadi." },
@@ -70,7 +70,7 @@ export const FAQ = [
     id: "mahsulot",
     label: "Mahsulot",
     items: [
-      { q: "Mijozlarim buni koʻradimi?", a: "Yoʻq. Datelle Studio — faqat siz va jamoangiz uchun. Mijozlar hech narsa koʻrmaydi." },
+      { q: "Mijozlarim buni koʻradimi?", a: "Yoʻq. Floreal — faqat siz va jamoangiz uchun. Mijozlar hech narsa koʻrmaydi." },
       { q: "Maʼlumotlarim kimda saqlanadi?", a: "Himoyalangan serverda, shifrlangan holda. Ularni faqat siz va jamoangiz koʻradi — biz hech kimga bermaymiz." },
       { q: "Telegram'siz ishlatsa boʻladimi?", a: "Kompyuterda brauzer orqali ishlaydi, kirish esa Telegram bilan tasdiqlanadi. Parol va SMS kerak emas." },
       { q: "Jamoamni qoʻsha olamanmi?", a: "Ha. Menejerga taklif linkini yuborasiz: u buyurtma va toʻlov kiritadi, tushum hisobotini faqat siz koʻrasiz." },

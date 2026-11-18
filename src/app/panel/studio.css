@@ -1,4 +1,4 @@
-/* Datelle Studio — component layer. Every value is a --ds-* token from src/studio/tokens.css
+/* Floreal — component layer. Every value is a --ds-* token from src/studio/tokens.css
    (Figma XNmqL3kbnh0lPpzO6ZQKUR). Raw numbers only for geometry the Figma components fix
    (control heights, icon boxes) — each noted with its component. */
 
@@ -103,12 +103,7 @@
 .ds-state { display: flex; flex-direction: column; align-items: center; gap: var(--ds-space-16); max-width: 360px; text-align: center; }
 
 /* ── Logo mark (Sidebar 28 / Kirish 40, radius 8, brand/solid) ── */
-.ds-mark {
-  display: grid; place-items: center; flex: none;
-  width: 28px; height: 28px; border-radius: var(--ds-radius-sm);
-  background: var(--ds-brand-solid); color: var(--ds-text-on-brand); font: var(--ds-type-body-strong);
-}
-.ds-mark[data-size="lg"] { width: 40px; height: 40px; }
+.ds-brandline > svg { flex: none; }
 
 /* ── App shell ── */
 .ds-shell { min-height: 100dvh; }

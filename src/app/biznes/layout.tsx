@@ -3,7 +3,7 @@ import { THEME_BOOT } from "@/components/studio/theme";
 import "@/studio/tokens.css";
 import "./landing.css";
 
-const TITLE = "Datelle Studio — dekor studiyalari va floristlar uchun CRM";
+const TITLE = "Floreal — dekor studiyalari va floristlar uchun CRM";
 const DESCRIPTION =
   "Dekor studiyalari va floristlar uchun CRM: bron kalendari, buyurtmalar, avans va qoldiq, jamoa. Telegram'da ishlaydi. Birinchi 10 ta studiyaga 3 oy bepul.";
 
@@ -20,15 +20,15 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    siteName: "Datelle",
+    siteName: "Floreal",
     locale: "uz_UZ",
     url: "/biznes",
-    title: "Datelle Studio — sanalar, buyurtmalar va pul bir joyda",
+    title: "Floreal — sanalar, buyurtmalar va pul bir joyda",
     description: "Dekor studiyalari va floristlar uchun CRM: bron kalendari, avans va qoldiq, jamoa. Birinchi 10 ta studiyaga 3 oy bepul.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Datelle Studio — sanalar, buyurtmalar va pul bir joyda",
+    title: "Floreal — sanalar, buyurtmalar va pul bir joyda",
     description: "Dekor studiyalari va floristlar uchun CRM. Birinchi 10 ta studiyaga 3 oy bepul.",
   },
 };
@@ -40,7 +40,7 @@ export const viewport: Viewport = {
   ],
 };
 
-/* Datelle Studio landing — own design system scope (.studio tokens + .landing), no marketplace nav/footer.
+/* Floreal landing — own design system scope (.studio tokens + .landing), no marketplace nav/footer.
    Theme: light by default, dark via the header toggle; the choice is shared with the panel ("ds-theme")
    and applied before first paint by THEME_BOOT — no flash. */
 export default function BiznesLayout({ children }: LayoutProps<"/biznes">) {

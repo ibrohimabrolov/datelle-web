@@ -4,7 +4,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 /* ───────────────────────────────────────────────
-   Datelle — Postgres schema (v1)
+   Floreal — Postgres schema (v1)
    Money: integer soʻm (bigint). Dates: `date` in Asia/Tashkent.
    ─────────────────────────────────────────────── */
 
@@ -29,7 +29,7 @@ const ts = (name: string) => timestamp(name, { withTimezone: true, mode: "date" 
 
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
-  phone: text("phone").unique(), // +998XXXXXXXXX — null for Telegram-only (Datelle Studio) users
+  phone: text("phone").unique(), // +998XXXXXXXXX — null for Telegram-only (Floreal) users
   name: text("name"),
   telegramId: bigint("telegram_id", { mode: "number" }).unique(),
   telegramUsername: text("telegram_username"),
@@ -46,7 +46,7 @@ export const sessions = pgTable(
     expiresAt: ts("expires_at").notNull(),
     createdAt: ts("created_at").notNull().defaultNow(),
     userAgent: text("user_agent"),
-    /* "site" = marketplace (dt_session), "panel" = Datelle Studio (dt_panel). A token never works in the other area. */
+    /* "site" = marketplace (dt_session), "panel" = Floreal (dt_panel). A token never works in the other area. */
     scope: sessionScope("scope").notNull().default("site"),
   },
   (t) => [index("sessions_user_idx").on(t.userId)],
@@ -201,7 +201,7 @@ export const rateLimits = pgTable(
 );
 
 /* ───────────────────────────────────────────────
-   Datelle Studio — internal tool for studios (claude/Datelle-STUDIO-TECH.md §2)
+   Floreal — internal tool for studios (claude/Datelle-STUDIO-TECH.md §2)
    Multi-tenant: every row belongs to a studio. Derived numbers (balance, day load,
    dashboard) are always computed from orders + order_payments — no counters, no drift.
    ─────────────────────────────────────────────── */
