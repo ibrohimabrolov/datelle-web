@@ -21,27 +21,27 @@ export type SendMessage = {
 
 export const COPY = {
   open: "Ochish",
-  openStudio: "Datelle Studio’ni ochish",
+  openStudio: "Floreal’ni ochish",
   joinTeam: "Jamoaga qoʻshilish",
   start: (name?: string) =>
     [
       name ? `Salom, ${escapeHtml(name)}!` : "Salom!",
       "",
-      "Datelle Studio — studiyangiz kalendari, buyurtmalari va puli bir joyda.",
+      "Floreal — studiyangiz kalendari, buyurtmalari va puli bir joyda.",
       "Har kuni kechqurun ertangi tadbirlarni shu yerga yuboraman.",
     ].join("\n"),
   invite: "Sizni studiya jamoasiga taklif qilishdi. Qoʻshilish uchun tugmani bosing.",
   help: [
     "<b>Buyruqlar</b>",
-    "/start — Datelle Studio’ni ochish",
+    "/start — Floreal’ni ochish",
     "/help — yordam",
     "",
-    "Savol boʻlsa — @datelle_uz",
+    "Savol boʻlsa — @floreal_uz",
   ].join("\n"),
   groupOnly: "Men faqat shaxsiy chatda ishlayman.",
   loginAsk: (code: string) =>
     [
-      "<b>Kompyuterda Datelle Studio’ga kirish</b>",
+      "<b>Kompyuterda Floreal’ga kirish</b>",
       "",
       `Kod: <b>${code}</b> — kompyuterdagi kod bilan bir xil boʻlsa, tasdiqlang.`,
       "Soʻrovni siz yubormagan boʻlsangiz, «Bekor qilish»ni bosing.",
@@ -55,7 +55,7 @@ export const COPY = {
 
 /* Commands shown in the Telegram "/" menu (setMyCommands) */
 export const BOT_COMMANDS = [
-  { command: "start", description: "Datelle Studio’ni ochish" },
+  { command: "start", description: "Floreal’ni ochish" },
   { command: "help", description: "Yordam" },
 ] as const;
 export const BOT_DESCRIPTION =

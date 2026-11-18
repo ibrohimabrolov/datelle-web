@@ -9,6 +9,7 @@ import { StudioIcon } from "../icons";
 import { usePanel, type Me } from "../PanelProvider";
 import { telegramLoginPopup } from "../telegram";
 import { Illustration, type StudioArt } from "../StateBlock";
+import { LogoMark } from "@/components/ui/Logo";
 
 type Config = {
   botId: number | null;
@@ -54,17 +55,15 @@ function Slides() {
       ref={ref}
       className="ds-auth-media"
       aria-roledescription="carousel"
-      aria-label="Datelle Studio imkoniyatlari"
+      aria-label="Floreal imkoniyatlari"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
       onBlur={(e) => !ref.current?.contains(e.relatedTarget as Node) && setPaused(false)}
     >
       <div className="ds-brandline">
-        <span className="ds-mark" data-size="lg" aria-hidden>
-          D
-        </span>
-        <span className="ds-body-strong">Datelle Studio</span>
+        <LogoMark size={40} />
+        <span className="ds-body-strong">Floreal</span>
       </div>
       <div className="ds-slides" aria-live="off">
         {SLIDES.map((s, n) => (

@@ -1,6 +1,6 @@
 import { BOT_HANDLE, BOT_URL, FEATURES, LOGIN_URL, PLANS, STATS, STEPS } from "./data";
 import { Faq } from "./Faq";
-import { IconBot, IconDatelle, IconHozir, IconJamoa, IconKalendar, IconPul, Step1, Step2, Step3 } from "./icons";
+import { IconBot, IconFloreal, IconHozir, IconJamoa, IconKalendar, IconPul, Step1, Step2, Step3 } from "./icons";
 import { Tour } from "./Tour";
 import { Cta, Eyebrow, Img, ListItem, Logo, Meter, SectionHead } from "./ui";
 
@@ -28,7 +28,7 @@ export function Stats() {
 export function Compare() {
   return (
     <section className="lp-section" aria-labelledby="h-oldin">
-      <SectionHead id="h-oldin" eyebrow="Oldin va endi" title="Daftardan — bitta ekranga" text={<>Koʻp studiyalar hozir shunday ishlaydi.<br />Datelle bilan esa shunday.</>} />
+      <SectionHead id="h-oldin" eyebrow="Oldin va endi" title="Daftardan — bitta ekranga" text={<>Koʻp studiyalar hozir shunday ishlaydi.<br />Floreal bilan esa shunday.</>} />
       <div className="lp-compare">
         <article className="lp-ccard">
           <div className="lp-ccard__media">
@@ -48,11 +48,11 @@ export function Compare() {
         </article>
         <article className="lp-ccard lp-ccard--brand">
           <div className="lp-ccard__media">
-            <Img src="/landing/3d-datelle.webp" alt="" width={1200} height={675} loading="lazy" />
+            <Img src="/landing/3d-floreal.webp" alt="" width={1200} height={675} loading="lazy" />
           </div>
           <div className="lp-ccard__body">
             <div className="lp-ccard__head">
-              <span className="lp-badge lp-caps"><IconDatelle />Datelle bilan</span>
+              <span className="lp-badge lp-caps"><IconFloreal />Floreal bilan</span>
               <h3 className="lp-card-title">Bitta kalendar, aniq raqamlar</h3>
             </div>
             <ul className="lp-list">

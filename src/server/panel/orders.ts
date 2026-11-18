@@ -10,7 +10,7 @@ import { HttpError } from "../http";
 import { phoneSchema } from "../phone";
 import { audit, type StudioCtx } from "./auth";
 
-/* Datelle Studio — orders & payments (Tech §2, §5).
+/* Floreal — orders & payments (Tech §2, §5).
    Money is integer soʻm. Balance is always computed from live payments; payments are never physically deleted. */
 
 const MAX_SUM = 100_000_000_000; // 100 mlrd soʻm — guards typos, fits bigint comfortably

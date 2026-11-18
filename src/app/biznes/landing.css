@@ -1,4 +1,4 @@
-/* Datelle Studio — landing (/biznes). Desktop first (1:1 with Figma "Landing · Desktop" 299:2859).
+/* Floreal — landing (/biznes). Desktop first (1:1 with Figma "Landing · Desktop" 299:2859).
  * Colours come from src/studio/tokens.css (--ds-*) + landing-only tokens below (--lp-*), exported from
  * Figma variables (Color collection, Light/Dark). Light by default, dark via the toggle.
  * Breakpoints (Figma "02 · Landing · Mobile / Tablet" 303:3969):
@@ -172,10 +172,7 @@
 .lp-li--onbrand svg { color: var(--ds-icon-on-brand); }
 
 .lp-logo { display: inline-flex; align-items: center; gap: 12px; font: 600 15px/22px var(--ds-font-sans); }
-.lp-logo__mark {
-  display: grid; place-items: center; width: 32px; height: 32px; border-radius: var(--ds-radius-md);
-  background: var(--ds-brand-solid); color: var(--ds-text-on-brand);
-}
+.lp-logo svg { flex: none; }
 
 .lp-navlink { font: 500 15px/22px var(--ds-font-sans); border-radius: var(--ds-radius-sm); transition: opacity .2s ease; }
 .lp-navlink:hover { opacity: .72; }
@@ -222,7 +219,7 @@
     linear-gradient(90deg, rgb(var(--lp-scrim) / .88) 0%, rgb(var(--lp-scrim) / .45) 50%, rgb(var(--lp-scrim) / 0) 85%);
 }
 .lp-hero__card { isolation: isolate; }
-.lp-nav { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: var(--lp-wide); }
+.lp-nav { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: var(--lp-wide); --ds-logo-petal: #f6f5f1; /* hero photo is always dark */ }
 .lp-nav .lp-logo { width: 239px; }
 .lp-nav__links { display: flex; gap: 32px; }
 .lp-nav__actions { display: flex; align-items: center; gap: 8px; }
@@ -280,7 +277,7 @@
 .lp-ccard__head { display: flex; flex-direction: column; gap: 16px; }
 .lp-ccard__body .lp-list { padding-top: 12px; }
 .lp-ccard .lp-badge { background: var(--lp-pill); }
-/* "Hozir" = the old way → neutral badge (Figma: bg/canvas, text/secondary, icon/muted); "Datelle bilan" keeps brand */
+/* "Hozir" = the old way → neutral badge (Figma: bg/canvas, text/secondary, icon/muted); "Floreal bilan" keeps brand */
 .lp-ccard:not(.lp-ccard--brand) .lp-badge { background: var(--ds-bg-canvas); color: var(--ds-text-secondary); }
 .lp-ccard:not(.lp-ccard--brand) .lp-badge svg { color: var(--ds-icon-muted); }
 .lp-ccard--brand .lp-li svg { color: var(--ds-icon-brand); }

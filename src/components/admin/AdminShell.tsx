@@ -32,7 +32,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
         <div className="flex h-14 items-center justify-between gap-3 px-4 lg:h-16 lg:px-5">
           <Link href="/admin" className="flex items-center gap-2.5">
             <LogoMark size={28} />
-            <span className="t-body-sb text-ink">Datelle Admin</span>
+            <span className="t-body-sb text-ink">Floreal Admin</span>
           </Link>
           <Logout className="lg:hidden" onDone={me.reload} />
         </div>

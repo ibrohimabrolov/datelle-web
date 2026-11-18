@@ -7,6 +7,7 @@ import { api } from "@/lib/api";
 import { useDataVersion } from "./data";
 import { StudioIcon, type StudioIconName } from "./icons";
 import { PANEL, usePanel, useStudio, type Role } from "./PanelProvider";
+import { LogoMark } from "@/components/ui/Logo";
 
 type NavDef = { href: string; label: string; icon: StudioIconName; roles: Role[] };
 
@@ -68,13 +69,8 @@ export function Shell({ children }: { children: ReactNode }) {
       <aside className="ds-sidebar" aria-label="Asosiy menyu">
         <div>
           <div className="ds-brandline">
-            <span className="ds-mark" aria-hidden>
-              D
-            </span>
-            <div>
-              <span className="ds-body-strong">Datelle</span>
-              <small>Studio</small>
-            </div>
+            <LogoMark size={28} />
+            <span className="ds-body-strong">Floreal</span>
           </div>
           <p className="ds-caps ds-navlabel">Studiya</p>
           <nav className="ds-nav" aria-busy={!studio || undefined}>

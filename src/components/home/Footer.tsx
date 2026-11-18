@@ -36,7 +36,7 @@ export function Footer() {
       <div className="mx-auto flex max-w-[1440px] flex-col gap-12 px-4 pt-16 sm:px-8 lg:gap-16 lg:px-20">
         <div className="flex flex-col justify-between gap-12 lg:flex-row">
           <div className="flex flex-col gap-3">
-            <Lockup height={32} />
+            <Lockup height={32} className="[--ds-logo-petal:#f6f5f1]" />
             <p className="t-body-s text-ink-inverse-muted">Toshkentdagi dekor studiyalari va floristlar — sana boʻyicha.</p>
           </div>
           <div className="grid grid-cols-2 gap-x-10 gap-y-10 sm:flex sm:gap-24">

@@ -1,4 +1,4 @@
-/* Datelle Studio icons — exported 1:1 from Figma "💠 Icons" (24 grid). Active nav = Filled, idle = Line.
+/* Floreal icons — exported 1:1 from Figma "💠 Icons" (24 grid). Active nav = Filled, idle = Line.
    Strokes are authored at 1.5px on a 24 grid; at 20px we keep the visual 1.5px like the Figma instances. */
 import type { SVGProps } from "react";
 

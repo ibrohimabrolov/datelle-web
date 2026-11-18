@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { api, apiDefaults, ApiError } from "@/lib/api";
 import { dataChanged } from "./data";
 import { telegram, type TelegramWebApp } from "./telegram";
+import { LogoMark } from "@/components/ui/Logo";
 
 export type Role = "owner" | "manager";
 export type Studio = { id: string; name: string; category: "dekor" | "floristika"; dailyCapacity: number; role: Role; remindersOn: boolean };
@@ -212,9 +213,7 @@ export function Splash() {
   return (
     <div className="ds-center" role="status" aria-live="polite">
       <div className="ds-state">
-        <span className="ds-mark" data-size="lg" aria-hidden>
-          D
-        </span>
+        <LogoMark size={40} />
         <span className="ds-sr-only">Yuklanmoqda</span>
       </div>
     </div>
@@ -225,9 +224,7 @@ function ErrorScreen({ message, onRetry }: { message: string; onRetry(): void })
   return (
     <div className="ds-center">
       <div className="ds-state" role="alert">
-        <span className="ds-mark" data-size="lg" aria-hidden>
-          D
-        </span>
+        <LogoMark size={40} />
         <h1 className="ds-h2">Kirib boʻlmadi</h1>
         <p className="ds-body ds-secondary">{message}</p>
         <button className="ds-btn" data-style="primary" onClick={onRetry}>

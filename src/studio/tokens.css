@@ -1,4 +1,4 @@
-/* Datelle Studio — design tokens
+/* Floreal — design tokens
  * Source of truth: Figma file XNmqL3kbnh0lPpzO6ZQKUR (Variables + Text/Effect styles).
  * Generated 2026-11-12 from tokens.json — do not edit by hand; change Figma, re-export.
  * Scope: everything lives under .studio so the marketplace (:root tokens in app/globals.css) is untouched.
@@ -146,6 +146,8 @@
   --ds-border-danger: var(--ds-red-600);
   --ds-border-info: var(--ds-blue-500);
   --ds-brand-solid: var(--ds-green-700);
+  --ds-logo-petal: #1e5a45; /* Figma logo/petal — Floreal mark */
+  --ds-logo-accent: #e9806a; /* Figma logo/accent — booked-day petal */
   --ds-brand-hover: var(--ds-green-800);
   --ds-brand-pressed: var(--ds-green-900);
   --ds-brand-subtle: var(--ds-green-50);
@@ -387,6 +389,7 @@
   --ds-border-danger: var(--ds-red-400);
   --ds-border-info: var(--ds-blue-400);
   --ds-brand-solid: var(--ds-green-500);
+  --ds-logo-petal: #f6f5f1;
   --ds-brand-hover: var(--ds-green-400);
   --ds-brand-pressed: var(--ds-green-600);
   --ds-brand-subtle: var(--ds-green-900);
@@ -505,6 +508,7 @@
     --ds-border-danger: var(--ds-red-400);
     --ds-border-info: var(--ds-blue-400);
     --ds-brand-solid: var(--ds-green-500);
+    --ds-logo-petal: #f6f5f1;
     --ds-brand-hover: var(--ds-green-400);
     --ds-brand-pressed: var(--ds-green-600);
     --ds-brand-subtle: var(--ds-green-900);
