@@ -390,6 +390,7 @@
 .lp-faq .lp-tab { flex: 1 1 0; }
 .lp-faq .lp-tab[aria-selected="true"] { background: var(--ds-brand-solid); color: var(--ds-text-on-brand); }
 .lp-faq__list { display: flex; flex-direction: column; gap: 4px; padding: 8px; border-radius: var(--ds-radius-xl); background: var(--ds-bg-surface); }
+.lp-faq__list[hidden] { display: none; }
 .lp-qa { border-radius: var(--ds-radius-lg); transition: background-color .2s ease; }
 .lp-qa[data-open="true"] { background: var(--ds-bg-elevated); }
 .lp-qa__q {

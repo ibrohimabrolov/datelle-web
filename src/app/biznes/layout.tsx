@@ -3,11 +3,34 @@ import { THEME_BOOT } from "@/components/studio/theme";
 import "@/studio/tokens.css";
 import "./landing.css";
 
+const TITLE = "Datelle Studio — dekor studiyalari va floristlar uchun CRM";
+const DESCRIPTION =
+  "Dekor studiyalari va floristlar uchun CRM: bron kalendari, buyurtmalar, avans va qoldiq, jamoa. Telegram'da ishlaydi. Birinchi 10 ta studiyaga 3 oy bepul.";
+
+/* SEO: keyword-first title (≤60) and description (≤155). The share image comes from the
+   opengraph-image.jpg / twitter-image.jpg files next to this layout (1200×630). */
 export const metadata: Metadata = {
-  title: { absolute: "Datelle Studio — dekor studiyalari va floristlar uchun" },
-  description: "Sanalar, buyurtmalar va pul — bir joyda. Kalendar, avans va qoldiq, jamoa. Telefonda — Telegram ichida, kompyuterda — brauzerda. Birinchi 10 ta studiya uchun 3 oy bepul.",
+  title: { absolute: TITLE },
+  description: DESCRIPTION,
   alternates: { canonical: "/biznes" },
-  openGraph: { title: "Datelle Studio", description: "Sanalar, buyurtmalar va pul — bir joyda.", url: "/biznes", images: ["/landing/hero.webp"] },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 },
+  },
+  openGraph: {
+    type: "website",
+    siteName: "Datelle",
+    locale: "uz_UZ",
+    url: "/biznes",
+    title: "Datelle Studio — sanalar, buyurtmalar va pul bir joyda",
+    description: "Dekor studiyalari va floristlar uchun CRM: bron kalendari, avans va qoldiq, jamoa. Birinchi 10 ta studiyaga 3 oy bepul.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Datelle Studio — sanalar, buyurtmalar va pul bir joyda",
+    description: "Dekor studiyalari va floristlar uchun CRM. Birinchi 10 ta studiyaga 3 oy bepul.",
+  },
 };
 
 export const viewport: Viewport = {

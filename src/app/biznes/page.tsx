@@ -1,4 +1,5 @@
 import { Hero } from "@/components/landing/Hero";
+import { JsonLd } from "@/components/landing/JsonLd";
 import { Backdrop } from "@/components/landing/Motion";
 import { Compare, Features, Footer, Marquee, Partners, Pricing, Product, Questions, Stats, Steps } from "@/components/landing/Sections";
 import { StickyHeader } from "@/components/landing/StickyHeader";
@@ -7,6 +8,7 @@ import { StickyHeader } from "@/components/landing/StickyHeader";
 export default function BiznesPage() {
   return (
     <>
+      <JsonLd />
       <Backdrop />
       <StickyHeader />
       <Hero />
