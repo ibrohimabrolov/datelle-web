@@ -1,8 +1,9 @@
 import { BOT_URL, LOGIN_URL, NAV } from "./data";
+import { MenuButton } from "./StickyHeader";
 import { ThemeToggle } from "./ThemeToggle";
 import { Cta, Eyebrow, Img, Logo } from "./ui";
 
-/* Hero (Figma 246:1344) — photo card with on-media nav, headline, primary CTA and the founder offer. */
+/* Hero (Figma 246:1344 desktop · 303:3984 mobile/tablet) — photo card with on-media nav, headline, primary CTA and the founder offer. */
 export function Hero() {
   return (
     <header className="lp-hero">
@@ -12,25 +13,29 @@ export function Hero() {
         </div>
 
         <nav className="lp-nav" aria-label="Asosiy">
-          <a href="/biznes" aria-label="Datelle Studio — bosh sahifa"><Logo /></a>
+          <a href="/biznes"><Logo /><span className="lp-sr"> — bosh sahifa</span></a>
           <div className="lp-nav__links">
             {NAV.map((l) => (
               <a key={l.href} className="lp-navlink" href={l.href}>{l.label}</a>
             ))}
           </div>
           <div className="lp-nav__actions">
-            <ThemeToggle />
-            <a className="lp-btn lp-btn--ghost" href={LOGIN_URL}>Kirish</a>
-            <Cta href={BOT_URL} tone="glass" size="m">Boshlash</Cta>
+            <ThemeToggle className="lp-d-only" />
+            <a className="lp-btn lp-btn--ghost lp-d-only" href={LOGIN_URL}>Kirish</a>
+            <Cta href={BOT_URL} tone="glass" size="m" className="lp-nav__cta">Boshlash</Cta>
+            <MenuButton />
           </div>
         </nav>
 
         <div className="lp-hero__content">
           <div className="lp-hero__text">
-            <Eyebrow media>Dekor studiyalari va floristlar uchun</Eyebrow>
+            <Eyebrow media>
+              <span className="lp-hide-m">Dekor studiyalari va floristlar uchun</span>
+              <span className="lp-m-only">Dekor va floristlar uchun</span>
+            </Eyebrow>
             <div className="lp-hero__copy">
-              <h1 className="lp-h1">Sanalar, buyurtmalar<br />va pul — bir joyda.</h1>
-              <p className="lp-lead">Kalendar, avans va qoldiq, jamoa. Telefonda — Telegram ichida, kompyuterda — brauzerda.</p>
+              <h1 className="lp-h1">Sanalar, buyurtmalar<br className="lp-hide-m" /> va pul — bir joyda.</h1>
+              <p className="lp-lead">Kalendar, avans va qoldiq, jamoa. <span>Telefonda — Telegram ichida, kompyuterda — brauzerda.</span></p>
             </div>
             <Cta href={BOT_URL} tone="light">Telegram&apos;da boshlash</Cta>
           </div>

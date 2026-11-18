@@ -140,3 +140,20 @@ export function IconSun(p: P) {
     </svg>
   );
 }
+
+/* menu 24 (Figma Landing/MenuButton: 18×12, stroke 1.5) · close 24 (12×12, stroke 1.5) */
+export function IconMenu(p: P) {
+  return (
+    <svg width={24} height={24} viewBox="0 0 24 24" fill="none" aria-hidden focusable="false" {...p}>
+      <path d="M3 6H21M3 12H21M3 18H21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function IconClose(p: P) {
+  return (
+    <svg width={24} height={24} viewBox="0 0 24 24" fill="none" aria-hidden focusable="false" {...p}>
+      <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}

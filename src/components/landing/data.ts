@@ -11,6 +11,14 @@ export const NAV = [
   { href: "#savollar", label: "Savollar" },
 ];
 
+/* Landing/Menu (mobile + tablet, Figma 318:9851): pricing is a menu item there — no room for it in the bar */
+export const MENU = [
+  { href: "#imkoniyatlar", label: "Imkoniyatlar" },
+  { href: "#qanday-ishlaydi", label: "Qanday ishlaydi" },
+  { href: "#narxlar", label: "Narxlar" },
+  { href: "#savollar", label: "Savollar" },
+];
+
 export const STATS = [
   { n: "1", unit: " daqiqa", label: "Studiyani ochish" },
   { n: "0", unit: " soʻm", label: "Birinchi 3 oy" },
@@ -18,8 +26,9 @@ export const STATS = [
   { n: "2", unit: " qurilma", label: "Telefon va kompyuter" },
 ];
 
-/* Tour stage — each tab is the Figma stage (1120×600, Landing/Tour · Size=Desktop) exported @2x per theme,
-   so screens, shadows and the stage gradient match the design exactly. */
+/* Tour stage — desktop: each tab is the Figma stage (1120×600, Landing/Tour · Size=Desktop) exported @2x per theme,
+   so screens, shadows and the stage gradient match the design exactly.
+   < 1024px: Landing/Tour · Size=Mobile — one Mini App screen per tab (tour/m/*, 240×432 visible part @2x) on a CSS stage. */
 export const TOUR = [
   { id: "bosh", label: "Bosh sahifa", alt: "Datelle Studio bosh sahifasi: kompyuterda tushum, qoldiq va keyingi 7 kun, yonida telefondagi kalendar", caption: "Bosh sahifa: bu oy tushum, umumiy qoldiq va keyingi 7 kun — bir qarashda." },
   { id: "kalendar", label: "Kalendar", alt: "Oylik kalendar: boʻsh, 1 joy va band kunlar; telefonda tanlangan kunning buyurtmalari", caption: "Kalendar: qaysi kun boʻsh, qaysi biri band — bir qarashda. Kunni bir bosishda yopasiz." },

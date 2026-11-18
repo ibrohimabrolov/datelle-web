@@ -28,7 +28,7 @@ export function Stats() {
 export function Compare() {
   return (
     <section className="lp-section" aria-labelledby="h-oldin">
-      <SectionHead id="h-oldin" eyebrow="Oldin va endi" title="Daftardan — bitta ekranga" text="Koʻp studiyalar hozir shunday ishlaydi. Datelle bilan esa shunday." />
+      <SectionHead id="h-oldin" eyebrow="Oldin va endi" title="Daftardan — bitta ekranga" text={<>Koʻp studiyalar hozir shunday ishlaydi.<br />Datelle bilan esa shunday.</>} />
       <div className="lp-compare">
         <article className="lp-ccard">
           <div className="lp-ccard__media">
@@ -89,7 +89,7 @@ const FEATURE_ICON = { kalendar: IconKalendar, pul: IconPul, jamoa: IconJamoa, b
 export function Features() {
   return (
     <section className="lp-section" id="imkoniyatlar" aria-labelledby="h-imk">
-      <div className="lp-container" style={{ display: "flex", flexDirection: "column", gap: 64 }}>
+      <div className="lp-container lp-stack">
         <SectionHead id="h-imk" eyebrow="Imkoniyatlar" title="Daftar va Excel oʻrniga" text="Sana, pul va jamoa — bitta ilovada. Studiya egasi va menejerlari uchun." />
         <div className="lp-features">
           {FEATURES.map((f) => {
@@ -121,7 +121,7 @@ const STEP_ICON = [Step1, Step2, Step3];
 export function Steps() {
   return (
     <section className="lp-section" id="qanday-ishlaydi" aria-labelledby="h-qadam">
-      <div className="lp-container" style={{ display: "flex", flexDirection: "column", gap: 64 }}>
+      <div className="lp-container lp-stack">
         <SectionHead id="h-qadam" eyebrow="Qanday ishlaydi" title="3 qadam, 5 daqiqa" />
         <ol className="lp-steps" style={{ listStyle: "none", padding: 0, margin: 0 }}>
           {STEPS.map((s, i) => {
@@ -198,10 +198,10 @@ export function Pricing() {
   );
 }
 
-/* Hamkorlar (235:752) — logo wall, placeholders until founding partners join */
+/* Hamkorlar (235:752) — logo wall, placeholders until founding partners join. Desktop only (hidden in Figma Mobile/Tablet). */
 export function Partners() {
   return (
-    <section className="lp-section" id="hamkorlar" aria-labelledby="h-hamkor">
+    <section className="lp-section lp-d-only" id="hamkorlar" aria-labelledby="h-hamkor">
       <SectionHead id="h-hamkor" eyebrow="Hamkorlar" title="Birinchi 10 ta studiya" text="Asoschi hamkorlar logotipi shu yerda doimiy turadi. Joy band boʻlgani sari devor toʻladi." />
       <div className="lp-wall" role="img" aria-label="Asoschi hamkorlar uchun 10 ta boʻsh joy">
         {Array.from({ length: 10 }, (_, i) => (
@@ -220,7 +220,7 @@ export function Questions() {
         <div className="lp-head__title">
           <Eyebrow>Savollar</Eyebrow>
           <h2 className="lp-h2" id="h-savol">Koʻp soʻraladi</h2>
-          <p className="lp-body">Qanday ishlashi, narxi va maʼlumotlaringiz haqida qisqa javoblar.</p>
+          <p className="lp-body">Qanday ishlashi, narxi va maʼlumotlaringiz<br />haqida qisqa javoblar.</p>
         </div>
         <Faq />
       </div>
@@ -231,7 +231,8 @@ export function Questions() {
 /* Marquee (179:701) */
 export function Marquee() {
   return (
-    <a className="lp-marquee" href={BOT_URL} target="_blank" rel="noopener" aria-label="Telegram'da boshlash">
+    <a className="lp-marquee" href={BOT_URL} target="_blank" rel="noopener">
+      <span className="lp-sr">Telegram&apos;da boshlash</span>
       {/* 3 identical units; the track loops by exactly one unit (−33.333%) */}
       <span className="lp-marquee__track" aria-hidden>
         {[0, 1, 2].map((i) => (
@@ -265,7 +266,7 @@ export function Footer() {
               <ul>
                 <li><a href="#imkoniyatlar">Imkoniyatlar</a></li>
                 <li><a href="#qanday-ishlaydi">Qanday ishlaydi</a></li>
-                <li><a href="#hamkorlar">Hamkorlar</a></li>
+                <li className="lp-d-only"><a href="#hamkorlar">Hamkorlar</a></li>
                 <li><a href="#savollar">Savollar</a></li>
               </ul>
             </div>

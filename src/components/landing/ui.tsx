@@ -35,9 +35,10 @@ type CtaProps = {
   size?: "l" | "m";
   block?: boolean;
   external?: boolean;
+  className?: string;
 };
-export function Cta({ href, children, tone, size = "l", block, external = true }: CtaProps) {
-  const cls = `lp-cta lp-cta--${tone}${size === "m" ? " lp-cta--m" : ""}${block ? " lp-cta--block" : ""}`;
+export function Cta({ href, children, tone, size = "l", block, external = true, className }: CtaProps) {
+  const cls = `lp-cta lp-cta--${tone}${size === "m" ? " lp-cta--m" : ""}${block ? " lp-cta--block" : ""}${className ? ` ${className}` : ""}`;
   return (
     <a className={cls} href={href} {...(external ? { target: "_blank", rel: "noopener" } : {})}>
       {children}
