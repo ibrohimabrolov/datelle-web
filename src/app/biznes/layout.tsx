@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { THEME_BOOT } from "@/components/studio/theme";
 import "@/studio/tokens.css";
 import "./landing.css";
 
@@ -17,7 +18,13 @@ export const viewport: Viewport = {
 };
 
 /* Datelle Studio landing — own design system scope (.studio tokens + .landing), no marketplace nav/footer.
-   Theme follows the visitor's system setting (tokens.css handles prefers-color-scheme). */
+   Theme: light by default, dark via the header toggle; the choice is shared with the panel ("ds-theme")
+   and applied before first paint by THEME_BOOT — no flash. */
 export default function BiznesLayout({ children }: LayoutProps<"/biznes">) {
-  return <div className="studio landing" id="top">{children}</div>;
+  return (
+    <div className="studio landing" id="top" data-theme="light" suppressHydrationWarning>
+      <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
+      {children}
+    </div>
+  );
 }

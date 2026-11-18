@@ -173,6 +173,19 @@
 .lp-navlink { font: 500 15px/22px var(--ds-font-sans); border-radius: var(--ds-radius-sm); transition: opacity .2s ease; }
 .lp-navlink:hover { opacity: .72; }
 
+/* Theme toggle — IconButton Ghost 44 (Figma 363:12893). Shows the moon in light, the sun in dark. */
+.lp-theme {
+  display: grid; place-items: center; width: 44px; height: 44px; border-radius: var(--ds-radius-full);
+  color: inherit; transition: background-color .2s ease;
+}
+.lp-theme:hover { background: var(--lp-glass); }
+.lp-theme svg { transition: transform .4s var(--lp-ease); }
+.lp-theme:hover svg { transform: rotate(-15deg); }
+.landing .lp-theme__sun, .landing[data-theme="dark"] .lp-theme__moon { display: none; }
+.landing[data-theme="dark"] .lp-theme__sun { display: block; }
+.lp-sticky .lp-theme { color: var(--ds-icon-default); }
+.lp-sticky .lp-theme:hover { background: var(--ds-bg-surface); }
+
 /* ---------- Sections ---------- */
 .lp-section {
   display: flex; flex-direction: column; align-items: center; gap: 64px;

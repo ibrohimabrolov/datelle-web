@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { BOT_URL, LOGIN_URL, NAV } from "./data";
+import { ThemeToggle } from "./ThemeToggle";
 import { Cta, Logo } from "./ui";
 
 /* Header · State=Sticky (Figma 292:3804 / spec 293:1670): slides in once the hero nav has scrolled away (> 760px). */
@@ -24,6 +25,7 @@ export function StickyHeader() {
           ))}
         </nav>
         <div className="lp-nav__actions">
+          <ThemeToggle />
           <a className="lp-btn lp-btn--ghost" href={LOGIN_URL}>Kirish</a>
           <Cta href={BOT_URL} tone="brand" size="m">3 oy bepul boshlash</Cta>
         </div>

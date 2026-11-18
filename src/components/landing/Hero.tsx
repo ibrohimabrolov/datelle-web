@@ -1,4 +1,5 @@
 import { BOT_URL, LOGIN_URL, NAV } from "./data";
+import { ThemeToggle } from "./ThemeToggle";
 import { Cta, Eyebrow, Img, Logo } from "./ui";
 
 /* Hero (Figma 246:1344) — photo card with on-media nav, headline, primary CTA and the founder offer. */
@@ -18,6 +19,7 @@ export function Hero() {
             ))}
           </div>
           <div className="lp-nav__actions">
+            <ThemeToggle />
             <a className="lp-btn lp-btn--ghost" href={LOGIN_URL}>Kirish</a>
             <Cta href={BOT_URL} tone="glass" size="m">Boshlash</Cta>
           </div>
