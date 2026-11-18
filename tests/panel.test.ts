@@ -109,7 +109,7 @@ describe("auth", () => {
 });
 
 describe("desktop bot sign-in", () => {
-  const hookSecret = createHmac("sha256", PANEL_TEST_BOT_TOKEN).update("datelle-webhook-v1").digest("hex");
+  const hookSecret = createHmac("sha256", PANEL_TEST_BOT_TOKEN).update("floreal-webhook-v1").digest("hex");
   const webhook = (update: object) =>
     fetch(`${BASE}/api/telegram/webhook`, {
       method: "POST",

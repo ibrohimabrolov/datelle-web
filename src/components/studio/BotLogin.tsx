@@ -7,7 +7,7 @@ import { api, ApiError } from "@/lib/api";
 import { Button } from "./Button";
 import { StudioIcon } from "./icons";
 
-/* Desktop sign-in through @datelle_bot (Figma "S1 · Kirish · bot").
+/* Desktop sign-in through the Telegram bot (Figma "S1 · Kirish · bot").
    Primary path on desktop: the Login Widget's confirmation message is sent by Telegram itself
    and sometimes never arrives. Here the bot asks, the user taps «Tasdiqlash», this browser polls. */
 type Started = { start: string; code: string; expiresAt: string; url: string };

@@ -1,7 +1,7 @@
-# Datelle Studio — design → code handoff
+# Floreal — design → code handoff
 
 > v1.0 · 2026-11-12 · Figma: `figma.com/design/XNmqL3kbnh0lPpzO6ZQKUR` (Projects team)
-> Product: `claude/Datelle-MVP-SCOPE.md` · Tech: `claude/Datelle-STUDIO-TECH.md` (Project docs) · Tokens: `src/studio/tokens.css`
+> Product: `claude/Floreal-MVP-SCOPE.md` · Tech: `claude/Floreal-STUDIO-TECH.md` (Project docs) · Tokens: `src/studio/tokens.css`
 
 ## 1. Figma file map
 

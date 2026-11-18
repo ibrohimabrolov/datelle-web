@@ -1,4 +1,4 @@
-# Datelle Studio — Telegram bot
+# Floreal — Telegram bot
 
 Status: **foundation done** (branch `studio/telegram`). Inert until env is set: webhook and cron answer 503, build-time setup is skipped.
 

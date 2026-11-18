@@ -1,4 +1,4 @@
-# Datelle — web
+# Floreal — web
 
 Next.js 16 · React 19 · Tailwind v4 · TypeScript. A1 Home sahifasi Figma `240:247` dan 1:1 (1440 frame).
 

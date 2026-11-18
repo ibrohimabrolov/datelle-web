@@ -1,11 +1,11 @@
-# Datelle Studio — implementation plan
+# Floreal — implementation plan
 
 > v1.0 · 2026-11-12 · Status: **prep done, feature code not started** (waiting for Ibrohim's Figma review).
 > Decision 2026-11-12: code is built regardless of the demo go/no-go — the product doubles as a portfolio case. Demos still run in parallel and still shape v1.1.
 
 ## Ground rules
 
-- `main` = production (`datelle-web.vercel.app`). Every phase on its own branch `studio/<phase>`, merged only after checks pass.
+- `main` = production (`floreal-uz.vercel.app`). Every phase on its own branch `studio/<phase>`, merged only after checks pass.
 - Marketplace code (`(site)`, `/admin`, existing `/api/*`, `app/globals.css`) is not touched. Studio lives in `src/app/panel`, `src/app/api/panel`, `src/components/studio`, `src/server/studio`, `src/studio`.
 - Read `node_modules/next/dist/docs/` before writing Next code (Next 16, see `AGENTS.md`).
 - Design is the spec: `docs/studio/DESIGN-HANDOFF.md` + Figma. Every PR ends with a 1:1 visual check against the Figma screen at 390 and 1440 (and 1280/1920 for desktop).
@@ -96,7 +96,7 @@ Playwright demo flow (onboarding → calendar → order + advance → day "1 joy
 - [x] Figma review (Desktop + Mobile pages side by side): layouts, type, colour and states match.
 - Fixed in QA: a finished (Bajarildi) order vanished from the calendar and freed its slot → now only cancelled orders free a day; unknown `/panel/*` URLs fell through to the marketplace 404 → Studio 404 inside the shell; dark-mode contrast of the "Band" meter and the mobile Obuna card; 1024–1279 px: Dashboard columns stack, KPI amounts no longer clipped, orders table drops the phone column so money never truncates; mobile KPI amount no longer runs under the mini bars; zero debt is no longer amber.
 - Deliberate gaps vs Figma (v1.1): table checkboxes + bulk bar and the month filter in Buyurtmalar (no bulk actions exist yet; Kalendar covers "what's in December"); 3 reminder toggles → 1 (only the evening digest exists); mobile header shows the settings gear instead of the avatar.
-- [x] Merged PR #8 to `main` (Ibrohim, 2026-11-15 13:27). Live check: `/api/health` db up, `/api/panel/auth/config` → @datelle_bot, dev login off, `/api/cron/daily` 401 without secret, `/panel/*` 200, marketplace pages and search unchanged.
+- [x] Merged PR #8 to `main` (Ibrohim, 2026-11-15 13:27). Live check: `/api/health` db up, `/api/panel/auth/config` → @floreal_uz_bot, dev login off, `/api/cron/daily` 401 without secret, `/panel/*` 200, marketplace pages and search unchanged.
 
 ## Needs from Ibrohim (with click-by-click guides when we get there)
 

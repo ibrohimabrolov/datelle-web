@@ -1,6 +1,6 @@
 /* Landing content — copy 1:1 from Figma "Landing · Desktop" (299:2859). */
 
-const BOT = (process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "datelle_bot").replace(/^@/, "");
+const BOT = (process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "floreal_uz_bot").replace(/^@/, "");
 export const BOT_HANDLE = `@${BOT}`;
 export const BOT_URL = `https://t.me/${BOT}`;
 export const LOGIN_URL = "/panel/kirish";
