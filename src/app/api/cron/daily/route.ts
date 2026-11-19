@@ -8,6 +8,7 @@ import { callTelegram, TelegramError } from "@/server/telegram/api";
 import { botConfig, cronSecret, panelUrl } from "@/server/telegram/config";
 import { loadDigests } from "@/server/telegram/digests";
 import { fanOutReminders } from "@/server/telegram/reminders";
+import { botStatus } from "@/server/telegram/setup";
 import { verifySecret } from "@/server/telegram/signature";
 
 export const maxDuration = 60;
@@ -23,6 +24,9 @@ export const GET = route(async (req: NextRequest) => {
   if (!bot) throw new HttpError(503, "bot_disabled", "Bot sozlanmagan");
 
   const started = Date.now();
+  // Self-heal once a day: a webhook left on an old domain/token is re-registered before sending
+  const wiring = await botStatus(bot).catch((e) => ({ error: e instanceof Error ? e.message : String(e) }));
+  if ("repaired" in wiring && wiring.repaired) console.warn("[cron:daily] webhook re-registered", wiring.webhook.url);
   const date = addDays(todayISO(), 1);
   const studios = await loadDigests(date);
   const result = await fanOutReminders(
