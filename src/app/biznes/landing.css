@@ -174,7 +174,7 @@
 .lp-logo { display: inline-flex; align-items: center; gap: 12px; font: 600 15px/22px var(--ds-font-sans); }
 .lp-logo svg { flex: none; }
 
-.lp-navlink { font: 500 15px/22px var(--ds-font-sans); border-radius: var(--ds-radius-sm); transition: opacity .2s ease; }
+.lp-navlink { font: 500 15px/22px var(--ds-font-sans); white-space: nowrap; border-radius: var(--ds-radius-sm); transition: opacity .2s ease; }
 .lp-navlink:hover { opacity: .72; }
 
 /* Theme toggle — IconButton Ghost 44 (Figma 363:12893). Shows the moon in light, the sun in dark. */
@@ -189,6 +189,15 @@
 .landing[data-theme="dark"] .lp-theme__sun { display: block; }
 .lp-sticky .lp-theme { color: var(--ds-icon-default); }
 .lp-sticky .lp-theme:hover { background: var(--ds-bg-surface); }
+
+/* Language switch — same 44 ghost target as the theme toggle, 2-letter code (UZ / RU). */
+.lp-lang {
+  display: grid; place-items: center; width: 44px; height: 44px; border-radius: var(--ds-radius-full);
+  color: inherit; font: 600 14px/20px var(--ds-font-sans); letter-spacing: .4px; transition: background-color .2s ease;
+}
+.lp-lang:hover { background: var(--lp-glass); }
+.lp-sticky .lp-lang { color: var(--ds-text-primary); }
+.lp-sticky .lp-lang:hover { background: var(--ds-bg-surface); }
 
 /* ---------- Sections ---------- */
 .lp-section {
@@ -524,6 +533,8 @@
   .lp-stat__num { font-size: 40px; line-height: 48px; letter-spacing: -0.8px; }
   .lp-head__title { flex: 1 1 auto; min-width: 0; }
   .lp-stage { height: auto; aspect-ratio: 1120 / 600; }
+  .lp-nav .lp-logo { width: auto; }
+  .lp-nav__links { gap: 24px; }
   .lp-faq-wrap { gap: 48px; }
   .lp-faq-wrap .lp-head__title, .lp-faq-wrap .lp-head__title .lp-h2 { width: 340px; flex: none; }
   .lp-footer__card { padding-inline: 40px; }
@@ -541,7 +552,7 @@
 .lp-menubtn--media:hover { background: #ffffff2e; }
 .lp-menubtn--surface { background: var(--ds-bg-surface); box-shadow: inset 0 0 0 1px var(--ds-border-default); color: var(--ds-icon-default); }
 .lp-menubtn--surface:hover { background: var(--ds-bg-surface-hover); }
-.landing .lp-menubtn:focus-visible { border-radius: var(--ds-radius-full); }
+.landing .lp-menubtn:focus-visible, .landing .lp-lang:focus-visible, .landing .lp-theme:focus-visible { border-radius: var(--ds-radius-full); }
 
 .lp-cta--text { padding: 0 20px; } /* Landing/CTA · Icon=false */
 
@@ -580,6 +591,8 @@ html.lp-lock { overflow: hidden; }
 .lp-menu__tools { display: flex; align-items: center; gap: 4px; }
 .lp-menu__tools .lp-theme { color: var(--ds-icon-default); }
 .lp-menu__tools .lp-theme:hover { background: var(--ds-bg-surface-hover); }
+.lp-menu__tools .lp-lang { color: var(--ds-text-primary); }
+.lp-menu__tools .lp-lang:hover { background: var(--ds-bg-surface-hover); }
 .lp-menu__links { margin: 0; padding: 0; list-style: none; }
 .lp-menu__links a {
   display: flex; align-items: center; min-height: 56px; border-bottom: 1px solid var(--lp-hairline);

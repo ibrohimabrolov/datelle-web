@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { TOUR } from "./data";
+import type { Copy } from "./copy";
 
 /* Landing/Tour (Figma 271:2963)
    · Size=Desktop — tabs + 1120×600 stage with real product screens (one export per tab and theme).
@@ -9,7 +9,8 @@ import { TOUR } from "./data";
    <picture> picks the right file per breakpoint, so phones never download the 2240px desktop shots. */
 const MOBILE = "(max-width: 1023.98px)";
 
-export function Tour() {
+export function Tour({ t: copy }: { t: Copy }) {
+  const TOUR = copy.tour;
   const [active, setActive] = useState(0);
   const tabsRef = useRef<HTMLDivElement>(null);
   const tab = TOUR[active];
@@ -34,7 +35,7 @@ export function Tour() {
 
   return (
     <div className="lp-tour">
-      <div className="lp-tabs" role="tablist" aria-label="Ilova ekranlari" onKeyDown={onKey} ref={tabsRef}>
+      <div className="lp-tabs" role="tablist" aria-label={copy.a11y.tourTabs} onKeyDown={onKey} ref={tabsRef}>
         {TOUR.map((t, i) => (
           <button
             key={t.id}

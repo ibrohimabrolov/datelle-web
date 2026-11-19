@@ -31,7 +31,7 @@ export const viewport = { themeColor: "#1e5a45" };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="uz" className={inter.variable}>
+    <html lang="uz" className={inter.variable} suppressHydrationWarning>
       <body>{children}</body>
     </html>
   );

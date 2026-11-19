@@ -1,14 +1,15 @@
-import { BOT_HANDLE, BOT_URL, FEATURES, LOGIN_URL, PLANS, STATS, STEPS } from "./data";
+import type { Copy } from "./copy";
+import { BOT_HANDLE, BOT_URL, LOGIN_URL } from "./data";
 import { Faq } from "./Faq";
 import { IconBot, IconFloreal, IconHozir, IconJamoa, IconKalendar, IconPul, Step1, Step2, Step3 } from "./icons";
 import { Tour } from "./Tour";
-import { Cta, Eyebrow, Img, ListItem, Logo, Meter, SectionHead } from "./ui";
+import { Cta, Eyebrow, Img, Lines, ListItem, Logo, Meter, SectionHead } from "./ui";
 
 /* Raqamlar (273:327) */
-export function Stats() {
+export function Stats({ t }: { t: Copy }) {
   return (
-    <section className="lp-stats" aria-label="Raqamlarda">
-      {STATS.map((s, i) => (
+    <section className="lp-stats" aria-label={t.a11y.stats}>
+      {t.stats.map((s, i) => (
         <div className="lp-stat" key={s.label}>
           <div className="lp-stat__top">
             <span className="lp-caps">/0{i + 1}/</span>
@@ -25,10 +26,11 @@ export function Stats() {
 }
 
 /* Oldin va endi (268:726) */
-export function Compare() {
+export function Compare({ t }: { t: Copy }) {
+  const c = t.compare;
   return (
     <section className="lp-section" aria-labelledby="h-oldin">
-      <SectionHead id="h-oldin" eyebrow="Oldin va endi" title="Daftardan — bitta ekranga" text={<>Koʻp studiyalar hozir shunday ishlaydi.<br />Floreal bilan esa shunday.</>} />
+      <SectionHead id="h-oldin" eyebrow={c.eyebrow} title={c.title} text={<Lines lines={c.text} />} />
       <div className="lp-compare">
         <article className="lp-ccard">
           <div className="lp-ccard__media">
@@ -36,13 +38,11 @@ export function Compare() {
           </div>
           <div className="lp-ccard__body">
             <div className="lp-ccard__head">
-              <span className="lp-badge lp-caps"><IconHozir />Hozir</span>
-              <h3 className="lp-card-title">Daftar, Excel va 3 ta chat</h3>
+              <span className="lp-badge lp-caps"><IconHozir />{c.before.badge}</span>
+              <h3 className="lp-card-title">{c.before.title}</h3>
             </div>
             <ul className="lp-list">
-              <ListItem type="cross">Avans qayerga yozilgani esdan chiqadi</ListItem>
-              <ListItem type="cross">Bir sanaga ikki buyurtma tushib qoladi</ListItem>
-              <ListItem type="cross">Oy oxirida tushum qoʻlda hisoblanadi</ListItem>
+              {c.before.items.map((x) => <ListItem key={x} type="cross">{x}</ListItem>)}
             </ul>
           </div>
         </article>
@@ -52,13 +52,11 @@ export function Compare() {
           </div>
           <div className="lp-ccard__body">
             <div className="lp-ccard__head">
-              <span className="lp-badge lp-caps"><IconFloreal />Floreal bilan</span>
-              <h3 className="lp-card-title">Bitta kalendar, aniq raqamlar</h3>
+              <span className="lp-badge lp-caps"><IconFloreal />{c.after.badge}</span>
+              <h3 className="lp-card-title">{c.after.title}</h3>
             </div>
             <ul className="lp-list">
-              <ListItem>Har buyurtmada avans va qoldiq koʻrinadi</ListItem>
-              <ListItem>Band kun ochiq qolmaydi</ListItem>
-              <ListItem>Oylik tushum oʻzi hisoblanadi</ListItem>
+              {c.after.items.map((x) => <ListItem key={x}>{x}</ListItem>)}
             </ul>
           </div>
         </article>
@@ -68,17 +66,17 @@ export function Compare() {
 }
 
 /* Ichkaridan koʻring (268:789) */
-export function Product() {
+export function Product({ t }: { t: Copy }) {
   return (
     <section className="lp-section" aria-labelledby="h-ichkaridan">
       <div className="lp-head">
         <div className="lp-head__title">
-          <Eyebrow>Mahsulot</Eyebrow>
-          <h2 className="lp-h2" id="h-ichkaridan">Ichkaridan koʻring</h2>
+          <Eyebrow>{t.product.eyebrow}</Eyebrow>
+          <h2 className="lp-h2" id="h-ichkaridan">{t.product.title}</h2>
         </div>
-        <Cta href={BOT_URL} tone="brand">3 oy bepul boshlash</Cta>
+        <Cta href={BOT_URL} tone="brand">{t.cta.startFree}</Cta>
       </div>
-      <Tour />
+      <Tour t={t} />
     </section>
   );
 }
@@ -86,14 +84,15 @@ export function Product() {
 const FEATURE_ICON = { kalendar: IconKalendar, pul: IconPul, jamoa: IconJamoa, bot: IconBot };
 
 /* Imkoniyatlar (179:605) */
-export function Features() {
+export function Features({ t }: { t: Copy }) {
+  const f0 = t.features;
   return (
     <section className="lp-section" id="imkoniyatlar" aria-labelledby="h-imk">
       <div className="lp-container lp-stack">
-        <SectionHead id="h-imk" eyebrow="Imkoniyatlar" title="Daftar va Excel oʻrniga" text="Sana, pul va jamoa — bitta ilovada. Studiya egasi va menejerlari uchun." />
+        <SectionHead id="h-imk" eyebrow={f0.eyebrow} title={f0.title} text={f0.text} />
         <div className="lp-features">
-          {FEATURES.map((f) => {
-            const Icon = FEATURE_ICON[f.icon];
+          {f0.items.map((f) => {
+            const Icon = FEATURE_ICON[f.icon as keyof typeof FEATURE_ICON];
             return (
               <article className="lp-fcard" key={f.img}>
                 <div className="lp-fcard__media">
@@ -118,13 +117,13 @@ export function Features() {
 const STEP_ICON = [Step1, Step2, Step3];
 
 /* Qanday ishlaydi (179:640) */
-export function Steps() {
+export function Steps({ t }: { t: Copy }) {
   return (
     <section className="lp-section" id="qanday-ishlaydi" aria-labelledby="h-qadam">
       <div className="lp-container lp-stack">
-        <SectionHead id="h-qadam" eyebrow="Qanday ishlaydi" title="3 qadam, 5 daqiqa" />
+        <SectionHead id="h-qadam" eyebrow={t.steps.eyebrow} title={t.steps.title} />
         <ol className="lp-steps" style={{ listStyle: "none", padding: 0, margin: 0 }}>
-          {STEPS.map((s, i) => {
+          {t.steps.items.map((s, i) => {
             const Icon = STEP_ICON[i];
             return (
               <li className="lp-step" key={s.title}>
@@ -146,7 +145,9 @@ export function Steps() {
   );
 }
 
-function PlanCard({ p, split }: { p: typeof PLANS.monthly; split?: boolean }) {
+type Plan = Copy["pricing"]["plans"]["monthly"];
+
+function PlanCard({ p, split, t }: { p: Plan; split?: boolean; t: Copy }) {
   return (
     <article className="lp-plan">
       <div className="lp-plan__top">
@@ -158,22 +159,22 @@ function PlanCard({ p, split }: { p: typeof PLANS.monthly; split?: boolean }) {
         <p className={`lp-plan__note${split ? " lp-plan__note--split" : ""}`}><span>{p.note[0]}</span><b>{p.note[1]}</b></p>
       </div>
       <div className="lp-plan__includes">
-        <span className="lp-caps">Nima kiradi</span>
+        <span className="lp-caps">{t.pricing.includes}</span>
         <ul className="lp-list">{p.includes.map((t) => <ListItem key={t}>{t}</ListItem>)}</ul>
       </div>
-      <a className="lp-btn lp-btn--secondary" href={BOT_URL} target="_blank" rel="noopener">Boshlash</a>
+      <a className="lp-btn lp-btn--secondary" href={BOT_URL} target="_blank" rel="noopener">{t.cta.start}</a>
     </article>
-  )
+  );
 }
 
 /* Narxlar (274:1529) */
-export function Pricing() {
-  const { monthly: m, founder: f, yearly: y } = PLANS;
+export function Pricing({ t }: { t: Copy }) {
+  const { monthly: m, founder: f, yearly: y } = t.pricing.plans;
   return (
     <section className="lp-section" id="narxlar" aria-labelledby="h-narx">
-      <SectionHead id="h-narx" eyebrow="Narxlar" title="Studiyangizga mos tarif" text="Hamma tarifda hammasi bor. Farqi — faqat toʻlov usulida." />
+      <SectionHead id="h-narx" eyebrow={t.pricing.eyebrow} title={t.pricing.title} text={t.pricing.text} />
       <div className="lp-plans">
-        <PlanCard p={m} split />
+        <PlanCard p={m} split t={t} />
         <article className="lp-plan lp-plan--featured">
           <div className="lp-plan__top">
             <div className="lp-plan__row">
@@ -187,23 +188,23 @@ export function Pricing() {
             <p className="lp-plan__note"><span>{f.note[0]}</span><b>{f.note[1]}</b></p>
           </div>
           <div className="lp-plan__includes">
-            <span className="lp-caps">Nima kiradi</span>
+            <span className="lp-caps">{t.pricing.includes}</span>
             <ul className="lp-list">{f.includes.map((t) => <ListItem key={t} tone="onbrand">{t}</ListItem>)}</ul>
           </div>
-          <Cta href={BOT_URL} tone="light" block>Joy band qilish</Cta>
+          <Cta href={BOT_URL} tone="light" block>{t.pricing.reserve}</Cta>
         </article>
-        <PlanCard p={y} />
+        <PlanCard p={y} t={t} />
       </div>
     </section>
   );
 }
 
 /* Hamkorlar (235:752) — logo wall, placeholders until founding partners join. Desktop only (hidden in Figma Mobile/Tablet). */
-export function Partners() {
+export function Partners({ t }: { t: Copy }) {
   return (
     <section className="lp-section lp-d-only" id="hamkorlar" aria-labelledby="h-hamkor">
-      <SectionHead id="h-hamkor" eyebrow="Hamkorlar" title="Birinchi 10 ta studiya" text="Asoschi hamkorlar logotipi shu yerda doimiy turadi. Joy band boʻlgani sari devor toʻladi." />
-      <div className="lp-wall" role="img" aria-label="Asoschi hamkorlar uchun 10 ta boʻsh joy">
+      <SectionHead id="h-hamkor" eyebrow={t.partners.eyebrow} title={t.partners.title} text={t.partners.text} />
+      <div className="lp-wall" role="img" aria-label={t.a11y.wall}>
         {Array.from({ length: 10 }, (_, i) => (
           <div className="lp-wall__cell" key={i}><span className="lp-wall__slot" /></div>
         ))}
@@ -213,31 +214,31 @@ export function Partners() {
 }
 
 /* Savollar (179:677) */
-export function Questions() {
+export function Questions({ t }: { t: Copy }) {
   return (
     <section className="lp-section" id="savollar" aria-labelledby="h-savol">
       <div className="lp-faq-wrap">
         <div className="lp-head__title">
-          <Eyebrow>Savollar</Eyebrow>
-          <h2 className="lp-h2" id="h-savol">Koʻp soʻraladi</h2>
-          <p className="lp-body">Qanday ishlashi, narxi va maʼlumotlaringiz<br />haqida qisqa javoblar.</p>
+          <Eyebrow>{t.questions.eyebrow}</Eyebrow>
+          <h2 className="lp-h2" id="h-savol">{t.questions.title}</h2>
+          <p className="lp-body"><Lines lines={t.questions.text} /></p>
         </div>
-        <Faq />
+        <Faq t={t} />
       </div>
     </section>
   );
 }
 
 /* Marquee (179:701) */
-export function Marquee() {
+export function Marquee({ t }: { t: Copy }) {
   return (
     <a className="lp-marquee" href={BOT_URL} target="_blank" rel="noopener">
-      <span className="lp-sr">Telegram&apos;da boshlash</span>
+      <span className="lp-sr">{t.cta.telegram}</span>
       {/* 3 identical units; the track loops by exactly one unit (−33.333%) */}
       <span className="lp-marquee__track" aria-hidden>
         {[0, 1, 2].map((i) => (
           <span key={i} style={{ display: "contents" }}>
-            <span>Telegram&apos;da boshlash</span>
+            <span>{t.cta.telegram}</span>
             <i />
           </span>
         ))}
@@ -247,7 +248,8 @@ export function Marquee() {
 }
 
 /* Footer · B — Bogʻ (263:20242) */
-export function Footer() {
+export function Footer({ t }: { t: Copy }) {
+  const ft = t.footer;
   return (
     <footer className="lp-footer">
       <div className="lp-footer__card">
@@ -257,30 +259,30 @@ export function Footer() {
         <div className="lp-footer__top">
           <div className="lp-footer__brand">
             <Logo />
-            <p className="lp-body">Dekor studiyalari va floristlar uchun.<br />Sanalar, buyurtmalar va pul — bir joyda.</p>
-            <Cta href={BOT_URL} tone="brand">Telegram&apos;da boshlash</Cta>
+            <p className="lp-body"><Lines lines={ft.text} /></p>
+            <Cta href={BOT_URL} tone="brand">{t.cta.telegram}</Cta>
           </div>
-          <nav className="lp-footer__links" aria-label="Pastki menyu">
+          <nav className="lp-footer__links" aria-label={t.a11y.footerNav}>
             <div className="lp-footer__col">
-              <h3>Mahsulot</h3>
+              <h3>{ft.product}</h3>
               <ul>
-                <li><a href="#imkoniyatlar">Imkoniyatlar</a></li>
-                <li><a href="#qanday-ishlaydi">Qanday ishlaydi</a></li>
-                <li className="lp-d-only"><a href="#hamkorlar">Hamkorlar</a></li>
-                <li><a href="#savollar">Savollar</a></li>
+                <li><a href="#imkoniyatlar">{t.nav[0].label}</a></li>
+                <li><a href="#qanday-ishlaydi">{t.nav[1].label}</a></li>
+                <li className="lp-d-only"><a href="#hamkorlar">{ft.partnersLink}</a></li>
+                <li><a href="#savollar">{t.nav[2].label}</a></li>
               </ul>
             </div>
             <div className="lp-footer__col">
-              <h3>Boshlash</h3>
+              <h3>{ft.start}</h3>
               <ul>
                 <li><a href={BOT_URL} target="_blank" rel="noopener">Telegram: {BOT_HANDLE}</a></li>
-                <li><a href={LOGIN_URL}>Kompyuterda kirish</a></li>
+                <li><a href={LOGIN_URL}>{ft.desktopLogin}</a></li>
               </ul>
             </div>
             <div className="lp-footer__col">
-              <h3>Hujjatlar</h3>
+              <h3>{ft.docs}</h3>
               <ul>
-                <li><a href="/maxfiylik">Maxfiylik</a></li>
+                <li><a href="/maxfiylik">{ft.privacy}</a></li>
               </ul>
             </div>
           </nav>
