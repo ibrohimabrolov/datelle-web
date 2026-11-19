@@ -24,8 +24,7 @@ export function Hero({ t }: { t: Copy }) {
           <div className="lp-nav__actions">
             <LangSwitch t={t} className="lp-d-only" />
             <ThemeToggle className="lp-d-only" label={t.a11y.theme} />
-            <a className="lp-btn lp-btn--ghost lp-d-only" href={LOGIN_URL}>{t.cta.login}</a>
-            <Cta href={BOT_URL} tone="glass" size="m" className="lp-nav__cta">{t.cta.start}</Cta>
+            <Cta href={LOGIN_URL} external={false} tone="glass" size="m" className="lp-nav__cta">{t.cta.login}</Cta>
             <MenuButton label={t.a11y.menuOpen} />
           </div>
         </nav>

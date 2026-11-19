@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 /* The client marketplace (studiyalar, studio pages, zadatok, partner form) is frozen — floreal.uz is the
    studio landing. Its routes redirect home until MARKETPLACE=on is set at build time; the code stays. */
 const MARKETPLACE = process.env.MARKETPLACE === "on";
-const MARKETPLACE_ROUTES = ["/bozor", "/studiyalar", "/studio/:path*", "/kirish", "/sorov/:path*", "/bronlarim", "/hamkorlar/:path*", "/hamkorlar", "/kafolat", "/biz-haqimizda", "/yordam", "/oferta"];
+const MARKETPLACE_ROUTES = ["/bozor", "/studiyalar", "/studio/:slug", "/studio/:slug/taklif", "/kirish", "/sorov/:path*", "/bronlarim", "/hamkorlar/:path*", "/hamkorlar", "/kafolat", "/biz-haqimizda", "/yordam", "/oferta"];
 
 const nextConfig: NextConfig = {
   async redirects() {
