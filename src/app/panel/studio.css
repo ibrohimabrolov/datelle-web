@@ -897,3 +897,8 @@ a.ds-btn[aria-disabled] { pointer-events: none; opacity: 0.5; }
   /* the 6-month mini bars sit top-right: keep the amount clear of them, let "soʻm" wrap */
   .ds-kpi[data-tone="inverse"] .ds-kpi-val { flex-wrap: wrap; row-gap: 0; padding-right: 76px; }
 }
+
+/* Forward → buyurtma: paste block in the order form */
+.ds-paste { display: flex; flex-direction: column; gap: var(--ds-space-12); padding: var(--ds-space-16); border-radius: var(--ds-radius-lg); background: var(--ds-bg-surface); }
+.ds-paste-actions { display: flex; justify-content: flex-end; gap: var(--ds-space-8); }
+.ds-paste-open { align-self: flex-start; }

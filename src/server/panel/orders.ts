@@ -8,7 +8,9 @@ import { canTransition, ORDER_VIEWS, type OrderStatus, type OrderView } from "@/
 import { db, schema } from "../db";
 import { HttpError } from "../http";
 import { phoneSchema } from "../phone";
+import { botToken } from "../telegram/config";
 import { audit, type StudioCtx } from "./auth";
+import { closeDraftCard, consumeDraft } from "./drafts";
 
 /* Floreal — orders & payments (Tech §2, §5).
    Money is integer soʻm. Balance is always computed from live payments; payments are never physically deleted. */
@@ -41,6 +43,7 @@ export const createSchema = z
     advance: z
       .object({ amount: money("Avans").min(1, "Avans 0 dan katta boʻlsin"), method: z.enum(METHODS).default("cash") })
       .optional(),
+    draftId: z.string().regex(/^[A-Za-z0-9_-]{16}$/).optional(), // Forward → buyurtma
   })
   .refine((o) => !o.advance || o.advance.amount <= o.total, { message: "Avans summadan oshmasin", path: ["advance", "amount"] })
   .refine((o) => dateInWindow(o.eventDate), { message: "Sana 2 yil oraligʻida boʻlsin", path: ["eventDate"] });
@@ -172,7 +175,8 @@ export async function createOrder(ctx: StudioCtx, input: z.infer<typeof createSc
   const studioId = ctx.studio.id;
   // capacity is a warning, never a block (Tech §2): the studio decides
   const warnings = await dayWarnings(studioId, ctx.studio.dailyCapacity, input.eventDate);
-  const { advance, ...fields } = input;
+  const { advance, draftId, ...fields } = input;
+  let card: Awaited<ReturnType<typeof consumeDraft>> = null;
 
   for (let attempt = 0; ; attempt++) {
     try {
@@ -184,9 +188,18 @@ export async function createOrder(ctx: StudioCtx, input: z.infer<typeof createSc
         if (advance) {
           await tx.insert(schema.orderPayments).values({ orderId: o.id, amount: advance.amount, method: advance.method, paidOn: todayISO(), note: "Avans", createdBy: ctx.user.id });
         }
-        await audit(tx, { studioId, actorId: ctx.user.id, entity: "order", entityId: o.id, action: "create", diff: { ...fields, advance: advance ?? null } });
+        if (draftId) card = await consumeDraft(tx, ctx.user, draftId, o.id);
+        await audit(tx, {
+          studioId,
+          actorId: ctx.user.id,
+          entity: "order",
+          entityId: o.id,
+          action: "create",
+          diff: { ...fields, advance: advance ?? null, ...(card ? { source: "telegram" } : {}) },
+        });
         return o;
       });
+      await closeDraftCard(botToken(), card);
       return { order: await getOrder(ctx, order.id), warnings };
     } catch (e) {
       // DS-###### collided with an existing code — retry with a fresh one

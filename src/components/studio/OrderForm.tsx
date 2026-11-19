@@ -5,9 +5,11 @@ import { api, ApiError } from "@/lib/api";
 import { addDays, MONTHS, todayISO, WD_FULL, weekdayIdx } from "@/lib/dates";
 import { freeSlots, STUDIO_EVENTS } from "@/lib/studio/calendar";
 import { groupThousands } from "@/lib/studio/orders";
+import { FIELD_LABEL, looksLikeOrder, missingKeyFields, parseOrder, type ParsedOrder } from "@/lib/studio/parseOrder";
 import { Button } from "./Button";
 import { dataChanged, fetchMonth, monthCache, monthKey, type OrderFull } from "./data";
 import { Field, formatPhone, MoneyInput, PhoneInput } from "./Fields";
+import { StudioIcon } from "./icons";
 import { ConfirmDialog } from "./Modal";
 import { Overlay } from "./Overlay";
 import { useStudio } from "./PanelProvider";
@@ -22,10 +24,43 @@ type Form = { clientName: string; clientPhone: string; eventDate: string; eventT
 
 export type SavedOrder = { order: OrderFull; warnings: string[] };
 
-export function OrderForm({ initial, date, onClose, onSaved }: { initial?: OrderFull; date?: string; onClose(): void; onSaved(r: SavedOrder): void }) {
+/* Forward → buyurtma: a draft from the bot, or text pasted into the form (parsed in the browser) */
+export type Prefill = { draftId?: string; parsed: ParsedOrder };
+type FilledFrom = { source: "telegram" | "paste"; missing: string[] };
+
+/* Fill only what the studio hasn't touched: a field still equal to its starting value */
+function applyParsed(f: Form, base: Form, p: ParsedOrder): Form {
+  const keep = <K extends keyof Form>(k: K, v: Form[K] | undefined) => (v != null && v !== "" && f[k] === base[k] ? v : f[k]);
+  return {
+    ...f,
+    clientName: keep("clientName", p.clientName),
+    clientPhone: keep("clientPhone", p.clientPhone && formatPhone(p.clientPhone)),
+    eventDate: keep("eventDate", p.eventDate),
+    eventType: keep("eventType", p.eventType),
+    guests: keep("guests", p.guests != null ? String(p.guests) : undefined),
+    venue: keep("venue", p.venue),
+    total: keep("total", p.total),
+    advance: keep("advance", p.advance),
+  };
+}
+const missingLabels = (p: ParsedOrder) => missingKeyFields(p).map((k) => FIELD_LABEL[k]);
+
+export function OrderForm({
+  initial,
+  date,
+  prefill,
+  onClose,
+  onSaved,
+}: {
+  initial?: OrderFull;
+  date?: string;
+  prefill?: Prefill;
+  onClose(): void;
+  onSaved(r: SavedOrder): void;
+}) {
   const ctx = useStudio();
   const edit = Boolean(initial);
-  const start: Form = useMemo(
+  const blank: Form = useMemo(
     () => ({
       clientName: initial?.client ?? "",
       clientPhone: initial ? formatPhone(initial.phone) : "",
@@ -39,7 +74,11 @@ export function OrderForm({ initial, date, onClose, onSaved }: { initial?: Order
     }),
     [initial, date],
   );
+  // a bot draft is the starting point (closing without saving loses nothing — the draft stays in Telegram)
+  const start = useMemo(() => (prefill ? applyParsed(blank, blank, prefill.parsed) : blank), [blank, prefill]);
   const [f, setF] = useState<Form>(start);
+  const [filledFrom, setFilledFrom] = useState<FilledFrom | null>(prefill ? { source: "telegram", missing: missingLabels(prefill.parsed) } : null);
+  const [paste, setPaste] = useState<{ text: string; error?: string } | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -97,6 +136,7 @@ export function OrderForm({ initial, date, onClose, onSaved }: { initial?: Order
       notes: f.notes,
       total: f.total ?? undefined,
       ...(!edit && f.advance ? { advance: { amount: f.advance, method: "cash" } } : {}),
+      ...(!edit && prefill?.draftId ? { draftId: prefill.draftId } : {}),
     };
     try {
       const r = edit
@@ -113,6 +153,17 @@ export function OrderForm({ initial, date, onClose, onSaved }: { initial?: Order
 
   const close = () => (dirty && !saving ? setGuard(true) : onClose());
 
+  function fillFromPaste() {
+    const p = parseOrder(paste?.text ?? "");
+    if (!looksLikeOrder(p)) {
+      setPaste((s) => s && { ...s, error: "Sana, telefon yoki summa topilmadi. Mijoz yozganini toʻliq qoʻying." });
+      return;
+    }
+    setF((cur) => applyParsed(cur, start, p));
+    setFilledFrom({ source: "paste", missing: missingLabels(p) });
+    setPaste(null);
+  }
+
   return (
     <Overlay title={edit ? "Tahrirlash" : "Yangi buyurtma"} onClose={close}>
       <h2 className="ds-h2 ds-mobile-only">{edit ? "Tahrirlash" : "Yangi buyurtma"}</h2>
@@ -125,6 +176,49 @@ export function OrderForm({ initial, date, onClose, onSaved }: { initial?: Order
         }}
         style={{ flex: 1, display: "flex", flexDirection: "column" }}
       >
+        {filledFrom ? (
+          <div className="ds-alert" data-tone="info" role="status">
+            <span className="ds-alert-icon" aria-hidden>
+              i
+            </span>
+            <div>
+              <b>{filledFrom.source === "telegram" ? "Telegram yozishmasidan toʻldirildi" : "Yozishmadan toʻldirildi"}</b>
+              <span>{filledFrom.missing.length ? `Tekshirib saqlang. Topilmadi: ${filledFrom.missing.join(", ")}.` : "Hammasi topildi — tekshirib saqlang."}</span>
+            </div>
+          </div>
+        ) : (
+          !edit &&
+          (paste ? (
+            <section className="ds-paste" aria-label="Yozishmadan toʻldirish">
+              <Field label="Mijoz yozishmasi" error={paste.error} hint="Matn qurilmangizdan chiqmaydi — shu yerda oʻqiladi">
+                {(a) => (
+                  <textarea
+                    {...a}
+                    className="ds-input"
+                    rows={5}
+                    value={paste.text}
+                    onChange={(e) => setPaste({ text: e.target.value })}
+                    placeholder="Telegram yoki Instagram’dagi xabarlarni shu yerga qoʻying"
+                    maxLength={4000}
+                    autoFocus
+                  />
+                )}
+              </Field>
+              <div className="ds-paste-actions">
+                <Button type="button" variant="ghost" onClick={() => setPaste(null)}>
+                  Bekor qilish
+                </Button>
+                <Button type="button" disabled={!paste.text.trim()} onClick={fillFromPaste}>
+                  Toʻldirish
+                </Button>
+              </div>
+            </section>
+          ) : (
+            <Button type="button" variant="secondary" icon={<StudioIcon name="clipboard-text" />} onClick={() => setPaste({ text: "" })} className="ds-paste-open">
+              Yozishmadan toʻldirish
+            </Button>
+          ))
+        )}
         <section aria-labelledby="f-client">
           <h3 id="f-client" className="ds-caps ds-tertiary">
             Mijoz

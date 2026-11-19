@@ -2,7 +2,7 @@
 
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ApiError } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
 import { isISODate, MONTHS, WD_SHORT, weekdayIdx } from "@/lib/dates";
 import { eventLabel } from "@/lib/studio/calendar";
 import { groupThousands, isOverdue, ORDER_VIEWS, weekGroup, type OrderView } from "@/lib/studio/orders";
@@ -12,7 +12,7 @@ import { StudioIcon } from "../icons";
 import { StateBlock } from "../StateBlock";
 import { OrderCard } from "../OrderCard";
 import { OrderDetail } from "../OrderDetail";
-import { OrderForm } from "../OrderForm";
+import { OrderForm, type Prefill } from "../OrderForm";
 import { useStudio } from "../PanelProvider";
 import { Toast, type ToastMsg } from "../Toast";
 import { SettingsLink } from "../Shell";
@@ -41,6 +41,8 @@ export function OrdersScreen() {
   const dir = params.get("dir") === "asc" || params.get("dir") === "desc" ? (params.get("dir") as "asc" | "desc") : null;
   const isNew = path.endsWith("/yangi");
   const newDate = params.get("sana");
+  const draftId = isNew ? params.get("qoralama") : null;
+  const draft = useDraft(draftId, () => setToast({ id: Date.now(), text: "Qoralama topilmadi yoki allaqachon saqlangan" }));
   const openId = !isNew && routeId ? routeId : null;
 
   const qs = useMemo(() => {
@@ -321,9 +323,10 @@ export function OrdersScreen() {
         <StudioIcon name="plus" size={24} />
       </button>
 
-      {isNew && ctx && (
+      {isNew && ctx && draft.state !== "loading" && (
         <OrderForm
           date={newDate && isISODate(newDate) ? newDate : undefined}
+          prefill={draft.state === "ready" ? draft.prefill : undefined}
           onClose={closeLayer}
           onSaved={(r) => {
             router.replace(`${BASE}/${r.order.id}`, { scroll: false });
@@ -366,4 +369,31 @@ function Empty({ view, q, onNew, onClear, onAll }: { view: OrderView; q: string;
       Bekor qilingan buyurtmalar shu yerda saqlanadi.
     </StateBlock>
   );
+}
+
+/* Forward → buyurtma: ?qoralama=<id> from the bot's "Koʻrib saqlash" button.
+   A missing/used draft opens the empty form — the studio can still paste the chat. */
+type DraftState = { state: "none" | "loading" | "gone" } | { state: "ready"; prefill: Prefill };
+function useDraft(id: string | null, onGone: () => void): DraftState {
+  const [res, setRes] = useState<{ id: string; r: DraftState } | null>(null);
+  const gone = useRef(onGone);
+  useEffect(() => {
+    gone.current = onGone;
+  });
+  useEffect(() => {
+    if (!id) return;
+    let alive = true;
+    api<{ draft: { id: string; parsed: Prefill["parsed"] } }>(`/api/panel/drafts/${encodeURIComponent(id)}`)
+      .then((r) => alive && setRes({ id, r: { state: "ready", prefill: { draftId: r.draft.id, parsed: r.draft.parsed } } }))
+      .catch(() => {
+        if (!alive) return;
+        setRes({ id, r: { state: "gone" } });
+        gone.current();
+      });
+    return () => {
+      alive = false;
+    };
+  }, [id]);
+  if (!id) return { state: "none" };
+  return res?.id === id ? res.r : { state: "loading" };
 }
