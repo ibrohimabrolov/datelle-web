@@ -307,8 +307,8 @@ export function SettingsScreen() {
         <Section title="Obuna">
           <div className="ds-plan">
             <div className="ds-li-main">
-              <span className="ds-li-title">{details?.studio.plan === "standard" ? "Standart" : "Asoschi hamkor"}</span>
-              <span className="ds-li-sub">{details ? (trialEnds ? `3 oy bepul · ${dayMonth(trialEnds)}gacha` : "Faol") : " "}</span>
+              <span className="ds-li-title">{details ? (trialEnds ? "Bepul oy" : "Standart") : " "}</span>
+              <span className="ds-li-sub">{details ? (trialEnds ? `${dayMonth(trialEnds)}gacha bepul` : "Faol") : " "}</span>
             </div>
             <span className="ds-tag" data-tone="plan">
               Faol

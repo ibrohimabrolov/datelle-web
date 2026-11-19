@@ -45,12 +45,12 @@ const uz = {
     tourTabs: "Ilova ekranlari",
     faqTabs: "Savollar mavzusi",
     footerNav: "Pastki menyu",
-    wall: "Asoschi hamkorlar uchun 10 ta boʻsh joy",
+    wall: "Birinchi 10 ta studiya uchun boʻsh joylar",
   },
   cta: {
     login: "Kirish",
     start: "Boshlash",
-    startFree: "3 oy bepul boshlash",
+    startFree: "1 oy bepul boshlash",
     telegram: "Telegram'da boshlash",
   },
   hero: {
@@ -59,12 +59,12 @@ const uz = {
     h1: ["Sanalar, buyurtmalar", "va pul — bir joyda."],
     lead: "Kalendar, avans va qoldiq, jamoa.",
     leadMore: "Telefonda — Telegram ichida, kompyuterda — brauzerda.",
-    offer: "3 oy bepul",
-    offerNote: "Birinchi 10 ta studiya uchun",
+    offer: "1 oy bepul",
+    offerNote: "Karta va shartnomasiz",
   },
   stats: [
     { n: "1", unit: " daqiqa", label: "Studiyani ochish" },
-    { n: "0", unit: " soʻm", label: "Birinchi 3 oy" },
+    { n: "0", unit: " soʻm", label: "Birinchi oy" },
     { n: "20", unit: ":00", label: "Har kuni botda eslatma" },
     { n: "2", unit: " qurilma", label: "Telefon va kompyuter" },
   ],
@@ -113,22 +113,22 @@ const uz = {
   pricing: {
     eyebrow: "Narxlar",
     title: "Studiyangizga mos tarif",
-    text: "Hamma tarifda hammasi bor. Farqi — faqat toʻlov usulida.",
+    text: "Birinchi oy — bepul, hamma imkoniyat bilan. Keyin toʻlov usulini oʻzingiz tanlaysiz.",
     includes: "Nima kiradi",
-    reserve: "Joy band qilish",
+    trialCta: "Bepul boshlash",
     plans: {
       monthly: { name: "OYLIK", desc: "Oyma-oy, istalgan payt toʻxtatasiz.", price: "299 000", unit: "soʻm / oy", note: ["Ishga tushirish", "+500 000 soʻm"], includes: UZ_BASE_INCLUDES },
-      founder: {
-        name: "ASOSCHI HAMKOR", chip: "10 TA JOY", desc: "Birinchi 10 ta studiya uchun.", price: "0 soʻm", unit: "3 oy", note: ["Keyin, umrbod", "149 000 soʻm / oy"],
-        includes: ["Oylik tarifdagi hammasi", "Ishga tushirish bepul", "Shaxsan sozlab beramiz", "Narx umrbod 2 baravar arzon"],
+      trial: {
+        name: "BIRINCHI OY", chip: "BEPUL", desc: "Hamma imkoniyat ochiq — toʻlovsiz, majburiyatsiz.", price: "0 soʻm", unit: "30 kun", note: ["Keyin", "oylik yoki yillik"],
+        includes: ["Hamma imkoniyatlar, cheklovsiz", "3 tagacha foydalanuvchi", "Karta va shartnoma kerak emas", "Oy oxirida oʻzingiz tanlaysiz"],
       },
-      yearly: { name: "YILLIK", desc: "Bir yilga oldindan — 2 oy bepul.", price: "2 990 000", unit: "soʻm / yil", note: ["Oyiga taxminan", "249 000 soʻm"], includes: UZ_BASE_INCLUDES },
+      yearly: { name: "YILLIK", desc: "Bir yilga oldindan — 2 oy tejaysiz.", price: "2 990 000", unit: "soʻm / yil", note: ["Oyiga taxminan", "249 000 soʻm"], includes: UZ_BASE_INCLUDES },
     },
   },
   partners: {
     eyebrow: "Hamkorlar",
     title: "Birinchi 10 ta studiya",
-    text: "Asoschi hamkorlar logotipi shu yerda doimiy turadi. Joy band boʻlgani sari devor toʻladi.",
+    text: "Floreal bilan ishlagan birinchi studiyalar logotipi shu yerda doimiy turadi. Har yangi studiya bilan devor toʻladi.",
   },
   questions: {
     eyebrow: "Savollar",
@@ -148,12 +148,12 @@ const uz = {
     },
     {
       id: "narx",
-      label: "Narx va hamkorlik",
+      label: "Narx va toʻlov",
       items: [
-        { q: "Ishga tushirish nima uchun pullik?", a: "Bir martalik 500 000 soʻm: eski buyurtmalaringizni kiritib beramiz va jamoani 1 soat oʻrgatamiz. Asoschi hamkorlar uchun bepul." },
+        { q: "Ishga tushirish nima uchun pullik?", a: "Bir martalik 500 000 soʻm: eski buyurtmalaringizni kiritib beramiz va jamoani 1 soat oʻrgatamiz." },
         { q: "Istalgan payt toʻxtatsam boʻladimi?", a: "Ha. Oylik tarifda shartnoma yoʻq: keyingi oy toʻlamasangiz, obuna toʻxtaydi." },
         { q: "3 tadan koʻp xodim boʻlsa-chi?", a: "Har bir qoʻshimcha foydalanuvchi — oyiga 49 000 soʻm." },
-        { q: "Asoschi hamkor boʻlish uchun nima kerak?", a: "3 oy tizimdan haqiqatan foydalanish va har 2 haftada 15 daqiqalik fikr. Evaziga 3 oy bepul, keyin umrbod 149 000 soʻm / oy." },
+        { q: "Bepul oydan keyin nima boʻladi?", a: "Oy oxirida oylik yoki yillik tarifni tanlaysiz. Tanlamasangiz, obuna toʻxtaydi — hech narsa avtomatik yechilmaydi." },
       ],
     },
   ],
@@ -171,7 +171,7 @@ const uz = {
     appDescription:
       "Dekor studiyalari va floristlar uchun CRM: bron kalendari, buyurtmalar, avans va qoldiq hisobi, jamoa. Telefonda — Telegram ichida, kompyuterda — brauzerda.",
     features: ["Bron kalendari", "Buyurtmalar", "Avans va qoldiq hisobi", "Jamoa va rollar", "Tushum hisoboti"],
-    offers: { monthly: "Oylik", yearly: "Yillik", founder: "Asoschi hamkor — 3 oy" },
+    offers: { monthly: "Oylik", yearly: "Yillik", trial: "Birinchi oy — bepul" },
     city: "Toshkent",
   },
 };
@@ -216,7 +216,7 @@ const ru: Copy = {
     tourTabs: "Экраны приложения",
     faqTabs: "Темы вопросов",
     footerNav: "Нижнее меню",
-    wall: "10 свободных мест для партнёров-основателей",
+    wall: "Свободные места для первых 10 студий",
   },
   cta: {
     login: "Войти",
@@ -230,12 +230,12 @@ const ru: Copy = {
     h1: ["Даты, заказы и деньги\u00a0—", "в\u00a0одном месте."],
     lead: "Календарь, аванс и остаток, команда.",
     leadMore: "В телефоне — внутри Telegram, на компьютере — в браузере.",
-    offer: "3 месяца бесплатно",
-    offerNote: "Для первых 10 студий",
+    offer: "Месяц бесплатно",
+    offerNote: "Без карты и договора",
   },
   stats: [
     { n: "1", unit: " минута", label: "Чтобы открыть студию" },
-    { n: "0", unit: " сум", label: "Первые 3 месяца" },
+    { n: "0", unit: " сум", label: "Первый месяц" },
     { n: "20", unit: ":00", label: "Напоминание в боте каждый день" },
     { n: "2", unit: " экрана", label: "Телефон и компьютер" },
   ],
@@ -284,22 +284,22 @@ const ru: Copy = {
   pricing: {
     eyebrow: "Цены",
     title: "Тариф под вашу студию",
-    text: "Во всех тарифах есть всё. Разница — только в способе оплаты.",
+    text: "Первый месяц — бесплатно, со всеми возможностями. Дальше способ оплаты выбираете сами.",
     includes: "Что входит",
-    reserve: "Забронировать место",
+    trialCta: "Начать бесплатно",
     plans: {
       monthly: { name: "ПОМЕСЯЧНО", desc: "Платите помесячно, остановить можно в любой момент.", price: "299 000", unit: "сум / мес", note: ["Подключение", "+500 000 сум"], includes: RU_BASE_INCLUDES },
-      founder: {
-        name: "ПАРТНЁР-ОСНОВАТЕЛЬ", chip: "10 МЕСТ", desc: "Для первых 10 студий.", price: "0 сум", unit: "3 мес", note: ["Затем, навсегда", "149 000 сум / мес"],
-        includes: ["Всё из помесячного тарифа", "Подключение бесплатно", "Настроим лично", "Цена навсегда в 2 раза ниже"],
+      trial: {
+        name: "ПЕРВЫЙ МЕСЯЦ", chip: "БЕСПЛАТНО", desc: "Всё открыто — без оплаты и обязательств.", price: "0 сум", unit: "30 дней", note: ["Затем", "помесячно или на год"],
+        includes: ["Все возможности открыты", "До 3 пользователей", "Карта и договор не нужны", "В конце месяца решаете сами"],
       },
-      yearly: { name: "НА ГОД", desc: "Оплата за год вперёд — 2 месяца бесплатно.", price: "2 990 000", unit: "сум / год", note: ["В месяц примерно", "249 000 сум"], includes: RU_BASE_INCLUDES },
+      yearly: { name: "НА ГОД", desc: "Оплата за год вперёд — 2 месяца в подарок.", price: "2 990 000", unit: "сум / год", note: ["В месяц примерно", "249 000 сум"], includes: RU_BASE_INCLUDES },
     },
   },
   partners: {
-    eyebrow: "Партнёры",
+    eyebrow: "Студии",
     title: "Первые 10 студий",
-    text: "Логотипы партнёров-основателей будут здесь всегда. С каждым занятым местом стена заполняется.",
+    text: "Логотипы первых студий, работающих с Floreal, будут здесь всегда. С каждой новой студией стена заполняется.",
   },
   questions: {
     eyebrow: "Вопросы",
@@ -320,19 +320,19 @@ const ru: Copy = {
     },
     {
       id: "narx",
-      label: "Цены и партнёрство",
+      label: "Цены и оплата",
       items: [
-        { q: "Почему подключение платное?", a: "Разово 500 000 сум: перенесём ваши старые заказы и за 1 час обучим команду. Для партнёров-основателей — бесплатно." },
+        { q: "Почему подключение платное?", a: "Разово 500 000 сум: перенесём ваши старые заказы и за 1 час обучим команду." },
         { q: "Можно остановить в любой момент?", a: "Да. На помесячном тарифе договора нет: не оплатили следующий месяц — подписка останавливается." },
         { q: "А если сотрудников больше трёх?", a: "Каждый дополнительный пользователь — 49 000 сум в месяц." },
-        { q: "Как стать партнёром-основателем?", a: "3 месяца по-настоящему пользоваться системой и раз в 2 недели давать 15-минутный отзыв. Взамен — 3 месяца бесплатно, затем навсегда 149 000 сум / мес." },
+        { q: "Что будет после бесплатного месяца?", a: "В конце месяца выбираете помесячный или годовой тариф. Не выбрали — подписка останавливается, ничего не списывается автоматически." },
       ],
     },
   ],
   footer: {
     text: ["Для декор-студий и флористов.", "Даты, заказы и деньги — в одном месте."],
     product: "Продукт",
-    partnersLink: "Партнёры",
+    partnersLink: "Студии",
     start: "Начать",
     desktopLogin: "Вход с компьютера",
     docs: "Документы",
@@ -343,7 +343,7 @@ const ru: Copy = {
     appDescription:
       "CRM для декор-студий и флористов: календарь броней, заказы, учёт аванса и остатка, команда. В телефоне — внутри Telegram, на компьютере — в браузере.",
     features: ["Календарь броней", "Заказы", "Учёт аванса и остатка", "Команда и роли", "Отчёт по выручке"],
-    offers: { monthly: "Помесячно", yearly: "На год", founder: "Партнёр-основатель — 3 месяца" },
+    offers: { monthly: "Помесячно", yearly: "На год", trial: "Первый месяц — бесплатно" },
     city: "Ташкент",
   },
 };

@@ -214,7 +214,7 @@ describe("onboarding and tenancy", () => {
     assert.ok(r.json.error.fields.name && r.json.error.fields.category && r.json.error.fields.dailyCapacity);
   });
 
-  test("creates the studio, makes the user owner, writes audit, starts the 90-day trial", async () => {
+  test("creates the studio, makes the user owner, writes audit, starts the 30-day free month", async () => {
     const r = await owner.req("/api/panel/onboarding", { body: { name: "  Gulnoza Decor ", category: "dekor", dailyCapacity: 3 } });
     assert.equal(r.status, 201, JSON.stringify(r.json));
     studioId = r.json.studio.id;
@@ -227,7 +227,7 @@ describe("onboarding and tenancy", () => {
     assert.deepEqual(rows, [{ action: "create", entity: "studio" }]);
     const { rows: st } = await pool.query("select plan, trial_ends_at - current_date as days from studios where id = $1", [studioId]);
     assert.equal(st[0].plan, "founding");
-    assert.ok(st[0].days >= 89 && st[0].days <= 91);
+    assert.ok(st[0].days >= 29 && st[0].days <= 31);
   });
 
   test("double tap cannot create a second studio", async () => {

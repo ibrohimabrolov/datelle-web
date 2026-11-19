@@ -86,7 +86,7 @@ export function Shell({ children }: { children: ReactNode }) {
             </span>
             <div>
               <strong>{studio.name}</strong>
-              <span className="ds-label ds-secondary">{studio.role === "owner" ? "Asoschi hamkor" : "Menejer"}</span>
+              <span className="ds-label ds-secondary">{studio.role === "owner" ? "Egasi" : "Menejer"}</span>
             </div>
           </Link>
         ) : (
