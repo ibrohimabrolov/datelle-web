@@ -1,17 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { FAQ } from "./data";
+import type { Copy } from "./copy";
 import { Minus, Plus } from "./icons";
 
 /* Landing/FAQ (Figma 292:3689): category tabs + accordion. First answer open by default. */
-export function Faq() {
+export function Faq({ t }: { t: Copy }) {
+  const FAQ = t.faq;
   const [tab, setTab] = useState(0);
   const [open, setOpen] = useState<number | null>(0);
 
   return (
     <div className="lp-faq">
-      <div className="lp-tabs" role="tablist" aria-label="Savollar mavzusi">
+      <div className="lp-tabs" role="tablist" aria-label={t.a11y.faqTabs}>
         {FAQ.map((t, i) => (
           <button
             key={t.id}

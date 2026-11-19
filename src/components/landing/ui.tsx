@@ -1,6 +1,7 @@
 import { LogoMark } from "@/components/ui/Logo";
 import { BRAND } from "@/config/brand";
-import type { ImgHTMLAttributes, ReactNode } from "react";
+import { Fragment, type ImgHTMLAttributes, type ReactNode } from "react";
+import type { Copy } from "./copy";
 import { Arrow18, Arrow20, CheckCircle, CrossCircle } from "./icons";
 
 /* Landing primitives — mirror the Figma components (🧩 Components page):
@@ -77,5 +78,25 @@ export function SectionHead({ eyebrow, title, text, id }: { eyebrow: string; tit
       </div>
       {text ? <p className="lp-body">{text}</p> : null}
     </div>
+  );
+}
+
+/* string[] → lines joined by <br/> (copy keeps line breaks as data, not JSX) */
+export function Lines({ lines }: { lines: readonly string[] }) {
+  return lines.map((l, i) => (
+    <Fragment key={i}>
+      {i > 0 ? <br /> : null}
+      {l}
+    </Fragment>
+  ));
+}
+
+/* Language switch — a text link to the other version (real URL, so crawlers follow it; hreflang marks the pair). */
+export function LangSwitch({ t, className }: { t: Copy; className?: string }) {
+  const s = t.switchTo;
+  return (
+    <a className={`lp-lang${className ? ` ${className}` : ""}`} href={s.href} hrefLang={s.hrefLang} lang={s.hrefLang} aria-label={`${s.label} — ${s.aria}`}>
+      {s.label}
+    </a>
   );
 }

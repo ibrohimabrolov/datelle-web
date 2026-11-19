@@ -1,29 +1,6 @@
-import { Hero } from "@/components/landing/Hero";
-import { JsonLd } from "@/components/landing/JsonLd";
-import { Backdrop } from "@/components/landing/Motion";
-import { Compare, Features, Footer, Marquee, Partners, Pricing, Product, Questions, Stats, Steps } from "@/components/landing/Sections";
-import { StickyHeader } from "@/components/landing/StickyHeader";
+import { LandingPage } from "@/components/landing/LandingPage";
 
-/* /biznes — Floreal landing for studio owners (Figma XNmqL3kbnh0lPpzO6ZQKUR · 🌐 Landing · 299:2859). */
+/* /biznes — Floreal landing for studio owners, Uzbek (default). Russian: /ru/biznes. */
 export default function BiznesPage() {
-  return (
-    <>
-      <JsonLd />
-      <Backdrop />
-      <StickyHeader />
-      <Hero />
-      <main>
-        <Stats />
-        <Compare />
-        <Product />
-        <Features />
-        <Steps />
-        <Pricing />
-        <Partners />
-        <Questions />
-        <Marquee />
-      </main>
-      <Footer />
-    </>
-  );
+  return <LandingPage lang="uz" />;
 }
