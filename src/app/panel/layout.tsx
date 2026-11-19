@@ -6,7 +6,7 @@ import "@/studio/tokens.css";
 import "./studio.css";
 
 export const metadata: Metadata = {
-  title: { default: "Floreal", template: "%s · Floreal" },
+  title: { absolute: "Floreal", template: "%s · Floreal" },
   robots: { index: false, follow: false },
 };
 

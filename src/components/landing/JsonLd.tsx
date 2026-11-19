@@ -8,7 +8,7 @@ const ORG_ID = `${SITE_URL}/#organization`;
 const num = (s: string) => s.replace(/\D/g, "");
 
 function graph(t: Copy) {
-  const URL_ = `${SITE_URL}${t.home}`;
+  const URL_ = t.home === "/" ? SITE_URL : `${SITE_URL}${t.home}`; // = canonical (no trailing slash on the root)
   const { monthly, yearly } = t.pricing.plans;
   const offer = (name: string, price: string) => ({ "@type": "Offer", name, price, priceCurrency: "UZS", url: `${URL_}#narxlar` });
   return {
@@ -29,7 +29,6 @@ function graph(t: Copy) {
         name: t.seo.pageName,
         inLanguage: t.lang,
         isPartOf: { "@type": "WebSite", "@id": `${SITE_URL}/#website`, url: SITE_URL, name: "Floreal", publisher: { "@id": ORG_ID } },
-        primaryImageOfPage: `${URL_}/opengraph-image.jpg`,
         about: { "@id": `${URL_}#app` },
       },
       {
