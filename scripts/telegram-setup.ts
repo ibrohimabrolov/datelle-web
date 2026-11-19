@@ -4,9 +4,8 @@
    Never fails the build — a bot hiccup must not block a site release.
 
    Manual run:  npx tsx --env-file=.env.local scripts/telegram-setup.ts --force */
-import { callTelegram } from "../src/server/telegram/api";
-import { botConfig, panelUrl, WEBHOOK_PATH } from "../src/server/telegram/config";
-import { BOT_COMMANDS, BOT_DESCRIPTION, BOT_SHORT_DESCRIPTION, COPY } from "../src/server/telegram/messages";
+import { botConfig, panelUrl } from "../src/server/telegram/config";
+import { setupBot, webhookUrl } from "../src/server/telegram/setup";
 import { SITE_URL } from "../src/config/site";
 
 async function main() {
@@ -26,21 +25,8 @@ async function main() {
     return;
   }
 
-  const t = <T>(method: string, payload: object) => callTelegram<T>(cfg.token, method, payload);
-  const me = await t<{ username: string }>("getMe", {});
-
-  await t("setWebhook", {
-    url: `${SITE_URL}${WEBHOOK_PATH}`,
-    secret_token: cfg.webhookSecret,
-    allowed_updates: ["message", "callback_query"],
-    max_connections: 10,
-  });
-  await t("setMyCommands", { commands: BOT_COMMANDS });
-  await t("setMyDescription", { description: BOT_DESCRIPTION });
-  await t("setMyShortDescription", { short_description: BOT_SHORT_DESCRIPTION });
-  await t("setChatMenuButton", { menu_button: { type: "web_app", text: COPY.open, web_app: { url: app } } });
-
-  console.log(`[telegram] @${me.username} → ${SITE_URL}${WEBHOOK_PATH} · Mini App ${app}`);
+  const username = await setupBot(cfg);
+  console.log(`[telegram] @${username} → ${webhookUrl()} · Mini App ${app}`);
 }
 
 main().catch((e) => {
