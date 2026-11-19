@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { api, ApiError } from "@/lib/api";
 import { DOC_LANGS, reminderText, smsHref, type DocLang } from "@/lib/studio/clientDocs";
 import { Button } from "./Button";
@@ -29,13 +29,19 @@ export function agoLabel(iso: string, now = Date.now()) {
 export const reminderLine = (r: Reminder) => `Eslatildi ${agoLabel(r.at)} · ${CHANNEL[r.channel] ?? r.channel}${r.by ? ` · ${r.by}` : ""}`;
 
 function LangSwitch({ value, onChange }: { value: DocLang; onChange(v: DocLang): void }) {
+  const id = useId();
   return (
-    <div className="ds-segment" role="radiogroup" aria-label="Mijoz tili" style={{ alignSelf: "flex-start" }}>
-      {DOC_LANGS.map((l) => (
-        <button key={l.value} type="button" role="radio" aria-checked={value === l.value} onClick={() => onChange(l.value)}>
-          {l.label}
-        </button>
-      ))}
+    <div className="ds-field">
+      <span className="ds-label ds-secondary" id={id}>
+        Mijoz tili
+      </span>
+      <div className="ds-segment" role="radiogroup" aria-labelledby={id} style={{ alignSelf: "flex-start" }}>
+        {DOC_LANGS.map((l) => (
+          <button key={l.value} type="button" role="radio" aria-checked={value === l.value} onClick={() => onChange(l.value)}>
+            {l.label}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -89,6 +95,7 @@ export function SmetaDialog({ order, onClose, onSent }: { order: OrderFull; onCl
             {err}
           </p>
         )}
+        {inTelegram && <p className="ds-label ds-tertiary">PDF bot chatingizga keladi — bir tegishda mijozga forward qilasiz.</p>}
         <div className="ds-modal-foot">
           {inTelegram ? (
             <>
