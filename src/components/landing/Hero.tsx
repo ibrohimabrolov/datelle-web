@@ -4,7 +4,7 @@ import { MenuButton } from "./StickyHeader";
 import { ThemeToggle } from "./ThemeToggle";
 import { Cta, Eyebrow, Img, LangSwitch, Logo } from "./ui";
 
-/* Hero (Figma 246:1344 desktop · 303:3984 mobile/tablet) — photo card with on-media nav, headline, primary CTA and the founder offer. */
+/* Hero (Figma 246:1344 desktop · 303:3984 mobile/tablet) — photo card with on-media nav, headline, primary CTA and the free-month offer. */
 export function Hero({ t }: { t: Copy }) {
   const h = t.hero;
   return (

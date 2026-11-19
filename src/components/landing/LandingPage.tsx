@@ -14,19 +14,19 @@ const SEO: Record<Lang, { title: string; description: string; ogTitle: string; o
   uz: {
     title: "Floreal — dekor studiyalari va floristlar uchun CRM",
     description:
-      "Dekor studiyalari va floristlar uchun CRM: bron kalendari, buyurtmalar, avans va qoldiq, jamoa. Telegram'da ishlaydi. Birinchi 10 ta studiyaga 3 oy bepul.",
+      "Dekor studiyalari va floristlar uchun CRM: bron kalendari, buyurtmalar, avans va qoldiq, jamoa. Telegram'da ishlaydi. Birinchi oy — bepul.",
     ogTitle: "Floreal — sanalar, buyurtmalar va pul bir joyda",
-    ogDescription: "Dekor studiyalari va floristlar uchun CRM: bron kalendari, avans va qoldiq, jamoa. Birinchi 10 ta studiyaga 3 oy bepul.",
-    twDescription: "Dekor studiyalari va floristlar uchun CRM. Birinchi 10 ta studiyaga 3 oy bepul.",
+    ogDescription: "Dekor studiyalari va floristlar uchun CRM: bron kalendari, avans va qoldiq, jamoa. Birinchi oy — bepul.",
+    twDescription: "Dekor studiyalari va floristlar uchun CRM. Birinchi oy — bepul.",
     locale: "uz_UZ",
   },
   ru: {
     title: "Floreal — CRM для декор-студий и флористов в Ташкенте",
     description:
-      "CRM для декор-студий и флористов: календарь броней, заказы, аванс и остаток, команда. Работает в Telegram. Первым 10 студиям — 3 месяца бесплатно.",
+      "CRM для декор-студий и флористов: календарь броней, заказы, аванс и остаток, команда. Работает в Telegram. Первый месяц — бесплатно.",
     ogTitle: "Floreal — даты, заказы и деньги в одном месте",
-    ogDescription: "CRM для декор-студий и флористов: календарь броней, аванс и остаток, команда. Первым 10 студиям — 3 месяца бесплатно.",
-    twDescription: "CRM для декор-студий и флористов. Первым 10 студиям — 3 месяца бесплатно.",
+    ogDescription: "CRM для декор-студий и флористов: календарь броней, аванс и остаток, команда. Первый месяц — бесплатно.",
+    twDescription: "CRM для декор-студий и флористов. Первый месяц — бесплатно.",
     locale: "ru_RU",
   },
 };

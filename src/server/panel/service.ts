@@ -10,7 +10,8 @@ import { limit } from "../ratelimit";
 import type { TelegramUser, VerifyFail } from "../telegram/signature";
 import { audit, memberships, startPanelSession, upsertTelegramUser, type PanelUser } from "./auth";
 
-export const FOUNDING_TRIAL_DAYS = 90;
+/* Free first month for every new studio (2026-11-19: was a 90-day founding trial). */
+export const TRIAL_DAYS = 30;
 
 const AUTH_FAIL: Record<VerifyFail, string> = {
   missing: "Telegram maʼlumoti kelmadi. Ilovani qayta oching.",
@@ -88,7 +89,7 @@ export async function createStudio(userId: string, input: z.infer<typeof onboard
 
     const [studio] = await tx
       .insert(schema.studios)
-      .values({ ...input, trialEndsAt: addDays(todayISO(), FOUNDING_TRIAL_DAYS) })
+      .values({ ...input, trialEndsAt: addDays(todayISO(), TRIAL_DAYS) })
       .returning({ id: schema.studios.id, name: schema.studios.name, category: schema.studios.category, dailyCapacity: schema.studios.dailyCapacity });
     await tx.insert(schema.studioMembers).values({ studioId: studio.id, userId, role: "owner" });
     await audit(tx, { studioId: studio.id, actorId: userId, entity: "studio", entityId: studio.id, action: "create", diff: input });

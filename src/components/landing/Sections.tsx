@@ -167,9 +167,9 @@ function PlanCard({ p, split, t }: { p: Plan; split?: boolean; t: Copy }) {
   );
 }
 
-/* Narxlar (274:1529) */
+/* Narxlar (274:1529). Middle card = the free first month (every studio starts here), flanked by what comes after. */
 export function Pricing({ t }: { t: Copy }) {
-  const { monthly: m, founder: f, yearly: y } = t.pricing.plans;
+  const { monthly: m, trial: f, yearly: y } = t.pricing.plans;
   return (
     <section className="lp-section" id="narxlar" aria-labelledby="h-narx">
       <SectionHead id="h-narx" eyebrow={t.pricing.eyebrow} title={t.pricing.title} text={t.pricing.text} />
@@ -191,7 +191,7 @@ export function Pricing({ t }: { t: Copy }) {
             <span className="lp-caps">{t.pricing.includes}</span>
             <ul className="lp-list">{f.includes.map((t) => <ListItem key={t} tone="onbrand">{t}</ListItem>)}</ul>
           </div>
-          <Cta href={BOT_URL} tone="light" block>{t.pricing.reserve}</Cta>
+          <Cta href={BOT_URL} tone="light" block>{t.pricing.trialCta}</Cta>
         </article>
         <PlanCard p={y} t={t} />
       </div>
@@ -199,7 +199,7 @@ export function Pricing({ t }: { t: Copy }) {
   );
 }
 
-/* Hamkorlar (235:752) — logo wall, placeholders until founding partners join. Desktop only (hidden in Figma Mobile/Tablet). */
+/* Hamkorlar (235:752) — logo wall, placeholders until the first studios join. Desktop only (hidden in Figma Mobile/Tablet). */
 export function Partners({ t }: { t: Copy }) {
   return (
     <section className="lp-section lp-d-only" id="hamkorlar" aria-labelledby="h-hamkor">

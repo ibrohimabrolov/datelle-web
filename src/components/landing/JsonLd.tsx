@@ -48,7 +48,7 @@ function graph(t: Copy) {
         offers: [
           offer(t.seo.offers.monthly, num(monthly.price)),
           offer(t.seo.offers.yearly, num(yearly.price)),
-          offer(t.seo.offers.founder, "0"),
+          offer(t.seo.offers.trial, "0"),
         ],
       },
       {
