@@ -1,7 +1,7 @@
 import type { Viewport } from "next";
 import { LandingShell, landingMetadata } from "@/components/landing/LandingPage";
 import "@/studio/tokens.css";
-import "../../biznes/landing.css";
+import "../(landing)/landing.css";
 
 export const metadata = landingMetadata("ru");
 
@@ -12,6 +12,6 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RuBiznesLayout({ children }: LayoutProps<"/ru/biznes">) {
+export default function RuLandingLayout({ children }: { children: React.ReactNode }) {
   return <LandingShell lang="ru">{children}</LandingShell>;
 }

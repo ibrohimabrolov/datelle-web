@@ -1,7 +1,7 @@
 import { BOT_HANDLE } from "./data";
 
 /* Landing copy per language. UZ is 1:1 from Figma "Landing · Desktop" (299:2859); RU is its adaptation for
-   /ru/biznes. Section anchors (#imkoniyatlar …) stay the same in both — one set of ids, one CSS.
+   /ru. Section anchors (#imkoniyatlar …) stay the same in both — one set of ids, one CSS.
    Multi-line texts are string[] — each item is a line (rendered with <br/>). */
 
 export type Lang = "uz" | "ru";
@@ -16,8 +16,8 @@ const UZ_BASE_INCLUDES = [
 
 const uz = {
   lang: "uz" as Lang,
-  home: "/biznes",
-  switchTo: { href: "/ru/biznes", label: "RU", hrefLang: "ru", aria: "Русская версия" },
+  home: "/",
+  switchTo: { href: "/ru", label: "RU", hrefLang: "ru", aria: "Русская версия" },
   nav: [
     { href: "#imkoniyatlar", label: "Imkoniyatlar" },
     { href: "#qanday-ishlaydi", label: "Qanday ishlaydi" },
@@ -188,8 +188,8 @@ const RU_BASE_INCLUDES = [
 
 const ru: Copy = {
   lang: "ru",
-  home: "/ru/biznes",
-  switchTo: { href: "/biznes", label: "UZ", hrefLang: "uz", aria: "Oʻzbekcha versiya" },
+  home: "/ru",
+  switchTo: { href: "/", label: "UZ", hrefLang: "uz", aria: "Oʻzbekcha versiya" },
   nav: [
     { href: "#imkoniyatlar", label: "Возможности" },
     { href: "#qanday-ishlaydi", label: "Как это работает" },
