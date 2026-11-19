@@ -882,3 +882,76 @@ describe("forward → buyurtma", () => {
     assert.equal((await owner.req(`/api/panel/drafts/${draftId}`)).status, 404);
   });
 });
+
+describe("smeta & qoldiq eslatmasi", () => {
+  const owner = new Client();
+  const ownerTg = tgId();
+  let orderId = "";
+  const calls: { method: string; type: string; size: number }[] = [];
+  let mock: import("node:http").Server;
+
+  before(async () => {
+    const http = await import("node:http");
+    mock = http.createServer((req, res) => {
+      const chunks: Buffer[] = [];
+      req.on("data", (c) => chunks.push(c));
+      req.on("end", () => {
+        calls.push({ method: req.url!.split("/").pop()!, type: String(req.headers["content-type"]), size: Buffer.concat(chunks).length });
+        res.setHeader("content-type", "application/json");
+        res.end(JSON.stringify({ ok: true, result: { message_id: 1 } }));
+      });
+    });
+    await new Promise<void>((r) => mock.listen(3199, "127.0.0.1", r));
+    await owner.devLogin(ownerTg, "Owner");
+    await owner.req("/api/panel/onboarding", { body: { name: "Smeta Decor", category: "dekor", dailyCapacity: 3 } });
+    const o = await owner.req("/api/panel/orders", {
+      body: { clientName: "Камола Юсупова", clientPhone: "+998935551234", eventDate: "2027-01-05", eventType: "tugilgan-kun", venue: "Ресторан Caravan", total: 4_500_000, notes: "Шары, арка", advance: { amount: 1_000_000, method: "card" } },
+    });
+    orderId = o.json.order.id;
+  });
+  after(() => new Promise<void>((r) => mock.close(() => r())));
+
+  test("GET returns a one-page PDF in either language; strangers get 404", async () => {
+    for (const lang of ["uz", "ru"]) {
+      const r = await fetch(`${BASE}/api/panel/orders/${orderId}/smeta?lang=${lang}`, { headers: { cookie: owner.cookie } });
+      assert.equal(r.status, 200);
+      assert.equal(r.headers.get("content-type"), "application/pdf");
+      assert.match(r.headers.get("content-disposition") ?? "", /attachment; filename="Smeta-DS-\d+\.pdf"/);
+      const buf = Buffer.from(await r.arrayBuffer());
+      assert.equal(buf.subarray(0, 5).toString(), "%PDF-");
+      assert.ok(buf.length < 80_000, `pdf is ${buf.length} bytes`);
+    }
+    const other = new Client();
+    await other.devLogin(tgId());
+    await other.req("/api/panel/onboarding", { body: { name: "Other", category: "dekor", dailyCapacity: 1 } });
+    const peek = await fetch(`${BASE}/api/panel/orders/${orderId}/smeta`, { headers: { cookie: other.cookie } });
+    assert.equal(peek.status, 404);
+  });
+
+  test("POST sends the PDF to the member's own chat via sendDocument and logs it", async () => {
+    calls.length = 0;
+    const r = await owner.req(`/api/panel/orders/${orderId}/smeta`, { body: { lang: "ru" } });
+    assert.equal(r.status, 200, JSON.stringify(r.json));
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].method, "sendDocument");
+    assert.match(calls[0].type, /^multipart\/form-data/);
+    const { rows } = await pool.query("select diff from studio_events where entity_id = $1 and action = 'smeta'", [orderId]);
+    assert.deepEqual(rows[0].diff, { lang: "ru", channel: "telegram" });
+  });
+
+  test("remind records channel + balance and surfaces as lastReminder", async () => {
+    assert.equal((await owner.req(`/api/panel/orders/${orderId}`)).json.order.lastReminder, null);
+    const bad = await owner.req(`/api/panel/orders/${orderId}/remind`, { body: { channel: "pigeon" } });
+    assert.equal(bad.status, 422);
+    const r = await owner.req(`/api/panel/orders/${orderId}/remind`, { body: { channel: "sms", lang: "ru" } });
+    assert.equal(r.status, 200);
+    assert.equal(r.json.lastReminder.channel, "sms");
+    const o = (await owner.req(`/api/panel/orders/${orderId}`)).json.order;
+    assert.equal(o.lastReminder.channel, "sms");
+    assert.equal(o.lastReminder.by, "Owner");
+    const { rows } = await pool.query("select diff from studio_events where entity_id = $1 and action = 'remind'", [orderId]);
+    assert.deepEqual(rows[0].diff, { channel: "sms", lang: "ru", balance: 3_500_000 });
+    const csrf = await owner.req(`/api/panel/orders/${orderId}/remind`, { body: { channel: "sms" }, origin: "https://evil.example" });
+    assert.equal(csrf.status, 403);
+  });
+});

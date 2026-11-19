@@ -115,3 +115,22 @@ test("parseOrder: Cyrillic Uzbek venue + guests, clause-bound advance", () => {
   const d = parseOrder("Девичник 7 марта, в кафе Bon, бюджет 2,5 млн. Ismim Jasur", { today: T });
   assert.deepEqual([d.venue, d.total, d.clientName, d.eventDate], ["кафе Bon", 2_500_000, "Jasur", "2027-03-07"]);
 });
+
+/* ── client docs: reminder + dates ── */
+import { docDate, docMoney, reminderText, smsHref } from "../src/lib/studio/clientDocs";
+
+const sp = (s: string) => s.replace(/\u00a0/g, " ");
+test("reminder: first name, short date, balance with context, studio sign-off — uz and ru", () => {
+  const o = { client: "Dilnoza Karimova", date: "2026-12-14", eventType: "toy", total: 12_000_000, paid: 3_000_000, studio: "Gulnoza Decor" };
+  const uz = sp(reminderText(o, "uz"));
+  assert.match(uz, /^Assalomu alaykum, Dilnoza!/);
+  assert.match(uz, /14-dekabr kungi toʻy bezagi boʻyicha eslatma: qoldiq 9 000 000 soʻm \(jami 12 000 000, toʻlandi 3 000 000\)\./);
+  assert.match(uz, /Hurmat bilan, Gulnoza Decor$/);
+  const ru = sp(reminderText({ ...o, paid: 0, eventType: "tugilgan-kun" }, "ru"));
+  assert.match(ru, /Напоминаем по оформлению дня рождения 14 декабря: остаток 12 000 000 сум\./);
+  assert.ok(!/оплачено/.test(ru.split("\n")[1]));
+  assert.equal(docDate("2027-03-08", "ru"), "8 марта 2027");
+  assert.equal(docDate("2027-03-08", "uz"), "8-mart, 2027");
+  assert.equal(docMoney(1500000, "uz"), "1\u00a0500\u00a0000\u00a0soʻm");
+  assert.equal(smsHref("+998901234567", "a b&c"), "sms:+998901234567?&body=a%20b%26c");
+});

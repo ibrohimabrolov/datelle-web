@@ -1,6 +1,6 @@
 import "server-only";
 import { randomInt } from "node:crypto";
-import { and, asc, eq, isNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import { addDays, isISODate, todayISO } from "@/lib/dates";
 import { STUDIO_EVENTS } from "@/lib/studio/calendar";
@@ -237,7 +237,27 @@ export async function getOrder(ctx: StudioCtx, id: string) {
     client: o.clientName, phone: o.clientPhone, total: o.total, notes: o.notes, status: o.status,
     createdAt: o.createdAt, paid, balance: o.total - paid,
     payments: payments.map((p) => ({ ...p, by: p.by ?? null })),
+    lastReminder: await lastReminder(ctx, id),
   };
+}
+
+/* Latest balance reminder (studio_events action "remind") — shown under the balance card */
+export async function lastReminder(ctx: StudioCtx, orderId: string): Promise<{ at: string; channel: string; by: string | null } | null> {
+  const [row] = await db
+    .select({ at: schema.studioEvents.createdAt, diff: schema.studioEvents.diff, by: schema.users.name })
+    .from(schema.studioEvents)
+    .leftJoin(schema.users, eq(schema.users.id, schema.studioEvents.actorId))
+    .where(
+      and(
+        eq(schema.studioEvents.studioId, ctx.studio.id),
+        eq(schema.studioEvents.entity, "order"),
+        eq(schema.studioEvents.entityId, orderId),
+        eq(schema.studioEvents.action, "remind"),
+      ),
+    )
+    .orderBy(desc(schema.studioEvents.createdAt))
+    .limit(1);
+  return row ? { at: row.at.toISOString(), channel: String(row.diff?.channel ?? ""), by: row.by ?? null } : null;
 }
 
 /* ── edit ── */

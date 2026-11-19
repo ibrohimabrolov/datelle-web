@@ -18,6 +18,7 @@ export type Payment = { id: string; amount: number; method: string; paidOn: stri
 export type OrderFull = {
   id: string; code: string; date: string; eventType: string; venue: string | null; guests: number | null; client: string; phone: string;
   total: number; notes: string | null; status: OrderStatus; createdAt: string; paid: number; balance: number; payments: Payment[];
+  lastReminder?: { at: string; channel: string; by: string | null } | null;
 };
 
 /* ── change bus: "orders changed" → calendar months + lists + dashboards refetch ── */

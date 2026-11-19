@@ -902,3 +902,12 @@ a.ds-btn[aria-disabled] { pointer-events: none; opacity: 0.5; }
 .ds-paste { display: flex; flex-direction: column; gap: var(--ds-space-12); padding: var(--ds-space-16); border-radius: var(--ds-radius-lg); background: var(--ds-bg-surface); }
 .ds-paste-actions { display: flex; justify-content: flex-end; gap: var(--ds-space-8); }
 .ds-paste-open { align-self: flex-start; }
+
+/* Smeta / Qoldiqni eslatish */
+.ds-remind-last { margin-top: var(--ds-space-8); }
+.ds-remind-actions { display: flex; flex-direction: column; gap: var(--ds-space-8); }
+.ds-doc-preview { display: flex; align-items: center; gap: var(--ds-space-12); padding: var(--ds-space-16); border-radius: var(--ds-radius-lg); background: var(--ds-bg-surface); color: var(--ds-text-primary); }
+.ds-doc-preview > span { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.ds-doc-preview b { font: var(--ds-type-label-strong); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-doc-preview:hover { background: var(--ds-state-hover); }
+.ds-doc-preview:focus-visible { outline: 2px solid var(--ds-border-focus); outline-offset: 2px; }
