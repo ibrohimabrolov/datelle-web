@@ -1,6 +1,6 @@
 import "server-only";
 import { randomInt } from "node:crypto";
-import { and, asc, eq, isNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import { addDays, isISODate, todayISO } from "@/lib/dates";
 import { STUDIO_EVENTS } from "@/lib/studio/calendar";
@@ -8,7 +8,9 @@ import { canTransition, ORDER_VIEWS, type OrderStatus, type OrderView } from "@/
 import { db, schema } from "../db";
 import { HttpError } from "../http";
 import { phoneSchema } from "../phone";
+import { botToken } from "../telegram/config";
 import { audit, type StudioCtx } from "./auth";
+import { closeDraftCard, consumeDraft } from "./drafts";
 
 /* Floreal — orders & payments (Tech §2, §5).
    Money is integer soʻm. Balance is always computed from live payments; payments are never physically deleted. */
@@ -41,6 +43,7 @@ export const createSchema = z
     advance: z
       .object({ amount: money("Avans").min(1, "Avans 0 dan katta boʻlsin"), method: z.enum(METHODS).default("cash") })
       .optional(),
+    draftId: z.string().regex(/^[A-Za-z0-9_-]{16}$/).optional(), // Forward → buyurtma
   })
   .refine((o) => !o.advance || o.advance.amount <= o.total, { message: "Avans summadan oshmasin", path: ["advance", "amount"] })
   .refine((o) => dateInWindow(o.eventDate), { message: "Sana 2 yil oraligʻida boʻlsin", path: ["eventDate"] });
@@ -172,7 +175,8 @@ export async function createOrder(ctx: StudioCtx, input: z.infer<typeof createSc
   const studioId = ctx.studio.id;
   // capacity is a warning, never a block (Tech §2): the studio decides
   const warnings = await dayWarnings(studioId, ctx.studio.dailyCapacity, input.eventDate);
-  const { advance, ...fields } = input;
+  const { advance, draftId, ...fields } = input;
+  let card: Awaited<ReturnType<typeof consumeDraft>> = null;
 
   for (let attempt = 0; ; attempt++) {
     try {
@@ -184,9 +188,18 @@ export async function createOrder(ctx: StudioCtx, input: z.infer<typeof createSc
         if (advance) {
           await tx.insert(schema.orderPayments).values({ orderId: o.id, amount: advance.amount, method: advance.method, paidOn: todayISO(), note: "Avans", createdBy: ctx.user.id });
         }
-        await audit(tx, { studioId, actorId: ctx.user.id, entity: "order", entityId: o.id, action: "create", diff: { ...fields, advance: advance ?? null } });
+        if (draftId) card = await consumeDraft(tx, ctx.user, draftId, o.id);
+        await audit(tx, {
+          studioId,
+          actorId: ctx.user.id,
+          entity: "order",
+          entityId: o.id,
+          action: "create",
+          diff: { ...fields, advance: advance ?? null, ...(card ? { source: "telegram" } : {}) },
+        });
         return o;
       });
+      await closeDraftCard(botToken(), card);
       return { order: await getOrder(ctx, order.id), warnings };
     } catch (e) {
       // DS-###### collided with an existing code — retry with a fresh one
@@ -224,7 +237,27 @@ export async function getOrder(ctx: StudioCtx, id: string) {
     client: o.clientName, phone: o.clientPhone, total: o.total, notes: o.notes, status: o.status,
     createdAt: o.createdAt, paid, balance: o.total - paid,
     payments: payments.map((p) => ({ ...p, by: p.by ?? null })),
+    lastReminder: await lastReminder(ctx, id),
   };
+}
+
+/* Latest balance reminder (studio_events action "remind") — shown under the balance card */
+export async function lastReminder(ctx: StudioCtx, orderId: string): Promise<{ at: string; channel: string; by: string | null } | null> {
+  const [row] = await db
+    .select({ at: schema.studioEvents.createdAt, diff: schema.studioEvents.diff, by: schema.users.name })
+    .from(schema.studioEvents)
+    .leftJoin(schema.users, eq(schema.users.id, schema.studioEvents.actorId))
+    .where(
+      and(
+        eq(schema.studioEvents.studioId, ctx.studio.id),
+        eq(schema.studioEvents.entity, "order"),
+        eq(schema.studioEvents.entityId, orderId),
+        eq(schema.studioEvents.action, "remind"),
+      ),
+    )
+    .orderBy(desc(schema.studioEvents.createdAt))
+    .limit(1);
+  return row ? { at: row.at.toISOString(), channel: String(row.diff?.channel ?? ""), by: row.by ?? null } : null;
 }
 
 /* ── edit ── */

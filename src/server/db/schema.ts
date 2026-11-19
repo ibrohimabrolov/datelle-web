@@ -359,3 +359,25 @@ export const panelLogins = pgTable(
   },
   (t) => [index("panel_logins_expires_idx").on(t.expiresAt)],
 );
+
+/* Forward → buyurtma: a client chat forwarded to the bot, parsed into an order draft.
+   Owned by the Telegram user (no studio yet — the panel picks it on save). Raw text is personal data:
+   kept only to merge consecutive forwards, wiped on consume, row purged after expiry (PROJECT_CONTEXT §11.4). */
+export const orderDrafts = pgTable(
+  "order_drafts",
+  {
+    id: text("id").primaryKey(), // 12 random bytes, base64url — goes into the web_app URL
+    tgUserId: bigint("tg_user_id", { mode: "number" }).notNull(),
+    text: text("text"), // merged forwards, ≤ 4000 chars; null once consumed
+    senderName: text("sender_name"), // forward_origin author — the client
+    parsed: jsonb("parsed").$type<import("../../lib/studio/parseOrder").ParsedOrder>().notNull(),
+    parts: integer("parts").notNull().default(1),
+    botMessageId: integer("bot_message_id"), // the one bot message we keep editing as forwards arrive
+    orderId: uuid("order_id").references(() => orders.id, { onDelete: "set null" }),
+    consumedAt: ts("consumed_at"),
+    expiresAt: ts("expires_at").notNull(),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    updatedAt: ts("updated_at").notNull().defaultNow(),
+  },
+  (t) => [index("order_drafts_user_idx").on(t.tgUserId, t.updatedAt), index("order_drafts_expires_idx").on(t.expiresAt)],
+);

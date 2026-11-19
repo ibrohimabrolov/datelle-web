@@ -766,3 +766,192 @@ describe("authorization matrix", () => {
     assert.equal(rows[0].n, 1);
   });
 });
+
+/* Forward → buyurtma. Server env also needs TELEGRAM_API_BASE=http://127.0.0.1:3199 (the mock Bot API below). */
+describe("forward → buyurtma", () => {
+  const hookSecret = createHmac("sha256", PANEL_TEST_BOT_TOKEN).update("floreal-webhook-v1").digest("hex");
+  const webhook = (update: object) =>
+    fetch(`${BASE}/api/telegram/webhook`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-telegram-bot-api-secret-token": hookSecret },
+      body: JSON.stringify({ update_id: 1, ...update }),
+    }).then((r) => r.json());
+  const fwd = (from: number, text: string, client = "Dilnoza Karimova") => ({
+    message: { message_id: 1, chat: { id: from, type: "private" }, from: { id: from, first_name: "Owner" }, text, forward_origin: { type: "hidden_user", date: 0, sender_user_name: client } },
+  });
+  const typed = (from: number, text: string) => ({ message: { message_id: 1, chat: { id: from, type: "private" }, from: { id: from, first_name: "Owner" }, text } });
+
+  const calls: { method: string; body: Record<string, unknown> }[] = [];
+  let nextId = 100;
+  let mock: import("node:http").Server;
+  const owner = new Client();
+  const ownerTg = tgId();
+
+  before(async () => {
+    const http = await import("node:http");
+    mock = http.createServer((req, res) => {
+      let raw = "";
+      req.on("data", (c) => (raw += c));
+      req.on("end", () => {
+        const method = req.url!.split("/").pop()!;
+        calls.push({ method, body: JSON.parse(raw || "{}") });
+        res.setHeader("content-type", "application/json");
+        res.end(JSON.stringify({ ok: true, result: method === "sendMessage" ? { message_id: nextId++ } : true }));
+      });
+    });
+    await new Promise<void>((r) => mock.listen(3199, "127.0.0.1", r));
+    await owner.devLogin(ownerTg, "Owner");
+    await owner.req("/api/panel/onboarding", { body: { name: "Forward Decor", category: "dekor", dailyCapacity: 3 } });
+  });
+  after(() => new Promise<void>((r) => mock.close(() => r())));
+
+  const drafts = async (tg: number) => (await pool.query("select * from order_drafts where tg_user_id = $1 order by created_at", [tg])).rows;
+
+  test("a stranger's forward gets the help text and stores nothing", async () => {
+    const stranger = tgId();
+    const r = await webhook(fwd(stranger, "14-dekabr to'y, 90 123 45 67"));
+    assert.equal(r.method, "sendMessage");
+    assert.match(r.text, /Buyruqlar/);
+    assert.equal((await drafts(stranger)).length, 0);
+  });
+
+  test("typed small talk from a member is not a draft", async () => {
+    const r = await webhook(typed(ownerTg, "rahmat"));
+    assert.match(r.text, /Buyruqlar/);
+  });
+
+  let draftId = "";
+  test("consecutive forwards fold into one draft and one bot card (parallel-safe)", async () => {
+    calls.length = 0;
+    assert.deepEqual(await webhook(fwd(ownerTg, "Assalomu alaykum! Qizimning to'yi 14-dekabr, Navro'z to'yxonasida")), { ok: true });
+    await Promise.all([webhook(fwd(ownerTg, "200 kishi, byudjet 12 mln")), webhook(fwd(ownerTg, "avans 3 mln tashlayman. 90 123 45 67"))]);
+    const rows = await drafts(ownerTg);
+    assert.equal(rows.length, 1);
+    assert.equal(rows[0].parts, 3);
+    assert.deepEqual(rows[0].parsed, {
+      clientName: "Dilnoza Karimova",
+      clientPhone: "+998901234567",
+      eventDate: rows[0].parsed.eventDate,
+      eventType: "toy",
+      venue: "Navro'z to'yxonasi",
+      guests: 200,
+      total: 12_000_000,
+      advance: 3_000_000,
+    });
+    assert.match(rows[0].parsed.eventDate, /^\d{4}-12-14$/);
+    assert.deepEqual(calls.map((c) => c.method), ["sendMessage", "editMessageText", "editMessageText"]);
+    assert.ok(calls.slice(1).every((c) => c.body.message_id === rows[0].bot_message_id));
+    assert.match(String(calls[2].body.text), /3 ta xabardan/);
+    draftId = rows[0].id;
+  });
+
+  test("another client's chat starts a new draft", async () => {
+    await webhook(fwd(ownerTg, "salom 12.12 korporativ", "Jasur"));
+    const rows = await drafts(ownerTg);
+    assert.equal(rows.length, 2);
+    await pool.query("delete from order_drafts where id = $1", [rows[1].id]);
+  });
+
+  test("only the author can read the draft", async () => {
+    const r = await owner.req(`/api/panel/drafts/${draftId}`);
+    assert.equal(r.status, 200);
+    assert.equal(r.json.draft.parsed.total, 12_000_000);
+    const other = new Client();
+    await other.devLogin(tgId());
+    assert.equal((await other.req(`/api/panel/drafts/${draftId}`)).status, 404);
+    assert.equal((await owner.req("/api/panel/drafts/%27%3Bdrop")).status, 404);
+  });
+
+  test("saving the order consumes the draft, wipes the chat and closes the bot card", async () => {
+    calls.length = 0;
+    const d = (await owner.req(`/api/panel/drafts/${draftId}`)).json.draft.parsed;
+    const r = await owner.req("/api/panel/orders", {
+      body: { clientName: d.clientName, clientPhone: d.clientPhone, eventDate: d.eventDate, eventType: d.eventType, venue: d.venue, guests: d.guests, total: d.total, advance: { amount: d.advance, method: "cash" }, draftId },
+    });
+    assert.equal(r.status, 201, JSON.stringify(r.json));
+    const [row] = await drafts(ownerTg);
+    assert.ok(row.consumed_at);
+    assert.equal(row.text, null);
+    assert.equal(row.order_id, r.json.order.id);
+    const { rows: ev } = await pool.query("select diff->>'source' as source from studio_events where entity_id = $1 and action = 'create'", [r.json.order.id]);
+    assert.equal(ev[0].source, "telegram");
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].method, "editMessageText");
+    assert.match(String(calls[0].body.text), /Buyurtma saqlandi/);
+    assert.deepEqual(calls[0].body.reply_markup, { inline_keyboard: [] });
+    assert.equal((await owner.req(`/api/panel/drafts/${draftId}`)).status, 404);
+  });
+});
+
+describe("smeta & qoldiq eslatmasi", () => {
+  const owner = new Client();
+  const ownerTg = tgId();
+  let orderId = "";
+  const calls: { method: string; type: string; size: number }[] = [];
+  let mock: import("node:http").Server;
+
+  before(async () => {
+    const http = await import("node:http");
+    mock = http.createServer((req, res) => {
+      const chunks: Buffer[] = [];
+      req.on("data", (c) => chunks.push(c));
+      req.on("end", () => {
+        calls.push({ method: req.url!.split("/").pop()!, type: String(req.headers["content-type"]), size: Buffer.concat(chunks).length });
+        res.setHeader("content-type", "application/json");
+        res.end(JSON.stringify({ ok: true, result: { message_id: 1 } }));
+      });
+    });
+    await new Promise<void>((r) => mock.listen(3199, "127.0.0.1", r));
+    await owner.devLogin(ownerTg, "Owner");
+    await owner.req("/api/panel/onboarding", { body: { name: "Smeta Decor", category: "dekor", dailyCapacity: 3 } });
+    const o = await owner.req("/api/panel/orders", {
+      body: { clientName: "Камола Юсупова", clientPhone: "+998935551234", eventDate: "2027-01-05", eventType: "tugilgan-kun", venue: "Ресторан Caravan", total: 4_500_000, notes: "Шары, арка", advance: { amount: 1_000_000, method: "card" } },
+    });
+    orderId = o.json.order.id;
+  });
+  after(() => new Promise<void>((r) => mock.close(() => r())));
+
+  test("GET returns a one-page PDF in either language; strangers get 404", async () => {
+    for (const lang of ["uz", "ru"]) {
+      const r = await fetch(`${BASE}/api/panel/orders/${orderId}/smeta?lang=${lang}`, { headers: { cookie: owner.cookie } });
+      assert.equal(r.status, 200);
+      assert.equal(r.headers.get("content-type"), "application/pdf");
+      assert.match(r.headers.get("content-disposition") ?? "", /attachment; filename="Smeta-DS-\d+\.pdf"/);
+      const buf = Buffer.from(await r.arrayBuffer());
+      assert.equal(buf.subarray(0, 5).toString(), "%PDF-");
+      assert.ok(buf.length < 80_000, `pdf is ${buf.length} bytes`);
+    }
+    const other = new Client();
+    await other.devLogin(tgId());
+    await other.req("/api/panel/onboarding", { body: { name: "Other", category: "dekor", dailyCapacity: 1 } });
+    const peek = await fetch(`${BASE}/api/panel/orders/${orderId}/smeta`, { headers: { cookie: other.cookie } });
+    assert.equal(peek.status, 404);
+  });
+
+  test("POST sends the PDF to the member's own chat via sendDocument and logs it", async () => {
+    calls.length = 0;
+    const r = await owner.req(`/api/panel/orders/${orderId}/smeta`, { body: { lang: "ru" } });
+    assert.equal(r.status, 200, JSON.stringify(r.json));
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].method, "sendDocument");
+    assert.match(calls[0].type, /^multipart\/form-data/);
+    const { rows } = await pool.query("select diff from studio_events where entity_id = $1 and action = 'smeta'", [orderId]);
+    assert.deepEqual(rows[0].diff, { lang: "ru", channel: "telegram" });
+  });
+
+  test("remind records channel + balance and surfaces as lastReminder", async () => {
+    assert.equal((await owner.req(`/api/panel/orders/${orderId}`)).json.order.lastReminder, null);
+    const bad = await owner.req(`/api/panel/orders/${orderId}/remind`, { body: { channel: "pigeon" } });
+    assert.equal(bad.status, 422);
+    const r = await owner.req(`/api/panel/orders/${orderId}/remind`, { body: { channel: "sms", lang: "ru" } });
+    assert.equal(r.status, 200);
+    assert.equal(r.json.lastReminder.channel, "sms");
+    const o = (await owner.req(`/api/panel/orders/${orderId}`)).json.order;
+    assert.equal(o.lastReminder.channel, "sms");
+    assert.equal(o.lastReminder.by, "Owner");
+    const { rows } = await pool.query("select diff from studio_events where entity_id = $1 and action = 'remind'", [orderId]);
+    assert.deepEqual(rows[0].diff, { channel: "sms", lang: "ru", balance: 3_500_000 });
+    const csrf = await owner.req(`/api/panel/orders/${orderId}/remind`, { body: { channel: "sms" }, origin: "https://evil.example" });
+    assert.equal(csrf.status, 403);
+  });
+});

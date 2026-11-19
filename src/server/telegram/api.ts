@@ -18,14 +18,39 @@ export class TelegramError extends Error {
 
 type TgResponse<T> = { ok: true; result: T } | { ok: false; error_code: number; description: string; parameters?: { retry_after?: number } };
 
+/* TELEGRAM_API_BASE: only for local integration tests (a mock Bot API); production leaves it unset */
+const apiBase = () => process.env.TELEGRAM_API_BASE?.replace(/\/$/, "") || "https://api.telegram.org";
+
 export async function callTelegram<T = unknown>(token: string, method: string, payload: object = {}, timeoutMs = 8000): Promise<T> {
-  const r = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
+  const r = await fetch(`${apiBase()}/bot${token}/${method}`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(payload),
     signal: AbortSignal.timeout(timeoutMs),
     cache: "no-store",
   });
+  let j: TgResponse<T>;
+  try {
+    j = (await r.json()) as TgResponse<T>;
+  } catch {
+    throw new TelegramError(method, r.status, "non-JSON response");
+  }
+  if (!j.ok) throw new TelegramError(method, j.error_code ?? r.status, j.description ?? "unknown", j.parameters?.retry_after);
+  return j.result;
+}
+
+/* multipart/form-data for uploads (sendDocument). Fields are strings or JSON-encoded objects. */
+export async function callTelegramFile<T = unknown>(
+  token: string,
+  method: string,
+  fields: Record<string, string | number | object>,
+  file: { field: string; name: string; type: string; bytes: Uint8Array },
+  timeoutMs = 15000,
+): Promise<T> {
+  const form = new FormData();
+  for (const [k, v] of Object.entries(fields)) form.set(k, typeof v === "object" ? JSON.stringify(v) : String(v));
+  form.set(file.field, new Blob([file.bytes as Uint8Array<ArrayBuffer>], { type: file.type }), file.name);
+  const r = await fetch(`${apiBase()}/bot${token}/${method}`, { method: "POST", body: form, signal: AbortSignal.timeout(timeoutMs), cache: "no-store" });
   let j: TgResponse<T>;
   try {
     j = (await r.json()) as TgResponse<T>;

@@ -6,6 +6,7 @@ import { MONTHS, todayISO, WD_FULL, weekdayIdx } from "@/lib/dates";
 import { eventLabel } from "@/lib/studio/calendar";
 import { groupThousands, isOverdue, methodLabel, PAYMENT_METHODS, STATUS_LABEL, type OrderStatus } from "@/lib/studio/orders";
 import { Button } from "./Button";
+import { reminderLine, RemindDialog, SmetaDialog } from "./ClientDocs";
 import { dataChanged, useDataVersion, type OrderFull } from "./data";
 import { Field, MoneyInput } from "./Fields";
 import { StudioIcon } from "./icons";
@@ -28,7 +29,7 @@ export function OrderDetail({ id, onClose, toast }: { id: string; onClose(): voi
   const version = useDataVersion();
   const [order, setOrder] = useState<OrderFull | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [layer, setLayer] = useState<null | "pay" | "edit" | "cancel" | "history" | { del: string }>(null);
+  const [layer, setLayer] = useState<null | "pay" | "edit" | "cancel" | "history" | "smeta" | "remind" | { del: string }>(null);
   const [nonce, setNonce] = useState(0);
   const isOwner = ctx?.studio.role === "owner";
 
@@ -157,7 +158,21 @@ export function OrderDetail({ id, onClose, toast }: { id: string; onClose(): voi
             <dd data-paid>{groupThousands(order.paid)}</dd>
           </div>
         </dl>
+        {order.lastReminder && order.balance > 0 && <p className="ds-label ds-secondary ds-remind-last">{reminderLine(order.lastReminder)}</p>}
       </section>
+
+      {order.status !== "cancelled" && (
+        <div className={order.balance > 0 ? "ds-two" : undefined}>
+          <Button variant="secondary" block icon={<StudioIcon name="receipt" />} onClick={() => setLayer("smeta")}>
+            Smeta
+          </Button>
+          {order.balance > 0 && (
+            <Button variant="secondary" block icon={<StudioIcon name="wallet" variant="Filled" />} onClick={() => setLayer("remind")}>
+              Qoldiqni eslatish
+            </Button>
+          )}
+        </div>
+      )}
 
       <section className="ds-stack" aria-labelledby="pays">
         <h3 id="pays" className="ds-caps ds-tertiary">
@@ -216,6 +231,28 @@ export function OrderDetail({ id, onClose, toast }: { id: string; onClose(): voi
               text: r.warnings.includes("overpaid") ? "Toʻlov qoʻshildi · ortiqcha toʻlov" : r.order.balance === 0 ? "Toʻlov qoʻshildi · toʻliq toʻlandi" : "Toʻlov qoʻshildi",
               action: { label: "Bekor qilish", run: () => void api(`/api/panel/payments/${paymentId}`, { method: "DELETE", body: {} }).then(dataChanged) },
             });
+          }}
+        />
+      )}
+      {layer === "smeta" && (
+        <SmetaDialog
+          order={order}
+          onClose={() => setLayer(null)}
+          onSent={(text) => {
+            setLayer(null);
+            toast({ id: Date.now(), text });
+          }}
+        />
+      )}
+      {layer === "remind" && (
+        <RemindDialog
+          order={order}
+          last={order.lastReminder ?? null}
+          onClose={() => setLayer(null)}
+          onDone={(r, text) => {
+            setLayer(null);
+            setOrder((o) => o && { ...o, lastReminder: r.lastReminder });
+            toast({ id: Date.now(), text });
           }}
         />
       )}
@@ -384,6 +421,9 @@ function describe(e: Ev) {
     const adv = (d.advance as { amount?: number } | null)?.amount;
     return adv ? `Buyurtma yaratildi · avans ${groupThousands(adv)}` : "Buyurtma yaratildi";
   }
+  if (e.action === "remind") return `Qoldiq eslatildi · ${groupThousands(Number(d.balance ?? 0))} (${d.channel === "sms" ? "SMS" : d.channel === "copy" ? "nusxa" : "Telegram"})`;
+  if (e.action === "smeta") return `Smeta yuborildi · ${d.lang === "ru" ? "ruscha" : "oʻzbekcha"}`;
+  if (e.action === "create" && d.source === "telegram") return "Buyurtma yaratildi · Telegram yozishmasidan";
   if (e.action === "status") return `Holat: ${STATUS_LABEL[d.to as OrderStatus] ?? d.to}`;
   if (e.action === "update") {
     const keys = Object.keys(d).map((k) => FIELD[k] ?? k);
