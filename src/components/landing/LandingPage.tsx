@@ -7,7 +7,7 @@ import { Backdrop } from "./Motion";
 import { Compare, Features, Footer, Marquee, Partners, Pricing, Product, Questions, Stats, Steps } from "./Sections";
 import { StickyHeader } from "./StickyHeader";
 
-/* One landing, two languages: /biznes (uz, x-default) and /ru/biznes (ru). Same layout, same CSS, copy from ./copy.
+/* One landing, two languages: / (uz, x-default) and /ru (ru). Same layout, same CSS, copy from ./copy.
    Figma XNmqL3kbnh0lPpzO6ZQKUR · 🌐 Landing · 299:2859. */
 
 const SEO: Record<Lang, { title: string; description: string; ogTitle: string; ogDescription: string; twDescription: string; locale: string }> = {
@@ -32,7 +32,7 @@ const SEO: Record<Lang, { title: string; description: string; ogTitle: string; o
 };
 
 /* hreflang pair — both pages list both, uz is the default for everyone else. */
-const LANGUAGES = { uz: "/biznes", ru: "/ru/biznes", "x-default": "/biznes" };
+const LANGUAGES = { uz: "/", ru: "/ru", "x-default": "/" };
 
 /* SEO: keyword-first title (≤60) and description (≤160). The share image comes from the
    opengraph-image.jpg / twitter-image.jpg files next to each route's layout (1200×630). */

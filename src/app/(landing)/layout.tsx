@@ -12,6 +12,6 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function BiznesLayout({ children }: LayoutProps<"/biznes">) {
+export default function LandingLayout({ children }: { children: React.ReactNode }) {
   return <LandingShell lang="uz">{children}</LandingShell>;
 }

@@ -2,7 +2,7 @@ import { SITE_URL } from "@/config/site";
 import type { Copy } from "./copy";
 import { BOT_URL } from "./data";
 
-/* Structured data for /biznes (schema.org): who makes it, what it is and costs, and the FAQ.
+/* Structured data for the landing (schema.org): who makes it, what it is and costs, and the FAQ.
    Everything here mirrors visible page content — no ratings or reviews we don't have. */
 const ORG_ID = `${SITE_URL}/#organization`;
 const num = (s: string) => s.replace(/\D/g, "");
