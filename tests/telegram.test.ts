@@ -198,3 +198,28 @@ test("bot sign-in params: strict shapes only", () => {
   assert.equal(parseLoginCallback(`lg:maybe:${id}`), null);
   assert.equal(parseLoginCallback(undefined), null);
 });
+
+/* ── Forward → buyurtma card ── */
+import { draftCard, draftMessage, draftUrl, forwardSender, messageText } from "../src/server/telegram/messages";
+
+test("draft card: found fields, missing ones, one web_app button with the draft id", () => {
+  const card = draftCard({ clientName: "Dilnoza <K>", eventDate: "2026-12-14", total: 12_000_000, eventType: "toy" }, 2);
+  assert.match(card, /Mijoz: <b>Dilnoza &lt;K&gt;<\/b>/);
+  assert.match(card, /Sana: <b>14-dekabr, du<\/b>/);
+  assert.match(card, /Summa: <b>12 000 000 soʻm<\/b>/);
+  assert.match(card, /Topilmadi: telefon/);
+  assert.match(card, /2 ta xabardan/);
+  const m = draftMessage(42, {}, 1, "AbCdEfGhIjKlMnOp", "https://x.uz/panel");
+  const btn = m.reply_markup!.inline_keyboard[0][0] as { web_app: { url: string } };
+  assert.equal(btn.web_app.url, "https://x.uz/panel/buyurtmalar/yangi?qoralama=AbCdEfGhIjKlMnOp");
+  assert.equal(draftUrl("https://x.uz/panel/", "id"), "https://x.uz/panel/buyurtmalar/yangi?qoralama=id");
+});
+
+test("forwardSender / messageText", () => {
+  const base = { message_id: 1, chat: { id: 1, type: "private" as const } };
+  assert.equal(forwardSender({ ...base, forward_origin: { type: "user", date: 0, sender_user: { id: 2, first_name: "Malika", last_name: "K" } } }), "Malika K");
+  assert.equal(forwardSender({ ...base, forward_origin: { type: "hidden_user", date: 0, sender_user_name: "Kamola" } }), "Kamola");
+  assert.equal(forwardSender({ ...base, forward_origin: { type: "channel", date: 0, chat: {} } }), null);
+  assert.equal(forwardSender(base), null);
+  assert.equal(messageText({ ...base, caption: " rasm ostida " }), "rasm ostida");
+});

@@ -4,6 +4,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { HttpError, json, route } from "@/server/http";
 import { handleLoginUpdate } from "@/server/panel/botLogin";
+import { handleDraftUpdate } from "@/server/panel/drafts";
 import { botConfig, panelUrl } from "@/server/telegram/config";
 import { replyTo, type TgUpdate } from "@/server/telegram/messages";
 import { verifyWebhookSecret } from "@/server/telegram/signature";
@@ -32,6 +33,13 @@ export const POST = route(async (req: NextRequest) => {
     return null;
   });
   if (login) return NextResponse.json(login, { headers: { "Cache-Control": "no-store" } });
+
+  // Forward → buyurtma: the draft flow answers by itself (one card it keeps editing)
+  const drafted = await handleDraftUpdate(update, cfg.token, panelUrl()).catch((e) => {
+    console.error("[telegram] draft update failed", e);
+    return false;
+  });
+  if (drafted) return json({ ok: true });
 
   const reply = replyTo(update, panelUrl());
   if (!reply) return json({ ok: true });
