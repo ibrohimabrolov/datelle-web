@@ -20,10 +20,11 @@ export const metadata: Metadata = {
   applicationName: BRAND.name,
   openGraph: { type: "website", siteName: BRAND.name, locale: "uz_UZ" },
   twitter: { card: "summary_large_image" },
-  /* Search Console / Yandex Webmaster ownership — the codes live in Vercel env, not in git. */
+  /* Search Console / Yandex Webmaster ownership for floreal.uz. These tokens are public by
+     design (they ship in every page's HTML); env vars override them if the property changes. */
   verification: {
-    google: process.env.GOOGLE_SITE_VERIFICATION || undefined,
-    yandex: process.env.YANDEX_VERIFICATION || undefined,
+    google: process.env.GOOGLE_SITE_VERIFICATION || "umz3CW6MWaunZEbADHr_L6R4iewwxcoMCACIRuR4pfs",
+    yandex: process.env.YANDEX_VERIFICATION || "ee43971a34a0b6c3",
   },
 };
 
