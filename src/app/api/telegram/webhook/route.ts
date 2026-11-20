@@ -6,7 +6,8 @@ import { HttpError, json, route } from "@/server/http";
 import { handleLoginUpdate } from "@/server/panel/botLogin";
 import { handleDraftUpdate } from "@/server/panel/drafts";
 import { botConfig, panelUrl } from "@/server/telegram/config";
-import { replyTo, type TgUpdate } from "@/server/telegram/messages";
+import { inviteForBot } from "@/server/panel/team";
+import { parseCommand, parseInvite, replyTo, type InviteInfo, type TgUpdate } from "@/server/telegram/messages";
 import { verifyWebhookSecret } from "@/server/telegram/signature";
 
 const MAX_BODY = 64 * 1024;
@@ -41,7 +42,17 @@ export const POST = route(async (req: NextRequest) => {
   });
   if (drafted) return json({ ok: true });
 
-  const reply = replyTo(update, panelUrl());
+  // /start inv_… → name the studio and the inviter, or say the link is used/expired
+  const cmd = update.message?.chat.type === "private" ? parseCommand(update.message.text) : null;
+  const token = cmd?.cmd === "start" ? parseInvite(cmd.arg) : undefined;
+  const invite: InviteInfo = token
+    ? await inviteForBot(token).catch((e) => {
+        console.error("[telegram] invite lookup failed", e);
+        return undefined;
+      })
+    : undefined;
+
+  const reply = replyTo(update, panelUrl(), invite);
   if (!reply) return json({ ok: true });
   return NextResponse.json({ method: "sendMessage", ...reply }, { headers: { "Cache-Control": "no-store" } });
 });

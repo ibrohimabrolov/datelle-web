@@ -143,6 +143,33 @@ export function SettingsScreen() {
     <>
       <PageHead title="Sozlamalar" settings={false} />
       <div className="ds-settings">
+        {others.length > 0 && (
+          <Section title="Studiyalaringiz">
+            <ul className="ds-list" role="radiogroup" aria-label="Faol studiya">
+              {me.studios.map((s) => (
+                <li key={s.id} className="ds-li">
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={s.id === studio.id}
+                    className="ds-li-cover"
+                    onClick={() => s.id !== studio.id && switchStudio(s.id)}
+                  >
+                    <span className="ds-avatar" aria-hidden>
+                      {initials(s.name)}
+                    </span>
+                    <span className="ds-li-main">
+                      <span className="ds-li-title">{s.name}</span>
+                      <span className="ds-li-sub">{s.role === "owner" ? "Egasi" : "Menejer"}</span>
+                    </span>
+                    {s.id === studio.id && <StudioIcon name="check" className="ds-brand" />}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </Section>
+        )}
+
         <Section title="Studiya">
           <ul className="ds-list">
             <EditRow label="Nomi" value={studio.name} editable={isOwner} onEdit={() => setLayer({ kind: "name" })} />
@@ -171,32 +198,6 @@ export function SettingsScreen() {
           </ul>
         </Section>
 
-        {others.length > 0 && (
-          <Section title="Studiyalaringiz">
-            <ul className="ds-list" role="radiogroup" aria-label="Faol studiya">
-              {me.studios.map((s) => (
-                <li key={s.id} className="ds-li">
-                  <button
-                    type="button"
-                    role="radio"
-                    aria-checked={s.id === studio.id}
-                    className="ds-li-cover"
-                    onClick={() => s.id !== studio.id && switchStudio(s.id)}
-                  >
-                    <span className="ds-avatar" aria-hidden>
-                      {initials(s.name)}
-                    </span>
-                    <span className="ds-li-main">
-                      <span className="ds-li-title">{s.name}</span>
-                      <span className="ds-li-sub">{s.role === "owner" ? "Egasi" : "Menejer"}</span>
-                    </span>
-                    {s.id === studio.id && <StudioIcon name="check" className="ds-brand" />}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </Section>
-        )}
 
         {isOwner && (
           <Section
@@ -304,17 +305,20 @@ export function SettingsScreen() {
           </Section>
         )}
 
-        <Section title="Obuna">
-          <div className="ds-plan">
-            <div className="ds-li-main">
-              <span className="ds-li-title">{details ? (trialEnds ? "Bepul oy" : "Standart") : " "}</span>
-              <span className="ds-li-sub">{details ? (trialEnds ? `${dayMonth(trialEnds)}gacha bepul` : "Faol") : " "}</span>
+        {/* billing is the owner's business — a manager doesn't need the plan */}
+        {isOwner && (
+          <Section title="Obuna">
+            <div className="ds-plan">
+              <div className="ds-li-main">
+                <span className="ds-li-title">{details ? (trialEnds ? "Bepul oy" : "Standart") : " "}</span>
+                <span className="ds-li-sub">{details ? (trialEnds ? `${dayMonth(trialEnds)}gacha bepul` : "Faol") : " "}</span>
+              </div>
+              <span className="ds-tag" data-tone="plan">
+                Faol
+              </span>
             </div>
-            <span className="ds-tag" data-tone="plan">
-              Faol
-            </span>
-          </div>
-        </Section>
+          </Section>
+        )}
 
         <Section title="Hisob">
           <ul className="ds-list">

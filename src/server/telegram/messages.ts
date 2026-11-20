@@ -39,6 +39,11 @@ export const COPY = {
       "Har kuni kechqurun ertangi tadbirlarni shu yerga yuboraman.",
     ].join("\n"),
   invite: "Sizni studiya jamoasiga taklif qilishdi. Qoʻshilish uchun tugmani bosing.",
+  inviteTo: (studio: string, inviter: string | null) =>
+    [`<b>${escapeHtml(studio)}</b>`, `${inviter ? escapeHtml(inviter) : "Studiya egasi"} sizni menejer qilib taklif qildi.`, "", "Qoʻshilish uchun tugmani bosing."].join("\n"),
+  inviteUsed: "Bu taklif linki allaqachon ishlatilgan. Agar siz qoʻshilgan boʻlsangiz — Floreal’ni oching. Boʻlmasa, studiya egasidan yangi link soʻrang.",
+  inviteExpired: "Taklif linkining muddati tugagan. Studiya egasidan yangi link soʻrang.",
+  inviteInvalid: "Taklif linki notoʻgʻri yoki bekor qilingan. Studiya egasidan yangi link soʻrang.",
   help: [
     "<b>Buyruqlar</b>",
     "/start — Floreal’ni ochish",
@@ -116,7 +121,10 @@ const withQuery = (base: string, q: Record<string, string>) => {
 /* ——— update → reply ———
    Returns the sendMessage payload, or null when the update needs no answer.
    panelUrl is the Mini App entry (https, set in BotFather /setdomain for the Login Widget). */
-export function replyTo(update: TgUpdate, panelUrl: string): SendMessage | null {
+/* invite: what the webhook found for /start inv_… (undefined = not looked up → generic copy) */
+export type InviteInfo = { studio: string; inviter: string | null; status: "ok" | "used" | "expired" } | null | undefined;
+
+export function replyTo(update: TgUpdate, panelUrl: string, inviteInfo?: InviteInfo): SendMessage | null {
   const msg = update.message;
   if (!msg?.text) return null;
   const cmd = parseCommand(msg.text);
@@ -130,9 +138,13 @@ export function replyTo(update: TgUpdate, panelUrl: string): SendMessage | null 
   if (cmd?.cmd === "start") {
     const invite = parseInvite(cmd.arg);
     if (invite) {
+      const open = { inline_keyboard: [[{ text: COPY.openStudio, web_app: { url: panelUrl } }]] };
+      if (inviteInfo === null) return { ...base, text: COPY.inviteInvalid, reply_markup: open };
+      if (inviteInfo?.status === "used") return { ...base, text: COPY.inviteUsed, reply_markup: open };
+      if (inviteInfo?.status === "expired") return { ...base, text: COPY.inviteExpired, reply_markup: open };
       return {
         ...base,
-        text: COPY.invite,
+        text: inviteInfo ? COPY.inviteTo(inviteInfo.studio, inviteInfo.inviter) : COPY.invite,
         reply_markup: { inline_keyboard: [[{ text: COPY.joinTeam, web_app: { url: withQuery(panelUrl, { taklif: invite }) } }]] },
       };
     }
