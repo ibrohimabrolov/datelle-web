@@ -99,6 +99,23 @@ test("/start inv_… → join button carries the token", () => {
   assert.ok(btn && "web_app" in btn);
   if (btn && "web_app" in btn) assert.equal(btn.web_app.url, `${PANEL}?taklif=abcdefghijklmnop`);
 });
+test("/start inv_… with a known invite → studio + inviter; used/expired/unknown → no join button", () => {
+  const ok = replyTo(msg("/start inv_abcdefghijklmnop"), PANEL, { studio: "Xasan <Florist>", inviter: "Ibrohim", status: "ok" });
+  assert.match(ok?.text ?? "", /<b>Xasan &lt;Florist&gt;<\/b>/);
+  assert.match(ok?.text ?? "", /Ibrohim sizni menejer qilib taklif qildi/);
+  const btn = ok?.reply_markup?.inline_keyboard[0][0];
+  assert.ok(btn && "web_app" in btn && btn.web_app.url.endsWith("?taklif=abcdefghijklmnop"));
+  for (const [info, re] of [
+    [{ studio: "X", inviter: null, status: "used" }, /allaqachon ishlatilgan/],
+    [{ studio: "X", inviter: null, status: "expired" }, /muddati tugagan/],
+    [null, /notoʻgʻri/],
+  ] as const) {
+    const r = replyTo(msg("/start inv_abcdefghijklmnop"), PANEL, info);
+    assert.match(r?.text ?? "", re);
+    const b = r?.reply_markup?.inline_keyboard[0][0];
+    assert.ok(b && "web_app" in b && b.web_app.url === PANEL, "no token in the button");
+  }
+});
 test("other text → help; groups → only a short notice on /start; no text → silence", () => {
   assert.match(replyTo(msg("salom"), PANEL)?.text ?? "", /Buyruqlar/);
   assert.equal(replyTo(msg("salom", "group"), PANEL), null);

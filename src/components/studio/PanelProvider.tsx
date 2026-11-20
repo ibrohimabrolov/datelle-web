@@ -55,8 +55,10 @@ export const INVITE_PATH = `${PANEL}/taklif`;
 export const REMOVED_PATH = `${PANEL}/yopilgan`;
 const STUDIO_KEY = "ds-studio";
 const INVITE_KEY = "ds-invite";
-/* last accepted/declined token: Telegram keeps start_param (and the URL keeps ?taklif=) for the whole session,
-   so a reload must not resurrect an invite the person already answered */
+/* last accepted/declined token, as "<userId>:<token>": Telegram keeps start_param (and the URL keeps ?taklif=)
+   for the whole session, so a reload must not resurrect an invite the person already answered. Per account:
+   two Telegram accounts on one phone share this webview storage — the owner tapping their own link must not
+   swallow it for the manager. */
 const INVITE_DONE_KEY = "ds-invite-done";
 const store = {
   get: (k: string) => {
@@ -125,7 +127,8 @@ export function PanelProvider({ children }: { children: ReactNode }) {
   );
   const clearInvite = useCallback(() => {
     const t = store.get(INVITE_KEY);
-    if (t) store.set(INVITE_DONE_KEY, t);
+    const uid = meRef.current?.user.id;
+    if (t && uid) store.set(INVITE_DONE_KEY, `${uid}:${t}`);
     store.set(INVITE_KEY, null);
     setInvite(null);
   }, []);
@@ -136,10 +139,22 @@ export function PanelProvider({ children }: { children: ReactNode }) {
       // invite from the URL (bot /start inv_… → ?taklif=, web link → /panel/taklif?t=), kept across the login step
       const q = new URLSearchParams(location.search);
       const fromUrl = q.get("taklif") ?? (location.pathname === INVITE_PATH ? q.get("t") : null);
-      const fresh = (t: string | null | undefined): t is string => !!t && /^[A-Za-z0-9_-]{16,64}$/.test(t) && t !== store.get(INVITE_DONE_KEY);
-      if (fresh(fromUrl)) store.set(INVITE_KEY, fromUrl);
-      const pending = store.get(INVITE_KEY);
-      if (pending) setInvite(pending);
+      const valid = (t: string | null | undefined): t is string => !!t && /^[A-Za-z0-9_-]{16,64}$/.test(t);
+      if (valid(fromUrl)) store.set(INVITE_KEY, fromUrl);
+      // kept across the login step; whether this account already answered it is checked once we know who it is
+      if (valid(store.get(INVITE_KEY))) setInvite(store.get(INVITE_KEY));
+      const settle = (me: Me, fromStart: string | null) => {
+        const done = store.get(INVITE_DONE_KEY);
+        const answered = (t: string) => done === `${me.user.id}:${t}`;
+        if (valid(fromStart) && !answered(fromStart)) store.set(INVITE_KEY, fromStart);
+        const pending = store.get(INVITE_KEY);
+        if (valid(pending) && !answered(pending)) setInvite(pending);
+        else {
+          store.set(INVITE_KEY, null);
+          setInvite(null);
+        }
+        setMe(me);
+      };
       const wa = await telegram();
       if (!alive) return;
       setTg(wa);
@@ -149,14 +164,9 @@ export function PanelProvider({ children }: { children: ReactNode }) {
           const r = await api<Me & { startParam: string | null }>("/api/panel/auth/telegram", { body: { initData: wa.initData } });
           if (!alive) return;
           setStartParam(r.startParam);
-          const fromStart = r.startParam?.startsWith("inv_") ? r.startParam.slice(4) : null;
-          if (fresh(fromStart)) {
-            store.set(INVITE_KEY, fromStart);
-            setInvite(fromStart);
-          }
-          setMe(r);
+          settle(r, r.startParam?.startsWith("inv_") ? r.startParam.slice(4) : null);
         } else {
-          setMe(await api<Me>("/api/panel/me"));
+          settle(await api<Me>("/api/panel/me"), null);
         }
       } catch (e) {
         if (!alive) return;

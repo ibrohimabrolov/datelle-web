@@ -100,8 +100,10 @@ export async function setMyReminders(ctx: StudioCtx, remindersOn: boolean) {
 /* ── invites: one-time link, 7 days, only the hash is stored ── */
 export function inviteLink(token: string) {
   const bot = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME?.replace(/^@/, "");
-  // Telegram link opens the Mini App with start_param; without a bot, the web panel takes ?taklif=
-  return bot ? `https://t.me/${bot}?startapp=inv_${token}` : `${SITE_URL}/panel/taklif?t=${token}`;
+  // ?start= opens the bot chat → /start inv_… → the bot answers with the studio name and a Mini App button
+  // carrying ?taklif=. (?startapp= only works when a Main Mini App is set up in BotFather — without it
+  // Telegram just opens the chat, the person taps the menu button and lands in their own studio.)
+  return bot ? `https://t.me/${bot}?start=inv_${token}` : `${SITE_URL}/panel/taklif?t=${token}`;
 }
 
 export async function createInvite(ctx: StudioCtx) {
@@ -153,6 +155,17 @@ async function findInvite(token: string) {
     .where(eq(schema.studioInvites.tokenHash, sha256(token)));
   if (!inv) throw new HttpError(404, "invite_invalid", "Taklif linki notoʻgʻri");
   return inv;
+}
+
+/* For the bot's /start inv_… answer: studio + inviter, no user needed. null = no such link. */
+export type BotInvite = { studio: string; inviter: string | null; status: "ok" | "used" | "expired" } | null;
+export async function inviteForBot(token: string): Promise<BotInvite> {
+  const inv = await findInvite(token).catch((e) => {
+    if (e instanceof HttpError && e.status === 404) return null;
+    throw e;
+  });
+  if (!inv) return null;
+  return { studio: inv.studioName, inviter: inv.inviter?.split(" ")[0] ?? null, status: inv.usedAt ? "used" : inv.expiresAt < new Date() ? "expired" : "ok" };
 }
 
 /* What the invitee sees before joining (Figma S0 · Taklif) */

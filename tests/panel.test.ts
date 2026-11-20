@@ -955,3 +955,62 @@ describe("smeta & qoldiq eslatmasi", () => {
     assert.equal(csrf.status, 403);
   });
 });
+
+describe("invite through the bot link — invitee already owns a studio", () => {
+  const hookSecret = createHmac("sha256", PANEL_TEST_BOT_TOKEN).update("floreal-webhook-v1").digest("hex");
+  const startText = (from: number, text: string) =>
+    fetch(`${BASE}/api/telegram/webhook`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-telegram-bot-api-secret-token": hookSecret },
+      body: JSON.stringify({ update_id: 1, message: { message_id: 1, chat: { id: from, type: "private" }, from: { id: from, first_name: "Odil" }, text } }),
+    }).then((r) => r.json());
+  const owner = new Client();
+  const multi = new Client();
+  const multiTg = tgId();
+  let ownerStudio = "";
+  let ownStudio = "";
+
+  before(async () => {
+    await owner.devLogin(tgId(), "Ibrohim Abrolov");
+    ownerStudio = (await owner.req("/api/panel/onboarding", { body: { name: "Xasanflorist", category: "floristika", dailyCapacity: 3 } })).json.studio.id;
+    await multi.devLogin(multiTg, "Odil");
+    ownStudio = (await multi.req("/api/panel/onboarding", { body: { name: "Odil Dekor", category: "dekor", dailyCapacity: 2 } })).json.studio.id;
+  });
+
+  test("link opens the bot chat; bot names the studio; joining keeps the own studio; roles stay per studio", async () => {
+    const inv = await owner.req("/api/panel/invites", { body: {} });
+    assert.equal(inv.status, 201);
+    assert.match(inv.json.link, /^https:\/\/t\.me\/floreal_uz_bot\?start=inv_[A-Za-z0-9_-]{24}$/);
+    const token = /inv_([A-Za-z0-9_-]+)/.exec(inv.json.link)![1];
+
+    const ask = await startText(multiTg, `/start inv_${token}`);
+    assert.match(ask.text, /<b>Xasanflorist<\/b>/);
+    assert.match(ask.text, /Ibrohim sizni menejer qilib taklif qildi/);
+    assert.match(ask.reply_markup.inline_keyboard[0][0].web_app.url, new RegExp(`\\?taklif=${token}$`));
+
+    const acc = await multi.req("/api/panel/invites/accept", { body: { token } });
+    assert.equal(acc.status, 200, JSON.stringify(acc.json));
+    const roles = Object.fromEntries(acc.json.studios.map((s: { id: string; role: string }) => [s.id, s.role]));
+    assert.deepEqual(roles, { [ownStudio]: "owner", [ownerStudio]: "manager" });
+
+    // each request runs in the studio the header names, with that studio's role
+    const as = (id: string) => ({ "x-studio-id": id });
+    assert.equal((await multi.req("/api/panel/dashboard", { headers: as(ownStudio) })).status, 200);
+    assert.equal((await multi.req("/api/panel/dashboard", { headers: as(ownerStudio) })).status, 403);
+    assert.equal((await multi.req("/api/panel/studio", { headers: as(ownerStudio) })).json.studio.name, "Xasanflorist");
+    assert.equal((await multi.req("/api/panel/studio", { headers: as(ownStudio) })).json.studio.name, "Odil Dekor");
+    // manager can't touch the owner's settings
+    assert.equal((await multi.req("/api/panel/studio", { method: "PATCH", headers: as(ownerStudio), body: { name: "Hack" } })).status, 403);
+
+    // owner sees the new manager and no pending invite
+    const team = await owner.req("/api/panel/members");
+    assert.deepEqual(team.json.members.map((m: { name: string; role: string }) => [m.name, m.role]), [["Ibrohim Abrolov", "owner"], ["Odil", "manager"]]);
+    assert.equal((await owner.req("/api/panel/invites")).json.invites.length, 0);
+
+    // the same link again: the bot says it's used, no join button
+    const again = await startText(multiTg, `/start inv_${token}`);
+    assert.match(again.text, /allaqachon ishlatilgan/);
+    assert.doesNotMatch(again.reply_markup.inline_keyboard[0][0].web_app.url, /taklif/);
+    assert.match((await startText(multiTg, `/start inv_${"x".repeat(24)}`)).text, /notoʻgʻri/);
+  });
+});
