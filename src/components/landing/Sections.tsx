@@ -1,3 +1,4 @@
+import { BRAND } from "@/config/brand";
 import type { Copy } from "./copy";
 import { BOT_HANDLE, BOT_URL, LOGIN_URL } from "./data";
 import { Faq } from "./Faq";
@@ -283,6 +284,13 @@ export function Footer({ t }: { t: Copy }) {
               <h3>{ft.docs}</h3>
               <ul>
                 <li><a href="/maxfiylik">{ft.privacy}</a></li>
+              </ul>
+            </div>
+            <div className="lp-footer__col">
+              <h3>{ft.contact}</h3>
+              <ul>
+                <li><a href={`tel:${BRAND.phoneE164}`}>{BRAND.phone}</a></li>
+                <li><address>{ft.address}</address></li>
               </ul>
             </div>
           </nav>

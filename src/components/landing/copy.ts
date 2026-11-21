@@ -165,6 +165,8 @@ const uz = {
     desktopLogin: "Kompyuterda kirish",
     docs: "Hujjatlar",
     privacy: "Maxfiylik",
+    contact: "Aloqa",
+    address: "Toshkent, Oʻzbekiston",
   },
   seo: {
     pageName: "Floreal — dekor studiyalari va floristlar uchun CRM",
@@ -337,6 +339,8 @@ const ru: Copy = {
     desktopLogin: "Вход с компьютера",
     docs: "Документы",
     privacy: "Конфиденциальность",
+    contact: "Контакты",
+    address: "Ташкент, Узбекистан",
   },
   seo: {
     pageName: "Floreal — CRM для декор-студий и флористов",
