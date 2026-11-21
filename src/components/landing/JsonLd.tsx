@@ -1,3 +1,4 @@
+import { BRAND } from "@/config/brand";
 import { SITE_URL } from "@/config/site";
 import type { Copy } from "./copy";
 import { BOT_URL } from "./data";
@@ -20,7 +21,25 @@ function graph(t: Copy) {
         name: "Floreal",
         url: SITE_URL,
         logo: `${SITE_URL}/apple-icon.png`,
+        telephone: BRAND.phoneE164,
+        address: { "@type": "PostalAddress", addressLocality: "Tashkent", addressCountry: "UZ" }, // one Organization node, same on /ru
         areaServed: { "@type": "City", name: t.seo.city },
+        contactPoint: {
+          "@type": "ContactPoint",
+          telephone: BRAND.phoneE164,
+          contactType: "sales",
+          areaServed: "UZ",
+          availableLanguage: ["uz", "ru"],
+        },
+        sameAs: [BOT_URL],
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${SITE_URL}/#website`,
+        url: SITE_URL,
+        name: "Floreal",
+        inLanguage: ["uz", "ru"],
+        publisher: { "@id": ORG_ID },
       },
       {
         "@type": "WebPage",
@@ -28,7 +47,7 @@ function graph(t: Copy) {
         url: URL_,
         name: t.seo.pageName,
         inLanguage: t.lang,
-        isPartOf: { "@type": "WebSite", "@id": `${SITE_URL}/#website`, url: SITE_URL, name: "Floreal", publisher: { "@id": ORG_ID } },
+        isPartOf: { "@id": `${SITE_URL}/#website` },
         about: { "@id": `${URL_}#app` },
       },
       {

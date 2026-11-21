@@ -440,6 +440,11 @@
 .lp-footer__col ul { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .lp-footer__col a { font: 400 15px/22px var(--ds-font-sans); color: var(--ds-text-secondary); border-radius: var(--ds-radius-sm); }
 .lp-footer__col a:hover { color: var(--ds-text-primary); }
+.lp-footer__col address { font: 400 15px/22px var(--ds-font-sans); font-style: normal; color: var(--ds-text-secondary); white-space: nowrap; }
+.lp-footer__col a[href^="tel:"] { white-space: nowrap; }
+/* 4 link columns: keep each link on one line on desktop; tighten the gap before it runs out of room */
+@media (min-width: 1024px) { .lp-footer__col a { white-space: nowrap; } }
+@media (min-width: 1280px) and (max-width: 1439.98px) { .lp-footer__links { gap: 48px; } }
 
 /* ---------- BG / Pattern (348:11502) ---------- */
 .lp-bg { position: absolute; inset: 0; z-index: -2; overflow: hidden; pointer-events: none; }
@@ -538,6 +543,10 @@
   .lp-faq-wrap { gap: 48px; }
   .lp-faq-wrap .lp-head__title, .lp-faq-wrap .lp-head__title .lp-h2 { width: 340px; flex: none; }
   .lp-footer__card { padding-inline: 40px; }
+  /* Brand + 4 columns don't fit side by side here (RU especially) — brand row, then links */
+  .lp-footer__card { height: auto; padding-bottom: 344px; } /* taller stack — keep the art clear of the links */
+  .lp-footer__top { flex-direction: column; gap: 40px; }
+  .lp-footer__links { gap: 48px; }
 }
 
 /* ---------- Mobile / Tablet chrome (Landing/Header · Size=Mobile, Landing/Menu, Landing/BottomBar) ---------- */
@@ -707,7 +716,7 @@ html.lp-lock { overflow: hidden; }
 
   .lp-footer__links { flex-wrap: wrap; gap: 32px; }
   .lp-footer__col ul { gap: 0; }
-  .lp-footer__col a { display: flex; align-items: center; min-height: 44px; }
+  .lp-footer__col a, .lp-footer__col address { display: flex; align-items: center; min-height: 44px; }
 }
 
 /* ================= < 640 — Mobile (Figma "Landing · Mobile" 303:3982) ================= */
