@@ -62,8 +62,8 @@ function Slides() {
       onBlur={(e) => !ref.current?.contains(e.relatedTarget as Node) && setPaused(false)}
     >
       <div className="ds-brandline">
-        <LogoMark size={40} />
-        <span className="ds-body-strong">Floreal</span>
+        <LogoMark size={30} />
+        <span className="ds-h3">Floreal</span>
       </div>
       <div className="ds-slides" aria-live="off">
         {SLIDES.map((s, n) => (
