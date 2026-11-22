@@ -15,7 +15,7 @@ type Phase = { kind: "loading" } | { kind: "waiting"; login: Started; qr: string
 
 const POLL_MS = 2000;
 
-export function BotLogin({ onDone, onCancel }: { onDone(me: Me): void; onCancel(): void }) {
+export function BotLogin({ onDone, onCancel, onFallback }: { onDone(me: Me): void; onCancel(): void; onFallback?(): void }) {
   const [phase, setPhase] = useState<Phase>({ kind: "loading" });
   const [now, setNow] = useState(() => Date.now());
 
@@ -97,9 +97,15 @@ export function BotLogin({ onDone, onCancel }: { onDone(me: Me): void; onCancel(
         <Button size="l" block icon={<StudioIcon name="refresh-cw" variant="Line" />} onClick={start}>
           {phase.kind === "expired" ? "Yangi kod olish" : "Qayta urinish"}
         </Button>
-        <Button variant="ghost" onClick={onCancel}>
-          Orqaga
-        </Button>
+        {phase.kind === "error" && onFallback ? (
+          <Button variant="ghost" onClick={onFallback}>
+            Telefon raqam bilan kirish
+          </Button>
+        ) : (
+          <Button variant="ghost" onClick={onCancel}>
+            Orqaga
+          </Button>
+        )}
       </div>
     );
   }
@@ -131,7 +137,7 @@ export function BotLogin({ onDone, onCancel }: { onDone(me: Me): void; onCancel(
         Tasdiqlash kutilmoqda · {mmss}
       </p>
       <Button variant="ghost" onClick={onCancel}>
-        Boshqa usul bilan kirish
+        Orqaga
       </Button>
     </div>
   );

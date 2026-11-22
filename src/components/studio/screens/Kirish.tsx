@@ -158,7 +158,14 @@ export function KirishScreen() {
       <h1 className="ds-h1">Kirish</h1>
 
       {mode === "bot" ? (
-        <BotLogin onDone={setMe} onCancel={() => setMode("idle")} />
+        <BotLogin
+          onDone={setMe}
+          onCancel={() => setMode("idle")}
+          onFallback={() => {
+            setMode("idle");
+            void signInTelegram();
+          }}
+        />
       ) : (
         <>
           {error && (
@@ -173,7 +180,7 @@ export function KirishScreen() {
             </div>
           )}
 
-          {/* Primary: confirm in our bot (reliable). Secondary: Telegram's phone-number popup. */}
+          {/* One path: confirm in our bot. The phone-number popup appears only after an error. */}
           <Button
             size="l"
             block
@@ -183,38 +190,23 @@ export function KirishScreen() {
               setError(null);
               setMode("bot");
             }}
-            icon={<StudioIcon name="send" variant="Filled" />}
+            icon={error ? <StudioIcon name="refresh-cw" variant="Line" /> : <StudioIcon name="send" variant="Filled" />}
           >
-            Telegram orqali kirish
+            {error ? "Qayta urinish" : "Telegram orqali kirish"}
           </Button>
 
           {unavailable ? (
             <p className="ds-helper">Telegram orqali kirish hali sozlanmagan</p>
+          ) : error ? (
+            // the only place the phone-number popup lives: a fallback when the bot path failed
+            <button type="button" className="ds-auth-alt" onClick={signInTelegram} disabled={busy !== null || !cfg}>
+              {busy === "tg" ? "Telegram oynasi ochiq…" : "Telefon raqam bilan kirish"}
+            </button>
           ) : (
-            <>
-              {!error && <p className="ds-auth-note">Bu qurilmada 30 kun kirgan holda qolasiz</p>}
-              <button type="button" className="ds-auth-alt" onClick={signInTelegram} disabled={busy !== null || !cfg}>
-                {busy === "tg" ? "Telegram oynasi ochiq…" : "Telefon raqam bilan kirish"}
-              </button>
-            </>
+            // one path for everyone: a new person signs in here too, then onboarding opens in this browser
+            <p className="ds-auth-note">Roʻyxatdan oʻtish shart emas — Telegram yetarli</p>
           )}
         </>
-      )}
-
-      {cfg?.botUsername && (
-        <p
-          className="ds-label"
-          style={{
-            display: "flex",
-            gap: "var(--ds-space-8)",
-            flexWrap: "wrap",
-          }}
-        >
-          <span className="ds-secondary">Studiya yoʻqmi?</span>
-          <a className="ds-label-strong ds-brand" href={`https://t.me/${cfg.botUsername}`} target="_blank" rel="noreferrer">
-            @{cfg.botUsername} ni oching
-          </a>
-        </p>
       )}
 
       {cfg?.devLogin && state.status === "anon" && (
