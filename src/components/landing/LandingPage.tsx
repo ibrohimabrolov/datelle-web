@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Clarity } from "./Clarity";
 import { THEME_BOOT } from "@/components/studio/theme";
 import { COPY, type Lang } from "./copy";
 import { Hero } from "./Hero";
@@ -71,6 +72,7 @@ export function LandingShell({ lang, children }: { lang: Lang; children: React.R
     <div className="studio landing" id="top" lang={lang} data-theme="light" suppressHydrationWarning>
       <script dangerouslySetInnerHTML={{ __html: boot }} />
       {children}
+      <Clarity />
     </div>
   );
 }
