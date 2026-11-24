@@ -15,7 +15,7 @@ export function Button({
   className,
   ...rest
 }: {
-  variant?: "primary" | "secondary" | "ghost" | "destructive";
+  variant?: "primary" | "secondary" | "ghost" | "destructive" | "danger-subtle";
   size?: "l" | "m";
   block?: boolean;
   loading?: boolean;

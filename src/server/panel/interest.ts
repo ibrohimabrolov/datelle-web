@@ -8,7 +8,7 @@ import { audit, type StudioCtx } from "./auth";
    "Menga kerak" on a feature that is not built yet. Each vote is one studio_events row
    (entity "interest", entity_id = feature) — no new table; demand is read with
    select entity_id, count(distinct studio_id) from studio_events where entity = 'interest' group by 1; */
-export const FEATURES = ["rekvizit", "jamoa-jadvali", "xarajatlar"] as const;
+export const FEATURES = ["rekvizit", "jamoa-jadvali", "xarajatlar", "logo"] as const; // logo = Sozlamalar → Logo «Yuklash»
 export type Feature = (typeof FEATURES)[number];
 export const interestBody = z.object({ feature: z.enum(FEATURES) });
 

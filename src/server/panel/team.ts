@@ -27,7 +27,13 @@ export async function studioDetails(ctx: StudioCtx) {
     .select({ id: schema.studios.id, name: schema.studios.name, category: schema.studios.category, dailyCapacity: schema.studios.dailyCapacity, plan: schema.studios.plan, trialEndsAt: schema.studios.trialEndsAt })
     .from(schema.studios)
     .where(eq(schema.studios.id, ctx.studio.id));
-  return { studio: s, role: ctx.role };
+  // Sozlamalar · menejer shows who owns the studio (Figma 596:11644)
+  const [owner] = await db
+    .select({ name: schema.users.name, username: schema.users.telegramUsername })
+    .from(schema.studioMembers)
+    .innerJoin(schema.users, eq(schema.users.id, schema.studioMembers.userId))
+    .where(and(eq(schema.studioMembers.studioId, ctx.studio.id), eq(schema.studioMembers.role, "owner")));
+  return { studio: s, role: ctx.role, owner: owner ? { name: owner.name ?? "Egasi", username: owner.username } : null };
 }
 
 export async function patchStudio(ctx: StudioCtx, input: z.infer<typeof studioPatch>) {
@@ -86,6 +92,17 @@ export async function removeMember(ctx: StudioCtx, userId: string) {
     await audit(tx, { studioId: ctx.studio.id, actorId: ctx.user.id, entity: "member", entityId: userId, action: "delete", diff: { name: m.name, role: m.role } });
   });
   return listMembers(ctx);
+}
+
+/* A manager leaves the studio themselves ("Jamoani tark etish"). The owner can't — a studio always has one.
+   Audited as member/leave, so the "egasi sizni chiqardi" screen (member/delete) doesn't fire. */
+export async function leaveStudio(ctx: StudioCtx) {
+  if (ctx.role === "owner") throw new HttpError(409, "owner_cannot_leave", "Egasi studiyani tark eta olmaydi");
+  await db.transaction(async (tx) => {
+    await tx.delete(schema.studioMembers).where(and(eq(schema.studioMembers.studioId, ctx.studio.id), eq(schema.studioMembers.userId, ctx.user.id)));
+    await audit(tx, { studioId: ctx.studio.id, actorId: ctx.user.id, entity: "member", entityId: ctx.user.id, action: "leave", diff: { role: ctx.role } });
+  });
+  return { left: true };
 }
 
 export const meMemberPatch = z.object({ remindersOn: z.boolean() });

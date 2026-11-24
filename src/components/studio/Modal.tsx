@@ -8,7 +8,7 @@ const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),textarea
 
 /* Second layer above an Overlay: centered 480/420 dialog on desktop, bottom sheet on mobile.
    Esc closes only this layer (stopPropagation), focus is trapped and returned. */
-export function Modal({ title, size, onClose, children }: { title: string; size?: "sm"; onClose(): void; children: ReactNode }) {
+export function Modal({ title, size, onClose, children }: { title: string; size?: "sm" | "lg"; onClose(): void; children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const close = useEffectEvent(onClose);
@@ -67,6 +67,7 @@ export function ConfirmDialog({
   title,
   description,
   confirm,
+  cancel = "Ortga",
   tone = "primary",
   onConfirm,
   onClose,
@@ -74,6 +75,7 @@ export function ConfirmDialog({
   title: string;
   description: string;
   confirm: string;
+  cancel?: string;
   tone?: "primary" | "destructive";
   onConfirm(): Promise<unknown> | void;
   onClose(): void;
@@ -90,7 +92,7 @@ export function ConfirmDialog({
       )}
       <div className="ds-modal-foot">
         <Button variant="ghost" onClick={onClose} disabled={busy} data-autofocus>
-          Ortga
+          {cancel}
         </Button>
         <Button
           variant={tone}
@@ -114,7 +116,7 @@ export function ConfirmDialog({
 }
 
 /* ⋯ menu: button + role=menu, arrow keys, Esc returns focus */
-export function Menu({ label, items }: { label: string; items: { label: string; icon?: ReactNode; danger?: boolean; onSelect(): void }[] }) {
+export function Menu({ label, trigger, items }: { label: string; trigger?: string; items: { label: string; icon?: ReactNode; danger?: boolean; disabled?: boolean; onSelect(): void }[] }) {
   const [open, setOpen] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
   const btn = useRef<HTMLButtonElement>(null);
@@ -140,9 +142,15 @@ export function Menu({ label, items }: { label: string; items: { label: string; 
 
   return (
     <div className="ds-menu-wrap" ref={wrap}>
-      <button ref={btn} className="ds-iconbtn" data-style="secondary" aria-label={label} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
-        <StudioIcon name="more-horiz" variant="Filled" />
-      </button>
+      {trigger ? (
+        <button ref={btn} type="button" className="ds-btn" data-style="ghost" aria-label={label} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+          {trigger}
+        </button>
+      ) : (
+        <button ref={btn} className="ds-iconbtn" data-style="secondary" aria-label={label} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+          <StudioIcon name="more-horiz" variant="Filled" />
+        </button>
+      )}
       {open && (
         <div
           className="ds-menu"
@@ -160,6 +168,7 @@ export function Menu({ label, items }: { label: string; items: { label: string; 
             <button
               key={it.label}
               role="menuitem"
+              disabled={it.disabled}
               data-danger={it.danger || undefined}
               onClick={() => {
                 setOpen(false);
