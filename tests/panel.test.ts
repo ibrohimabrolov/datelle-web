@@ -1042,3 +1042,36 @@ describe("tez orada — Menga kerak", () => {
     ]);
   });
 });
+
+describe("sozlamalar v2 — studiya egasi va jamoani tark etish", () => {
+  test("manager sees the owner; leaves on their own; owner cannot leave; leave ≠ removed", async () => {
+    const owner = new Client();
+    await owner.devLogin(tgId(), "Ega Egamov");
+    const studioId = (await owner.req("/api/panel/onboarding", { body: { name: "Leave Studio", category: "dekor", dailyCapacity: 3 } })).json.studio.id;
+    const manager = new Client();
+    const m = (await manager.devLogin(tgId(), "Menejer")).json.user;
+    await pool.query("insert into studio_members (studio_id, user_id, role) values ($1, $2, 'manager')", [studioId, m.id]);
+
+    const d = await manager.req("/api/panel/studio");
+    assert.equal(d.status, 200);
+    assert.equal(d.json.owner.name, "Ega Egamov");
+
+    assert.equal((await owner.req("/api/panel/members/me", { method: "DELETE", body: {} })).status, 409);
+    assert.equal((await manager.req("/api/panel/members/me", { method: "DELETE", body: {}, origin: "https://evil.example" })).status, 403);
+    assert.equal((await manager.req("/api/panel/members/me", { method: "DELETE", body: {} })).status, 200);
+    assert.equal((await manager.req("/api/panel/studio")).status, 409); // no studio left → onboarding
+    const me = await manager.req("/api/panel/me");
+    assert.ok(!me.json.removed, "leaving yourself must not show the 'egasi sizni chiqardi' screen");
+    const team = await owner.req("/api/panel/members");
+    assert.deepEqual(team.json.members.map((x: { role: string }) => x.role), ["owner"]);
+    const { rows } = await pool.query("select action from studio_events where studio_id = $1 and entity = 'member'", [studioId]);
+    assert.deepEqual(rows.map((r) => r.action), ["leave"]);
+  });
+
+  test("logo is a valid fake-door feature", async () => {
+    const c = new Client();
+    await c.devLogin(tgId(), "Logo");
+    await c.req("/api/panel/onboarding", { body: { name: "Logo Studio", category: "floristika", dailyCapacity: 2 } });
+    assert.deepEqual((await c.req("/api/panel/interest", { body: { feature: "logo" } })).json.features, ["logo"]);
+  });
+});

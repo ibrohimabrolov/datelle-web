@@ -1,15 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
-import { api, ApiError } from "@/lib/api";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { api, ApiError, useToday } from "@/lib/api";
 import { MONTHS } from "@/lib/dates";
-import { ThemeSwitch } from "../AuthTools";
 import { Button } from "../Button";
 import { useDataVersion, dataChanged } from "../data";
-import { StudioIcon } from "../icons";
-import { ConfirmDialog, Modal } from "../Modal";
+import { FakeDoor } from "../FakeDoor";
+import { StudioIcon, type StudioIconName } from "../icons";
+import { ConfirmDialog, Menu, Modal } from "../Modal";
 import { usePanel, useStudio, type Me, type Studio } from "../PanelProvider";
 import { PageHead } from "../Shell";
+import { applyTheme, storedTheme, type PanelTheme } from "../theme";
 import { Toast, type ToastMsg } from "../Toast";
 
 type Category = Studio["category"];
@@ -17,10 +18,14 @@ const CATEGORY: Record<Category, string> = { dekor: "Dekor", floristika: "Floris
 const CAP_MIN = 1;
 const CAP_MAX = 20;
 
-type Details = { studio: { id: string; name: string; category: Category; dailyCapacity: number; plan: "founding" | "standard"; trialEndsAt: string | null }; role: Studio["role"] };
+type Details = {
+  studio: { id: string; name: string; category: Category; dailyCapacity: number; plan: "founding" | "standard"; trialEndsAt: string | null };
+  role: Studio["role"];
+  owner: { name: string; username: string | null } | null;
+};
 type Member = { userId: string; name: string; username: string | null; role: Studio["role"]; lastSeenAt: string | null; isYou: boolean };
 type Invite = { id: string; expiresAt: string };
-type Layer = { kind: "name" } | { kind: "category" } | { kind: "invite" } | { kind: "remove"; member: Member } | null;
+type Layer = { kind: "name" } | { kind: "category" } | { kind: "logo" } | { kind: "invite" } | { kind: "remove"; member: Member } | { kind: "leave" } | null;
 
 export const initials = (name: string) =>
   name
@@ -46,9 +51,26 @@ function seen(iso: string | null) {
   return `${dayMonth(iso)} faol boʻlgan`;
 }
 
-const daysLeft = (iso: string) => Math.max(1, Math.ceil((new Date(iso).getTime() - Date.now()) / 86_400_000));
 
-/* S6 · Sozlamalar (Figma 22:10541 desktop / 7:548 mobile) */
+const TRIAL_DAYS = 30; // onboarding gives a 30-day free month
+const SEATS_INCLUDED = 3; // landing PLANS: 299 000 soʻm/oy — 3 foydalanuvchi, keyingisi +49 000
+const PRICE_MONTH = "299 000";
+const PRICE_YEAR = "2 990 000";
+
+type SectionId = "studiyalar" | "umumiy" | "jamoa" | "obuna" | "studiya" | "eslatmalar" | "korinish" | "hisob";
+const SECTION_LABEL: Record<SectionId, string> = {
+  studiyalar: "Studiyalar",
+  umumiy: "Umumiy",
+  jamoa: "Jamoa",
+  obuna: "Obuna",
+  studiya: "Studiya",
+  eslatmalar: "Eslatmalar",
+  korinish: "Koʻrinish",
+  hisob: "Hisob",
+};
+
+/* S6 · Sozlamalar v2 (Figma 06 · Sozlamalar 593:11522 — egasi 595:11527, menejer 596:11644):
+   one column + in-page nav, a card per section, label · value · action rows, every change saves at once. */
 export function SettingsScreen() {
   const { tg, signOut, setMe, switchStudio } = usePanel();
   const ctx = useStudio();
@@ -59,6 +81,7 @@ export function SettingsScreen() {
   const [layer, setLayer] = useState<Layer>(null);
   const [toast, setToast] = useState<ToastMsg | null>(null);
   const [leaving, setLeaving] = useState(false);
+  const [logoVoted, setLogoVoted] = useState(false);
   const say = useCallback((text: string) => setToast({ id: Date.now(), text }), []);
 
   const studioId = ctx?.studio.id;
@@ -70,6 +93,7 @@ export function SettingsScreen() {
     if (isOwner) {
       jobs.push(api<{ members: Member[] }>("/api/panel/members").then((r) => alive && setMembers(r.members)));
       jobs.push(api<{ invites: Invite[] }>("/api/panel/invites").then((r) => alive && setInvites(r.invites)));
+      jobs.push(api<{ features: string[] }>("/api/panel/interest").then((r) => alive && setLogoVoted(r.features.includes("logo"))));
     }
     Promise.all(jobs).catch((e) => alive && say(e instanceof ApiError ? e.message : "Yuklab boʻlmadi"));
     return () => {
@@ -102,6 +126,7 @@ export function SettingsScreen() {
     clearTimeout(capTimer.current);
     capTimer.current = setTimeout(() => {
       patchStudio({ dailyCapacity: next })
+        .then(() => say(`Kunlik sigʻim saqlandi — ${next} ta`))
         .catch((e) => say(e instanceof ApiError ? e.message : "Saqlab boʻlmadi"))
         .finally(() => setCapacity(null));
     }, 500);
@@ -124,225 +149,242 @@ export function SettingsScreen() {
     }
   }
 
+  const others = ctx ? ctx.me.studios.filter((s) => s.id !== ctx.studio.id) : [];
+  const sections: SectionId[] = !ctx
+    ? []
+    : [
+        ...(others.length ? (["studiyalar"] as const) : []),
+        ...(isOwner ? (["umumiy", "jamoa", "obuna"] as const) : (["studiya"] as const)),
+        "eslatmalar",
+        ...(!tg ? (["korinish"] as const) : []),
+        "hisob",
+      ];
+  const active = useScrollSpy(sections);
+
   if (!ctx)
     return (
       <>
         <PageHead title="Sozlamalar" settings={false} />
-        <div className="ds-settings">
-          <span className="ds-skeleton" style={{ height: 220, borderRadius: "var(--ds-radius-xl)" }} />
-          <span className="ds-skeleton" style={{ height: 192, borderRadius: "var(--ds-radius-xl)" }} />
-          <span className="ds-skeleton" style={{ height: 100, borderRadius: "var(--ds-radius-xl)" }} />
+        <div className="ds-set">
+          <span className="ds-set-nav ds-desktop-only" />
+          <div className="ds-set-content">
+            <span className="ds-skeleton" style={{ height: 320, borderRadius: "var(--ds-radius-xl)" }} />
+            <span className="ds-skeleton" style={{ height: 240, borderRadius: "var(--ds-radius-xl)" }} />
+          </div>
         </div>
       </>
     );
   const { me, studio } = ctx;
-  const others = me.studios.filter((s) => s.id !== studio.id);
-  const trialEnds = details?.studio.trialEndsAt;
+  const trialEnds = details?.studio.trialEndsAt ?? null;
+  const owner = details?.owner;
+  const handle = me.user.username ? `@${me.user.username}` : me.user.name;
 
   return (
     <>
       <PageHead title="Sozlamalar" settings={false} />
-      <div className="ds-settings">
-        {others.length > 0 && (
-          <Section title="Studiyalaringiz">
-            <ul className="ds-list" role="radiogroup" aria-label="Faol studiya">
-              {me.studios.map((s) => (
-                <li key={s.id} className="ds-li">
-                  <button
-                    type="button"
-                    role="radio"
-                    aria-checked={s.id === studio.id}
-                    className="ds-li-cover"
-                    onClick={() => s.id !== studio.id && switchStudio(s.id)}
-                  >
-                    <span className="ds-avatar" aria-hidden>
-                      {initials(s.name)}
-                    </span>
-                    <span className="ds-li-main">
-                      <span className="ds-li-title">{s.name}</span>
-                      <span className="ds-li-sub">{s.role === "owner" ? "Egasi" : "Menejer"}</span>
+      <div className="ds-set">
+        <nav className="ds-set-nav" aria-label="Sozlamalar boʻlimlari">
+          {sections.map((id) => (
+            <a key={id} href={`#s-${id}`} aria-current={active === id ? "location" : undefined}>
+              {SECTION_LABEL[id]}
+            </a>
+          ))}
+        </nav>
+
+        <div className="ds-set-content">
+          {others.length > 0 && (
+            <Section id="studiyalar" icon="briefcase" title="Studiyalaringiz">
+              <div role="radiogroup" aria-label="Faol studiya">
+                {me.studios.map((s) => (
+                  <button key={s.id} type="button" role="radio" aria-checked={s.id === studio.id} className="ds-row ds-row-button" onClick={() => s.id !== studio.id && switchStudio(s.id)}>
+                    <StudioAvatar />
+                    <span className="ds-row-text">
+                      <span className="ds-row-title">{s.name}</span>
+                      <span className="ds-row-sub">{s.role === "owner" ? "Egasi" : "Menejer"}</span>
                     </span>
                     {s.id === studio.id && <StudioIcon name="check" className="ds-brand" />}
                   </button>
-                </li>
-              ))}
-            </ul>
-          </Section>
-        )}
-
-        <Section title="Studiya">
-          <ul className="ds-list">
-            <EditRow label="Nomi" value={studio.name} editable={isOwner} onEdit={() => setLayer({ kind: "name" })} />
-            <EditRow label="Yoʻnalish" value={CATEGORY[studio.category]} editable={isOwner} onEdit={() => setLayer({ kind: "category" })} />
-            <li className="ds-li">
-              <div className="ds-li-main">
-                <span className="ds-li-title" id="cap-label">
-                  Kunlik sigʻim
-                </span>
-                <span className="ds-li-sub">Bir kunda nechta tadbir</span>
+                ))}
               </div>
-              {isOwner ? (
-                <div className="ds-stepper" data-size="s" role="group" aria-labelledby="cap-label">
-                  <button type="button" onClick={() => stepCapacity(-1)} disabled={shownCap <= CAP_MIN} aria-label="Kamaytirish">
-                    −
-                  </button>
-                  <output aria-live="polite">{shownCap}</output>
-                  <button type="button" onClick={() => stepCapacity(1)} disabled={shownCap >= CAP_MAX} aria-label="Koʻpaytirish">
-                    +
-                  </button>
-                </div>
-              ) : (
-                <span className="ds-li-value">{studio.dailyCapacity} ta</span>
-              )}
-            </li>
-          </ul>
-        </Section>
+            </Section>
+          )}
 
-
-        {isOwner && (
-          <Section
-            title={members ? `Jamoa · ${members.length}` : "Jamoa"}
-            action={
-              <Button variant="secondary" className="ds-desktop-only" icon={<StudioIcon name="users" variant="Filled" />} onClick={() => setLayer({ kind: "invite" })}>
-                Menejer qoʻshish
-              </Button>
-            }
-          >
-            <ul className="ds-list">
-              {!members && (
-                <li className="ds-li" aria-hidden>
-                  <span className="ds-skeleton" style={{ height: 40, width: "60%" }} />
-                </li>
-              )}
-              {members?.map((m) => (
-                <li key={m.userId} className="ds-li" data-tall>
-                  <span className="ds-avatar" aria-hidden>
-                    {initials(m.name)}
-                  </span>
-                  <div className="ds-li-main">
-                    <span className="ds-li-title">{m.name}</span>
-                    <span className="ds-li-sub">{m.isYou ? "Siz" : seen(m.lastSeenAt)}</span>
-                  </div>
-                  {m.role === "owner" ? (
-                    <span className="ds-tag" data-tone="brand">
-                      Egasi
-                    </span>
-                  ) : (
-                    <>
-                      <span className="ds-li-value">Menejer</span>
-                      <button type="button" className="ds-textbtn" data-tone="danger" onClick={() => setLayer({ kind: "remove", member: m })} aria-label={`${m.name}ni chiqarish`}>
-                        Chiqarish
+          {isOwner ? (
+            <>
+              <Section id="umumiy" icon="briefcase" title="Umumiy">
+                <Row label="Logo" helper={logoVoted ? "Logo yuklash tez orada — soʻrovingiz qabul qilingan" : "PNG yoki JPG, kamida 256×256. Sidebar va smetada chiqadi"} action={<Button variant="secondary" data-on-card onClick={() => setLayer({ kind: "logo" })}>Yuklash</Button>}>
+                  <StudioAvatar />
+                </Row>
+                <Row label="Nomi" action={<Button variant="ghost" onClick={() => setLayer({ kind: "name" })} aria-label="Nomini oʻzgartirish">Oʻzgartirish</Button>}>
+                  {studio.name}
+                </Row>
+                <Row label="Yoʻnalish" action={<Button variant="ghost" onClick={() => setLayer({ kind: "category" })} aria-label="Yoʻnalishni oʻzgartirish">Oʻzgartirish</Button>}>
+                  {CATEGORY[studio.category]}
+                </Row>
+                <Row
+                  label="Kunlik sigʻim"
+                  labelId="cap-label"
+                  helper="Kalendarda «1 joy» va «Band» shu songa qarab chiqadi"
+                  action={
+                    <div className="ds-stepper" data-size="s" role="group" aria-labelledby="cap-label">
+                      <button type="button" onClick={() => stepCapacity(-1)} disabled={shownCap <= CAP_MIN} aria-label="Kamaytirish">
+                        <StudioIcon name="minus" />
                       </button>
-                    </>
-                  )}
-                </li>
-              ))}
-              {invites.map((inv) => (
-                <li key={inv.id} className="ds-li">
-                  <span className="ds-avatar" data-tone="muted" aria-hidden>
-                    <StudioIcon name="send" variant="Filled" size={18} />
-                  </span>
-                  <div className="ds-li-main">
-                    <span className="ds-li-title">Taklif yuborilgan</span>
-                    <span className="ds-li-sub">Link yana {daysLeft(inv.expiresAt)} kun amal qiladi</span>
+                      <output aria-live="polite">{shownCap}</output>
+                      <button type="button" onClick={() => stepCapacity(1)} disabled={shownCap >= CAP_MAX} aria-label="Koʻpaytirish">
+                        <StudioIcon name="plus" />
+                      </button>
+                    </div>
+                  }
+                />
+              </Section>
+
+              <Section
+                id="jamoa"
+                icon="users"
+                title="Jamoa"
+                action={
+                  <Button variant="secondary" icon={<StudioIcon name="user-plus" variant="Filled" />} onClick={() => setLayer({ kind: "invite" })}>
+                    Menejer qoʻshish
+                  </Button>
+                }
+              >
+                {!members && (
+                  <div className="ds-row" aria-hidden>
+                    <span className="ds-skeleton" style={{ height: 40, width: "60%" }} />
                   </div>
-                  <button
-                    type="button"
-                    className="ds-textbtn"
-                    data-tone="danger"
+                )}
+                {members?.map((m) => (
+                  <div key={m.userId} className="ds-row">
+                    <span className="ds-avatar" aria-hidden>
+                      {initials(m.name)}
+                    </span>
+                    <span className="ds-row-text">
+                      <span className="ds-row-title">{m.name}</span>
+                      <span className="ds-row-sub">{m.username ? `@${m.username}` : m.isYou ? "Siz" : seen(m.lastSeenAt)}</span>
+                    </span>
+                    {m.role === "owner" ? (
+                      <span className="ds-tag" data-tone="brand">
+                        Egasi
+                      </span>
+                    ) : (
+                      <>
+                        <span className="ds-tag" data-tone="neutral">
+                          Menejer
+                        </span>
+                        <Menu
+                          label={`${m.name}ni boshqarish`}
+                          trigger="Boshqarish"
+                          items={[
+                            {
+                              label: "Telegram’da yozish",
+                              icon: <StudioIcon name="send" />,
+                              disabled: !m.username,
+                              onSelect: () => m.username && window.open(`https://t.me/${m.username}`, "_blank", "noopener"),
+                            },
+                            { label: "Jamoadan chiqarish", icon: <StudioIcon name="log-out" />, danger: true, onSelect: () => setLayer({ kind: "remove", member: m }) },
+                          ]}
+                        />
+                      </>
+                    )}
+                  </div>
+                ))}
+                {invites.map((inv) => (
+                  <div key={inv.id} className="ds-row">
+                    <span className="ds-avatar" data-tone="muted" aria-hidden>
+                      <StudioIcon name="send" size={24} />
+                    </span>
+                    <span className="ds-row-text">
+                      <span className="ds-row-title">Taklif yuborilgan</span>
+                      <span className="ds-row-sub">Bir martalik link · {dayMonth(inv.expiresAt)}gacha amal qiladi</span>
+                    </span>
+                    <Button
+                      variant="ghost"
+                      onClick={async () => {
+                        try {
+                          setInvites((await api<{ invites: Invite[] }>(`/api/panel/invites/${inv.id}`, { method: "DELETE", body: {} })).invites);
+                          say("Taklif bekor qilindi");
+                        } catch (e) {
+                          say(e instanceof ApiError ? e.message : "Bekor qilib boʻlmadi");
+                        }
+                      }}
+                    >
+                      Bekor qilish
+                    </Button>
+                  </div>
+                ))}
+              </Section>
+
+              <Section id="obuna" icon="star" title="Obuna" padded>
+                {details ? <Plan trialEnds={trialEnds} /> : <span className="ds-skeleton" style={{ height: 120 }} />}
+              </Section>
+            </>
+          ) : (
+            <Section id="studiya" icon="briefcase" title="Studiya">
+              <div className="ds-row">
+                <StudioAvatar />
+                <span className="ds-row-text">
+                  <span className="ds-row-title">{studio.name}</span>
+                  <span className="ds-row-sub">{owner ? `Egasi: ${owner.name}${owner.username ? ` · @${owner.username}` : ""}` : " "}</span>
+                </span>
+                <span className="ds-tag" data-tone="neutral">
+                  Menejer
+                </span>
+              </div>
+              <div className="ds-row ds-row-stack">
+                <span className="ds-row-title">Siz nima qila olasiz</span>
+                <Rights you />
+              </div>
+              <div className="ds-row">
+                <span className="ds-row-text">
+                  <span className="ds-row-title">Jamoani tark etish</span>
+                  <span className="ds-row-sub">Studiya maʼlumotlariga kirishingiz yopiladi. Siz qoʻshgan buyurtmalar studiyada qoladi</span>
+                </span>
+                <Button variant="ghost" data-tone="danger" onClick={() => setLayer({ kind: "leave" })}>
+                  Tark etish
+                </Button>
+              </div>
+            </Section>
+          )}
+
+          {/* Only the evening digest exists in the bot (cron 20:00) — one honest switch */}
+          <Section id="eslatmalar" icon="bell" title="Eslatmalar">
+            <Row label="Kechki xulosa" labelId="rem-label" action={<button type="button" role="switch" aria-checked={remindersOn} aria-labelledby="rem-label" aria-describedby="rem-sub" className="ds-switch" onClick={toggleReminders} />}>
+              <span id="rem-sub">Har kuni 20:00 da</span>
+            </Row>
+          </Section>
+
+          {/* Telegram decides the Mini App theme; the web panel remembers its own (light by default) */}
+          {!tg && (
+            <Section id="korinish" icon="sun" title="Koʻrinish">
+              <Row label="Mavzu" labelId="theme-label" wide action={<ThemeSegment />} />
+            </Section>
+          )}
+
+          <Section id="hisob" icon="send" title="Hisob">
+            <Row
+              label="Telegram"
+              action={
+                // In the Mini App the session is re-created on every open, so "Chiqish" would be a no-op
+                !tg && (
+                  <Button
+                    variant="danger-subtle"
+                    icon={<StudioIcon name="log-out" />}
+                    loading={leaving}
                     onClick={async () => {
-                      try {
-                        setInvites((await api<{ invites: Invite[] }>(`/api/panel/invites/${inv.id}`, { method: "DELETE", body: {} })).invites);
-                        say("Taklif bekor qilindi");
-                      } catch (e) {
-                        say(e instanceof ApiError ? e.message : "Bekor qilib boʻlmadi");
-                      }
+                      setLeaving(true);
+                      await signOut();
                     }}
                   >
-                    Bekor qilish
-                  </button>
-                </li>
-              ))}
-              <li className="ds-li ds-mobile-only">
-                <button type="button" className="ds-li-cover ds-brand" onClick={() => setLayer({ kind: "invite" })}>
-                  <StudioIcon name="users" variant="Filled" />
-                  <span className="ds-li-title">Menejer qoʻshish</span>
-                </button>
-              </li>
-            </ul>
+                    Chiqish
+                  </Button>
+                )
+              }
+            >
+              {handle}
+            </Row>
           </Section>
-        )}
-
-        {/* Figma desktop draws 3 toggles; only the evening digest exists in the bot (cron 20:00) — one honest switch */}
-        <Section title="Eslatma">
-          <ul className="ds-list">
-            <li className="ds-li">
-              <div className="ds-li-main">
-                <span className="ds-li-title" id="rem-label">
-                  Kechki eslatma
-                </span>
-                <span className="ds-li-sub" id="rem-sub">
-                  Ertangi tadbirlar · har kuni 20:00 da botda
-                </span>
-              </div>
-              <button type="button" role="switch" aria-checked={remindersOn} aria-labelledby="rem-label" aria-describedby="rem-sub" className="ds-switch" onClick={toggleReminders} />
-            </li>
-          </ul>
-        </Section>
-
-        {/* Telegram decides the Mini App theme; the web panel remembers its own (light by default) */}
-        {!tg && (
-          <Section title="Koʻrinish">
-            <ul className="ds-list">
-              <li className="ds-li">
-                <div className="ds-li-main">
-                  <span className="ds-li-title">Mavzu</span>
-                  <span className="ds-li-sub">Shu brauzerda saqlanadi</span>
-                </div>
-                <ThemeSwitch />
-              </li>
-            </ul>
-          </Section>
-        )}
-
-        {/* billing is the owner's business — a manager doesn't need the plan */}
-        {isOwner && (
-          <Section title="Obuna">
-            <div className="ds-plan">
-              <div className="ds-li-main">
-                <span className="ds-li-title">{details ? (trialEnds ? "Bepul oy" : "Standart") : " "}</span>
-                <span className="ds-li-sub">{details ? (trialEnds ? `${dayMonth(trialEnds)}gacha bepul` : "Faol") : " "}</span>
-              </div>
-              <span className="ds-tag" data-tone="plan">
-                Faol
-              </span>
-            </div>
-          </Section>
-        )}
-
-        <Section title="Hisob">
-          <ul className="ds-list">
-            <li className="ds-li" data-tall>
-              <div className="ds-li-main">
-                <span className="ds-li-title">Telegram orqali kirgansiz</span>
-                <span className="ds-li-sub">{[me.user.username ? `@${me.user.username}` : me.user.name, tg ? "Telegram ilovasida" : "shu brauzerda"].join(" · ")}</span>
-              </div>
-              {/* In the Mini App the session is re-created on every open, so "Chiqish" would be a no-op */}
-              {!tg && (
-                <Button
-                  variant="secondary"
-                  loading={leaving}
-                  onClick={async () => {
-                    setLeaving(true);
-                    await signOut();
-                  }}
-                >
-                  Chiqish
-                </Button>
-              )}
-            </li>
-          </ul>
-        </Section>
+        </div>
       </div>
 
       {layer?.kind === "name" && (
@@ -367,9 +409,24 @@ export function SettingsScreen() {
           }}
         />
       )}
+      {layer?.kind === "logo" && (
+        <FakeDoor
+          title="Studiya logosi"
+          text="Oʻz logongizni yuklang — u sidebar, smeta PDF va mijozga yuboriladigan hujjatlarda chiqadi. Hozircha standart rasm turibdi. Sizga kerakmi?"
+          voted={logoVoted}
+          onClose={() => setLayer(null)}
+          onVote={async () => {
+            await api("/api/panel/interest", { body: { feature: "logo" } });
+            setLogoVoted(true);
+            setLayer(null);
+            say("Rahmat — tayyor boʻlganda xabar beramiz");
+          }}
+        />
+      )}
       {layer?.kind === "invite" && (
         <InviteDialog
           studioName={studio.name}
+          seat={(members?.length ?? 1) + invites.length + 1}
           onClose={() => {
             setLayer(null);
             api<{ invites: Invite[] }>("/api/panel/invites")
@@ -381,9 +438,10 @@ export function SettingsScreen() {
       )}
       {layer?.kind === "remove" && (
         <ConfirmDialog
-          title={`${layer.member.name.split(" ")[0]} chiqarilsinmi?`}
-          description="Kalendar va buyurtmalarni boshqa koʻrmaydi. Kiritgan toʻlovlari saqlanib qoladi."
+          title={`${layer.member.name.split(" ")[0]}ni jamoadan chiqarasizmi?`}
+          description="U kalendar va buyurtmalarga kira olmay qoladi. U qoʻshgan buyurtmalar va toʻlovlar studiyada qoladi."
           confirm="Chiqarish"
+          cancel="Bekor qilish"
           tone="destructive"
           onClose={() => setLayer(null)}
           onConfirm={async () => {
@@ -394,39 +452,177 @@ export function SettingsScreen() {
           }}
         />
       )}
+      {layer?.kind === "leave" && (
+        <ConfirmDialog
+          title="Jamoani tark etasizmi?"
+          description={`${studio.name} kalendari va buyurtmalariga kirishingiz yopiladi. Siz qoʻshgan buyurtmalar studiyada qoladi.`}
+          confirm="Tark etish"
+          cancel="Bekor qilish"
+          tone="destructive"
+          onClose={() => setLayer(null)}
+          onConfirm={async () => {
+            await api("/api/panel/members/me", { method: "DELETE", body: {} });
+            // full reload: the provider re-reads /me and routes to another studio or onboarding
+            window.location.replace(new URL("/panel", window.location.href).href);
+          }}
+        />
+      )}
       <Toast toast={toast} onDone={() => setToast(null)} />
     </>
   );
 }
 
-function Section({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
-  const id = useId();
+/* In-page nav: the section nearest the top of the viewport is current */
+function useScrollSpy(ids: SectionId[]) {
+  const [active, setActive] = useState<SectionId | null>(null);
+  const key = ids.join(",");
+  useEffect(() => {
+    const els = key
+      .split(",")
+      .filter(Boolean)
+      .map((id) => document.getElementById(`s-${id}`))
+      .filter((e): e is HTMLElement => Boolean(e));
+    if (!els.length) return;
+    const onScroll = () => {
+      const line = 120;
+      let cur = els[0];
+      for (const el of els) if (el.getBoundingClientRect().top - line <= 0) cur = el;
+      // at the very bottom the last section wins even if it never reaches the line
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) cur = els[els.length - 1];
+      setActive(cur.id.slice(2) as SectionId);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [key]);
+  return active;
+}
+
+/* Section: brand title with an 18px Filled icon + a card; `action` sits right of the title */
+function Section({ id, icon, title, action, padded, children }: { id: SectionId; icon: StudioIconName; title: string; action?: ReactNode; padded?: boolean; children: ReactNode }) {
   return (
-    <section className="ds-set-section" aria-labelledby={id}>
+    <section id={`s-${id}`} className="ds-set-section" aria-labelledby={`s-${id}-h`}>
       <div className="ds-set-head">
-        <h2 id={id} className="ds-caps">
+        <h2 id={`s-${id}-h`} className="ds-set-title">
+          <StudioIcon name={icon} variant="Filled" size={18} />
           {title}
         </h2>
         {action}
       </div>
-      {children}
+      <div className="ds-set-card" data-padded={padded || undefined}>
+        {children}
+      </div>
     </section>
   );
 }
 
-/* Desktop: label · value · "Oʻzgartirish"; mobile: the whole row is the button, chevron at the end */
-function EditRow({ label, value, editable, onEdit }: { label: string; value: string; editable: boolean; onEdit(): void }) {
+/* Row: label 184 · value (+ helper) · action. `wide` = label takes the free space (Koʻrinish → Mavzu) */
+function Row({ label, labelId, helper, action, wide, children }: { label: string; labelId?: string; helper?: string; action?: ReactNode; wide?: boolean; children?: ReactNode }) {
   return (
-    <li className="ds-li ds-editrow">
-      <span className="ds-li-label">{label}</span>
-      <span className="ds-li-value">{value}</span>
-      {editable && (
-        <button type="button" className="ds-textbtn ds-li-stretch" onClick={onEdit} aria-label={`${label}ni oʻzgartirish`}>
-          <span className="ds-desktop-only">Oʻzgartirish</span>
-          <StudioIcon name="chevron-right" className="ds-mobile-only" />
-        </button>
+    <div className="ds-row" data-wide={wide || undefined}>
+      <span className="ds-row-label" id={labelId}>
+        {label}
+      </span>
+      {!wide && (
+        <span className="ds-row-value">
+          {children}
+          {helper && <span className="ds-row-help">{helper}</span>}
+        </span>
       )}
-    </li>
+      {action}
+    </div>
+  );
+}
+
+function StudioAvatar() {
+  // eslint-disable-next-line @next/next/no-img-element -- static 80px WebP; Figma Avatar Type=studio until logo upload exists
+  return <img className="ds-avatar" src="/studio/3d/guldasta.webp" alt="" width={40} height={40} />;
+}
+
+/* What a manager can do (Sozlamalar · menejer, Menejer qoʻshish) */
+function Rights({ you }: { you?: boolean }) {
+  return (
+    <ul className="ds-rights">
+      <li>
+        <StudioIcon name="check" size={18} />
+        Kalendar: kun ochish va yopish
+      </li>
+      <li>
+        <StudioIcon name="check" size={18} />
+        Buyurtma va toʻlov qoʻshish
+      </li>
+      <li data-off>
+        <StudioIcon name="lock" size={18} />
+        {you ? "Dashboard, obuna va jamoa — faqat egasida" : "Dashboard, obuna va jamoa koʻrinmaydi"}
+      </li>
+    </ul>
+  );
+}
+
+/* Obuna card (Figma 595:11841): days left first, then the price after the trial and the yearly deal */
+function Plan({ trialEnds }: { trialEnds: string | null }) {
+  const today = useToday(); // Toshkent calendar day; null during SSR
+  const left = trialEnds && today ? Math.round((Date.parse(trialEnds.slice(0, 10)) - Date.parse(today)) / 86_400_000) : null;
+  if (trialEnds && !today) return <span className="ds-skeleton" style={{ height: 120 }} />;
+  const ended = left !== null && left <= 0;
+  return (
+    <>
+      <div className="ds-plan-title">
+        <p className="ds-h2">{left === null ? "Standart tarif" : ended ? "Bepul oy tugadi" : `${left} kun qoldi`}</p>
+        <span className="ds-tag" data-tone={ended ? "due" : "brand"}>
+          {left === null ? "Faol" : ended ? "Tugagan" : "Bepul oy"}
+        </span>
+      </div>
+      <p className="ds-body ds-secondary">
+        {left === null
+          ? `${PRICE_MONTH} soʻm/oy — ${SEATS_INCLUDED} foydalanuvchigacha.`
+          : ended
+            ? "Maʼlumotlaringiz saqlanadi. Davom etish uchun tarifni tanlang."
+            : `${dayMonth(trialEnds!)}gacha bepul. Keyin ${PRICE_MONTH} soʻm/oy — ${SEATS_INCLUDED} foydalanuvchigacha. Maʼlumotlaringiz hech qachon oʻchmaydi`}
+      </p>
+      {left !== null && !ended && (
+        <div className="ds-meter" role="meter" aria-label="Bepul oy" aria-valuemin={0} aria-valuemax={TRIAL_DAYS} aria-valuenow={Math.min(left, TRIAL_DAYS)} aria-valuetext={`${left} kun qoldi`}>
+          <i style={{ width: `${(Math.min(left, TRIAL_DAYS) / TRIAL_DAYS) * 100}%` }} />
+        </div>
+      )}
+      <div className="ds-plan-foot">
+        <span className="ds-body">Yillik toʻlovda 2 oy tekin — {PRICE_YEAR} soʻm/yil</span>
+        <a className="ds-btn" data-style="secondary" data-on-card href="/#narxlar" target="_blank" rel="noreferrer">
+          Tarifni tanlash
+        </a>
+      </div>
+    </>
+  );
+}
+
+/* Theme as a text segment (Figma Inputs/Segment: Yorugʻ / Qorongʻi) */
+function ThemeSegment() {
+  const [theme, setTheme] = useState<PanelTheme>(() => (typeof window === "undefined" ? "light" : storedTheme()));
+  const opts: [PanelTheme, string][] = [
+    ["light", "Yorugʻ"],
+    ["dark", "Qorongʻi"],
+  ];
+  return (
+    <div className="ds-segment" role="radiogroup" aria-labelledby="theme-label" data-on-card>
+      {opts.map(([t, label]) => (
+        <button
+          key={t}
+          type="button"
+          role="radio"
+          aria-checked={theme === t}
+          onClick={() => {
+            setTheme(t);
+            applyTheme(t);
+          }}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -559,29 +755,32 @@ function CategoryDialog({ initial, onClose, onSave }: { initial: Category; onClo
   );
 }
 
-/* A fresh one-time link per open: the token is never stored in clear, so an old link can't be shown again */
-function InviteDialog({ studioName, onClose, say }: { studioName: string; onClose(): void; say(t: string): void }) {
+/* Menejer qoʻshish (Figma 596:12216). A fresh one-time link per open: the token is never stored in clear,
+   so an old link can't be shown again. */
+function InviteDialog({ studioName, seat, onClose, say }: { studioName: string; seat: number; onClose(): void; say(t: string): void }) {
   const { tg } = usePanel();
-  const [link, setLink] = useState<string | null>(null);
+  const [invite, setInvite] = useState<{ link: string; expiresAt: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
   const started = useRef(false);
 
   useEffect(() => {
     if (started.current) return; // StrictMode double-mount must not mint two links
     started.current = true;
-    api<{ link: string }>("/api/panel/invites", { body: {} })
-      .then((r) => setLink(r.link))
+    api<{ link: string; expiresAt: string }>("/api/panel/invites", { body: {} })
+      .then((r) => setInvite(r))
       .catch((e) => setError(e instanceof ApiError ? e.message : "Link yaratib boʻlmadi"));
   }, []);
 
+  const link = invite?.link ?? null;
   async function copy() {
     if (!link) return;
     try {
       await navigator.clipboard.writeText(link);
     } catch {
-      inputRef.current?.select(); // clipboard blocked (some webviews) — leave it selected for a manual copy
+      // clipboard blocked (some webviews) — select the text for a manual copy
+      const el = document.getElementById("invite-link");
+      if (el) window.getSelection()?.selectAllChildren(el);
       return say("Linkni belgilab nusxa oling");
     }
     setCopied(true);
@@ -592,34 +791,51 @@ function InviteDialog({ studioName, onClose, say }: { studioName: string; onClos
   const share = link ? `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}` : "#";
 
   return (
-    <Modal title="Menejer qoʻshish" onClose={onClose}>
-      <p className="ds-body ds-secondary">Linkni menejeringizga yuboring. U bir marta ishlaydi va 7 kun amal qiladi.</p>
+    <Modal title="Menejer qoʻshish" size="lg" onClose={onClose}>
+      <p className="ds-body ds-secondary">Linkni menejerga Telegram’da yuboring. U bosganda bot uni {studioName} jamoasiga qoʻshadi</p>
       {error ? (
         <p className="ds-alert" role="alert">
           {error}
         </p>
       ) : (
         <div className="ds-field">
-          <label htmlFor="invite-link">Taklif linki</label>
+          <span className="ds-label-strong" id="invite-label">
+            Taklif linki
+          </span>
           {link ? (
-            <input id="invite-link" ref={inputRef} className="ds-input" value={link} readOnly onFocus={(e) => e.currentTarget.select()} />
+            <div className="ds-linkbox" role="group" aria-labelledby="invite-label">
+              <span id="invite-link" className="ds-body-medium">
+                {link.replace(/^https?:\/\//, "")}
+              </span>
+              <Button variant="ghost" onClick={copy} icon={<StudioIcon name={copied ? "check" : "copy"} variant={copied ? "Line" : "Filled"} />}>
+                {copied ? "Nusxalandi" : "Nusxalash"}
+              </Button>
+            </div>
           ) : (
-            <span className="ds-skeleton" style={{ height: 52, borderRadius: "var(--ds-radius-md)" }} aria-label="Link tayyorlanmoqda" />
+            <span className="ds-skeleton" style={{ height: 52, borderRadius: "var(--ds-radius-lg)" }} aria-label="Link tayyorlanmoqda" />
           )}
+          <p className="ds-label ds-secondary">Bir martalik · {invite ? `${dayMonth(invite.expiresAt)}gacha amal qiladi` : `${7} kun amal qiladi`} · bekor qilsangiz darhol ishlamay qoladi</p>
         </div>
       )}
-      <div className="ds-modal-foot" data-split>
-        <Button variant="secondary" disabled={!link} onClick={copy} icon={copied ? <StudioIcon name="check" /> : undefined}>
-          {copied ? "Nusxalandi" : "Nusxalash"}
+      <div className="ds-perms">
+        <p className="ds-label-strong">Menejer nima qila oladi</p>
+        <Rights />
+      </div>
+      <div className="ds-modal-foot ds-invfoot">
+        <span className="ds-label ds-secondary">
+          {seat}-oʻrin · {seat <= SEATS_INCLUDED ? "tarifga kiradi" : "+49 000 soʻm/oy"}
+        </span>
+        <Button variant="ghost" onClick={onClose}>
+          Yopish
         </Button>
         {tg ? (
           <Button disabled={!link} icon={<StudioIcon name="send" variant="Filled" />} onClick={() => link && (tg.openTelegramLink ? tg.openTelegramLink(share) : window.open(share, "_blank"))}>
-            Telegram&apos;da yuborish
+            Telegram’da yuborish
           </Button>
         ) : (
           <a className="ds-btn" data-style="primary" data-size="m" href={link ? share : undefined} target="_blank" rel="noreferrer" aria-disabled={!link || undefined}>
             <StudioIcon name="send" variant="Filled" />
-            <span>Telegram&apos;da yuborish</span>
+            <span>Telegram’da yuborish</span>
           </a>
         )}
       </div>

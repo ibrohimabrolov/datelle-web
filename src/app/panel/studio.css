@@ -246,7 +246,6 @@ img.ds-avatar { object-fit: cover; background: var(--ds-bg-muted); }
 .ds-seg button:disabled { color: var(--ds-text-disabled); cursor: not-allowed; }
 .ds-seg button:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
 .studio[data-platform="telegram"] .ds-auth-tools { display: none; } /* Telegram owns the Mini App theme */
-.ds-li .ds-seg { background: var(--ds-bg-muted); } /* Sozlamalar row sits on bg/surface — one step darker so the white active pill reads */
 .ds-auth-alt { align-self: flex-start; font: var(--ds-type-label-strong); color: var(--ds-text-brand); padding: 3px 0; border-radius: var(--ds-radius-sm); }
 .ds-auth-alt:hover { text-decoration: underline; text-underline-offset: 3px; }
 .ds-auth-alt:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
@@ -838,49 +837,94 @@ textarea.ds-input { height: auto; min-height: 48px; padding-top: 13px; padding-b
 }
 
 /* ── S6 · Sozlamalar (Figma 22:10541 / 7:548): caps head 16 + gap 12, grouped list cards, rows 60/72 ── */
-.ds-settings { display: flex; flex-direction: column; gap: var(--ds-space-24); max-width: 720px; padding-bottom: var(--ds-space-32); }
-.ds-set-section { display: flex; flex-direction: column; gap: var(--ds-space-12); }
-.ds-set-head { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-16); min-height: 16px; }
-.ds-set-head .ds-caps { color: var(--ds-text-secondary); }
-.ds-list { list-style: none; margin: 0; padding: 0; background: var(--ds-bg-surface); border-radius: var(--ds-radius-xl); overflow: hidden; }
-.ds-li { position: relative; display: flex; align-items: center; gap: var(--ds-space-16); min-height: 60px; padding: var(--ds-space-12) 20px; }
-.ds-li[data-tall] { min-height: 68px; }
-.ds-li + .ds-li { box-shadow: inset 0 1px 0 var(--ds-border-subtle); }
-.ds-li-main { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; text-align: left; }
-.ds-li-title, .ds-li-label { font: var(--ds-type-body-medium); color: var(--ds-text-primary); }
-.ds-li-sub { font: var(--ds-type-label-default); color: var(--ds-text-secondary); }
-.ds-li-value { font: var(--ds-type-body-default); color: var(--ds-text-secondary); white-space: nowrap; }
-.ds-editrow .ds-li-label { flex: 1; }
-/* a button that turns the whole row into the hit target (mobile rows, switcher, "Menejer qoʻshish") */
-.ds-li:has(> .ds-li-cover) { padding: 0; }
-.ds-li-cover { display: flex; align-items: center; gap: var(--ds-space-16); width: 100%; min-height: 60px; padding: var(--ds-space-12) 20px; text-align: left; }
-.ds-li-cover:hover { background: var(--ds-state-hover); }
-.ds-li-cover:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--ds-border-focus); }
-.ds-li-cover.ds-brand .ds-li-title { color: var(--ds-text-brand); font: var(--ds-type-body-strong); }
-.ds-li-cover svg { flex: none; }
-.ds-avatar[data-tone="muted"] { background: var(--ds-bg-muted); color: var(--ds-icon-muted); }
+/* ── Sozlamalar v2 (Figma 06 · Sozlamalar 593:11522: egasi 595:11527, menejer 596:11644) ──
+   Section = brand title (18 Filled icon + H3) + card; Row = label 184 · value (+ helper) · action, 72 min, dividers.
+   "On card" fills use --ds-bg-canvas: grey on the desktop white card, white on the mobile grey card. */
+.ds-set { display: flex; flex-direction: column; gap: var(--ds-space-24); padding-bottom: var(--ds-space-32); }
+.ds-set-nav { display: none; }
+.ds-set-content { display: flex; flex-direction: column; gap: var(--ds-space-32); flex: 1; min-width: 0; }
+.ds-set-section { display: flex; flex-direction: column; gap: var(--ds-space-12); scroll-margin-top: var(--ds-space-24); }
+.ds-set-head { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-16); min-height: 24px; }
+.ds-set-head .ds-btn[data-style="secondary"] { box-shadow: none; } /* Figma: white pill on the page, no stroke */
+.ds-set-title { display: flex; align-items: center; gap: var(--ds-space-12); font: var(--ds-type-heading-h3); letter-spacing: var(--ds-type-heading-h3-tracking); color: var(--ds-text-brand); }
+.ds-set-title svg { flex: none; }
+.ds-set-card { display: flex; flex-direction: column; padding: 0 var(--ds-space-16); border-radius: var(--ds-radius-xl); background: var(--ds-bg-surface); }
+.ds-set-card[data-padded] { gap: var(--ds-space-16); padding: var(--ds-space-20) var(--ds-space-16); }
+.ds-row { position: relative; display: flex; align-items: center; gap: var(--ds-space-12); min-height: 72px; padding: var(--ds-space-16) 0; }
+.ds-set-card > .ds-row + .ds-row, .ds-set-card [role="radiogroup"] > .ds-row + .ds-row { border-top: 1px solid var(--ds-border-subtle); }
+.ds-row-label { flex: none; font: var(--ds-type-body-medium); color: var(--ds-text-primary); }
+.ds-row[data-wide] .ds-row-label { flex: 1; }
+.ds-row-value { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; font: var(--ds-type-body-default); color: var(--ds-text-primary); overflow-wrap: anywhere; }
+.ds-row-help { font: var(--ds-type-label-default); color: var(--ds-text-secondary); }
+.ds-row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; text-align: left; }
+.ds-row-title { font: var(--ds-type-body-medium); color: var(--ds-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-row-sub { font: var(--ds-type-label-default); color: var(--ds-text-secondary); }
+.ds-row.ds-row-stack { flex-direction: column; align-items: stretch; gap: var(--ds-space-8); }
+.ds-row-button { width: 100%; }
+.ds-row-button::before { content: ""; position: absolute; inset: 0 calc(-1 * var(--ds-space-16)); border-radius: var(--ds-radius-md); transition: background-color var(--ds-duration-fast) var(--ds-ease-out); }
+.ds-row-button:hover::before { background: var(--ds-state-hover); }
+.ds-row-button:focus-visible { box-shadow: none; }
+.ds-row-button:focus-visible::before { box-shadow: inset 0 0 0 2px var(--ds-border-focus); }
+.ds-row .ds-menu-wrap { flex: none; }
+.ds-avatar[data-tone="muted"] { background: var(--ds-bg-canvas); color: var(--ds-icon-default); } /* Figma Icon tile on the card */
 
-.ds-textbtn { font: var(--ds-type-label-strong); color: var(--ds-text-brand); padding: var(--ds-space-8) 0; border-radius: var(--ds-radius-sm); white-space: nowrap; }
-.ds-textbtn[data-tone="danger"] { color: var(--ds-text-danger); }
-.ds-textbtn:hover { text-decoration: underline; text-underline-offset: 3px; }
-.ds-textbtn:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
-/* mobile: the chevron button stretches over the whole row (Figma 7:548 rows are tappable) */
-@media (max-width: 1023.98px) {
-  .ds-li-stretch { display: grid; place-items: center; color: var(--ds-icon-muted); padding: 0; }
-  .ds-li-stretch::after { content: ""; position: absolute; inset: 0; }
-  .ds-li-stretch:hover { text-decoration: none; }
-  .ds-li:has(.ds-li-stretch):hover { background: var(--ds-state-hover); }
-  .ds-li:has(.ds-li-stretch:focus-visible) { box-shadow: inset 0 0 0 2px var(--ds-border-focus); }
-  .ds-li-stretch:focus-visible { box-shadow: none; }
-}
+.ds-btn[data-style="ghost"][data-tone="danger"] { color: var(--ds-text-danger); }
+.ds-btn[data-style="danger-subtle"] { background: var(--ds-status-danger-bg); color: var(--ds-text-danger); }
+.ds-btn[data-style="danger-subtle"]:hover { background: color-mix(in srgb, var(--ds-status-danger-bg) 85%, var(--ds-text-danger)); }
+.ds-btn[data-style="secondary"][data-on-card] { background: var(--ds-bg-canvas); box-shadow: none; }
+.ds-btn[data-style="secondary"][data-on-card]:hover { background: var(--ds-bg-surface-hover); }
+
+/* Obuna (Figma 595:11841) */
+.ds-plan-title { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ds-space-8); }
+.ds-meter { height: 6px; border-radius: var(--ds-radius-full); background: var(--ds-bg-muted); overflow: hidden; }
+.ds-meter i { display: block; height: 100%; border-radius: var(--ds-radius-full); background: var(--ds-brand-solid); }
+.ds-plan-foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ds-space-12) var(--ds-space-16); padding-top: var(--ds-space-16); border-top: 1px solid var(--ds-border-subtle); }
+.ds-plan-foot > span { flex: 1 1 200px; }
+
+/* Manager rights (Sozlamalar · menejer, Menejer qoʻshish) */
+.ds-rights { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ds-space-8); }
+.ds-rights li { display: flex; align-items: center; gap: var(--ds-space-8); font: var(--ds-type-body-default); color: var(--ds-text-primary); }
+.ds-rights li[data-off] { color: var(--ds-text-secondary); }
+.ds-rights svg { flex: none; }
+.ds-perms { display: flex; flex-direction: column; gap: var(--ds-space-8); padding: var(--ds-space-16); border-radius: var(--ds-radius-lg); background: var(--ds-bg-subtle); }
+.ds-linkbox { display: flex; align-items: center; gap: var(--ds-space-12); min-height: 52px; padding: var(--ds-space-4) var(--ds-space-4) var(--ds-space-4) var(--ds-space-16); border-radius: var(--ds-radius-lg); background: var(--ds-bg-surface); }
+.ds-linkbox > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; user-select: all; }
+.ds-invfoot > span:first-child { text-align: center; }
+
+/* Theme segment on a card (Figma Inputs/Segment: container on-card pill, pad 4; selected = inverse) */
+.ds-segment[data-on-card] { margin: 0; padding: var(--ds-space-4); gap: 0; background: var(--ds-bg-canvas); }
+.ds-segment[data-on-card] button { height: 36px; padding: 0 var(--ds-space-12); background: none; color: var(--ds-text-secondary); font: var(--ds-type-body-medium); }
+.ds-segment[data-on-card] button[aria-checked="true"] { background: var(--ds-bg-inverse); color: var(--ds-text-on-inverse); font: var(--ds-type-body-strong); }
+
 @media (min-width: 1024px) {
-  .ds-editrow .ds-li-label { flex: none; width: 200px; }
-  .ds-editrow .ds-li-value { flex: 1; color: var(--ds-text-secondary); }
+  .ds-set { flex-direction: row; align-items: flex-start; gap: var(--ds-space-16); }
+  /* SubNav 275 incl. 40 right padding, items pad 8/12 r16; active = white card pill */
+  .ds-set-nav { position: sticky; top: calc(var(--ds-space-12) + var(--ds-space-24)); display: flex; flex-direction: column; gap: var(--ds-space-8); flex: none; width: 275px; padding-right: var(--ds-space-40); }
+  .ds-set-nav a { padding: var(--ds-space-8) var(--ds-space-12); border-radius: var(--ds-radius-lg); font: var(--ds-type-body-medium); color: var(--ds-text-secondary); transition: background-color var(--ds-duration-fast) var(--ds-ease-out); }
+  .ds-set-nav a:hover { background: var(--ds-state-hover); }
+  .ds-set-nav a[aria-current] { background: var(--ds-bg-surface); color: var(--ds-text-primary); }
+  .ds-set-card { padding: 0 var(--ds-space-24); }
+  .ds-set-card[data-padded] { padding: var(--ds-space-24); }
+  .ds-row { gap: var(--ds-space-24); }
+  .ds-row:has(> .ds-avatar, > .ds-row-text) { gap: var(--ds-space-12); }
+  .ds-row-label { width: 184px; }
+  .ds-row[data-wide] .ds-row-label { width: auto; }
+  .ds-modal[data-size="lg"] { width: 560px; }
+  .ds-invfoot { align-items: center; }
+  .ds-invfoot > span:first-child { margin-right: auto; text-align: left; }
+}
+/* Mobile: label over value on the left, the action on the right (no room for three columns at 358) */
+@media (max-width: 1023.98px) {
+  .ds-row:has(> .ds-row-label):not([data-wide]) { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--ds-space-12); row-gap: 2px; }
+  .ds-row:has(> .ds-row-label):not([data-wide]) > :nth-child(3) { grid-column: 2; grid-row: 1 / span 2; }
+  .ds-row-value { color: var(--ds-text-secondary); }
 }
 
 /* Tag (Figma StatusPill 24h, pad 0 8, label-strong) */
 .ds-tag { display: inline-flex; align-items: center; height: 24px; padding: 0 var(--ds-space-8); border-radius: var(--ds-radius-full); font: var(--ds-type-label-strong); white-space: nowrap; }
 .ds-tag[data-tone="brand"], .ds-tag[data-tone="plan"] { background: var(--ds-brand-subtle); color: var(--ds-text-brand); }
+.ds-tag[data-tone="neutral"] { background: var(--ds-bg-canvas); color: var(--ds-text-secondary); }
+.ds-tag[data-tone="due"] { background: var(--ds-money-due-bg); color: var(--ds-money-due); }
 
 /* Stepper S (Figma 124×44: pad 4, buttons 36) */
 .ds-stepper[data-size="s"] { gap: var(--ds-space-4); background: var(--ds-bg-subtle); } /* Figma Stepper: bg/subtle track, white buttons */
@@ -897,14 +941,6 @@ textarea.ds-input { height: auto; min-height: 48px; padding-top: 13px; padding-b
 .ds-switch:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
 @media (prefers-reduced-motion: reduce) { .ds-switch, .ds-switch::after { transition: none; } }
 
-/* Obuna: plain row on desktop, brand card on mobile (Figma 7:548) */
-.ds-plan { display: flex; align-items: center; gap: var(--ds-space-16); min-height: 72px; padding: var(--ds-space-12) 20px; border-radius: var(--ds-radius-xl); background: var(--ds-bg-surface); }
-@media (max-width: 1023.98px) {
-  .ds-plan { background: var(--ds-brand-solid); color: var(--ds-text-on-brand); padding: 20px; }
-  .ds-plan .ds-li-title { color: var(--ds-text-on-brand); font: var(--ds-type-body-strong); }
-  .ds-plan .ds-li-sub { color: var(--ds-text-on-brand); }
-  .ds-plan .ds-tag { background: var(--ds-bg-elevated); color: var(--ds-text-brand); }
-}
 .ds-modal-foot[data-split] { flex-direction: column-reverse; }
 @media (min-width: 1024px) { .ds-modal-foot[data-split] { flex-direction: row; } .ds-modal-foot[data-split] > * { flex: 1; } }
 a.ds-btn[aria-disabled] { pointer-events: none; opacity: 0.5; }

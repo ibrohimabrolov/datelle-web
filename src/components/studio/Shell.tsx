@@ -4,10 +4,9 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { api } from "@/lib/api";
-import { Button } from "./Button";
 import { useDataVersion } from "./data";
 import { StudioIcon, type StudioIconName } from "./icons";
-import { Modal } from "./Modal";
+import { FakeDoor } from "./FakeDoor";
 import { PANEL, usePanel, useStudio, type Role } from "./PanelProvider";
 import { Toast, type ToastMsg } from "./Toast";
 import { LogoMark } from "@/components/ui/Logo";
@@ -145,7 +144,8 @@ export function Shell({ children }: { children: ReactNode }) {
 
       {door && (
         <FakeDoor
-          item={door}
+          title={door.title}
+          text={door.text}
           voted={voted.includes(door.feature)}
           onClose={() => setDoor(null)}
           onVote={async () => {
@@ -174,45 +174,6 @@ export function Shell({ children }: { children: ReactNode }) {
         })}
       </nav>}
     </div>
-  );
-}
-
-/* Figma 07 · Tez orada · dialog: title + pitch, "Yopish" / "Menga kerak" */
-function FakeDoor({ item, voted, onClose, onVote }: { item: Soon; voted: boolean; onClose(): void; onVote(): Promise<void> }) {
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-  return (
-    <Modal title={item.title} size="sm" onClose={onClose}>
-      <p className="ds-body ds-secondary">{voted ? "Soʻrovingiz qabul qilingan — tayyor boʻlganda Telegram orqali xabar beramiz." : item.text}</p>
-      {err && (
-        <p className="ds-alert" role="alert">
-          {err}
-        </p>
-      )}
-      <div className="ds-modal-foot">
-        <Button variant="ghost" onClick={onClose} disabled={busy} data-autofocus={voted || undefined}>
-          Yopish
-        </Button>
-        {!voted && (
-          <Button
-            loading={busy}
-            data-autofocus
-            onClick={async () => {
-              setBusy(true);
-              setErr(null);
-              try {
-                await onVote();
-              } catch (e) {
-                setErr(e instanceof Error ? e.message : "Xatolik yuz berdi");
-                setBusy(false);
-              }
-            }}
-          >
-            Menga kerak
-          </Button>
-        )}
-      </div>
-    </Modal>
   );
 }
 
