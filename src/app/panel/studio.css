@@ -112,40 +112,76 @@
 .ds-main-inner { max-width: var(--ds-layout-content-max); margin: 0 auto; display: flex; flex-direction: column; gap: var(--ds-layout-stack-gap); }
 .ds-page-head { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-16); min-height: 44px; }
 
+/* Desktop shell (Figma S* · desktop frames, 2026-11-24): brand gradient page, transparent Sidebar 240
+   with white nav, content on a bg/surface card (radius xl) inset 12 top/right/bottom.
+   Inside the card the planes swap — cards that were bg/surface on a white page are now bg/canvas
+   on a bg/surface page — so every component keeps its token and the whole panel follows Figma.
+   Overlays/modals rendered inside the card restore the theme's own planes. */
 @media (min-width: 1024px) {
-  .ds-shell { display: grid; grid-template-columns: var(--ds-layout-sidebar-width) minmax(0, 1fr); }
-  .ds-sidebar {
-    position: sticky; top: 0; height: 100dvh;
-    display: flex; flex-direction: column; justify-content: space-between;
-    padding: var(--ds-space-20) var(--ds-space-16);
-    background: var(--ds-bg-surface); box-shadow: inset -1px 0 0 var(--ds-border-subtle);
+  .ds-shell {
+    display: grid; grid-template-columns: var(--ds-layout-sidebar-width) minmax(0, 1fr); align-items: start;
+    padding: var(--ds-space-12) var(--ds-space-12) var(--ds-space-12) 0;
+    /* Figma frame fill: linear green/700 → green/900 (55%) → green/950, bottom-left → top-right */
+    background: linear-gradient(69deg, var(--ds-green-700) 7%, var(--ds-green-900) 54%, var(--ds-green-950) 93%) fixed;
+    --ds-plane-canvas: var(--ds-bg-canvas);
+    --ds-plane-surface: var(--ds-bg-surface);
   }
-  .ds-main { padding: var(--ds-space-32) var(--ds-layout-gutter) var(--ds-space-48); }
+  .ds-sidebar {
+    position: sticky; top: var(--ds-space-12); height: calc(100dvh - 2 * var(--ds-space-12)); overflow-y: auto; scrollbar-width: none;
+    display: flex; flex-direction: column; justify-content: space-between; gap: var(--ds-space-24);
+    padding: var(--ds-space-20) var(--ds-space-16);
+    color: var(--ds-text-on-brand);
+    --ds-logo-petal: var(--ds-neutral-0); /* Brand/Mark on brand: white petals, coral accent */
+  }
+  .ds-main {
+    min-height: calc(100dvh - 2 * var(--ds-space-12));
+    padding: var(--ds-space-24) var(--ds-space-20) var(--ds-space-48);
+    border-radius: var(--ds-radius-xl);
+    background: var(--ds-plane-surface);
+    --ds-bg-canvas: var(--ds-plane-surface);
+    --ds-bg-surface: var(--ds-plane-canvas);
+  }
+  .ds-main :is(.ds-overlay, .ds-modal) { --ds-bg-canvas: var(--ds-plane-canvas); --ds-bg-surface: var(--ds-plane-surface); }
   .ds-tabbar, .ds-mobile-only { display: none !important; }
 }
 @media (max-width: 1023.98px) { .ds-desktop-only { display: none !important; } }
 
 .ds-brandline { display: flex; align-items: center; gap: var(--ds-space-8); padding: 0 var(--ds-space-8) var(--ds-space-32); }
 .ds-brandline small { display: block; font: var(--ds-type-label-default); color: var(--ds-text-secondary); }
-.ds-navlabel { padding: 0 var(--ds-space-12) var(--ds-space-8); color: var(--ds-text-tertiary); }
-.ds-nav { display: flex; flex-direction: column; gap: var(--ds-space-4); }
 
-/* NavItem (Figma NavItem: 40h, radius 12, pad 0 12, gap 12; active = bg/elevated + Filled icon) */
+/* Navigation/Sidebar (8:230): Top = Logo · Nav group · Nav group "Tez orada", gap 32; group = label + nav, gap 8 */
+.ds-sidebar-top { display: flex; flex-direction: column; gap: var(--ds-space-32); }
+.ds-sidebar .ds-brandline { padding: 0 var(--ds-space-8); }
+.ds-navgroup { display: flex; flex-direction: column; gap: var(--ds-space-8); }
+.ds-navlabel { padding-left: var(--ds-space-12); color: var(--ds-text-on-brand); opacity: 0.8; }
+.ds-nav { display: flex; flex-direction: column; gap: var(--ds-space-8); list-style: none; margin: 0; padding: 0; }
+.ds-sidebar .ds-skeleton[data-on="brand"] { background: var(--ds-alpha-white-16); }
+
+/* Navigation/NavItem (3:211): 40h, radius 12, pad 0 12, gap 12, Filled 20 icons.
+   Idle = white on brand · hover = white 8% · active = bg/elevated pill, text/primary semibold.
+   State=soon = text/on-media-muted, icon at 56%; soon-voted adds ✓ icon/on-brand-accent. */
 .ds-navitem {
-  display: flex; align-items: center; gap: var(--ds-space-12);
+  display: flex; align-items: center; gap: var(--ds-space-12); width: 100%;
   height: 40px; padding: 0 var(--ds-space-12); border-radius: var(--ds-radius-md);
-  font: var(--ds-type-body-medium); color: var(--ds-text-secondary);
+  font: var(--ds-type-body-medium); color: var(--ds-text-on-brand); text-align: left;
   transition: background-color var(--ds-duration-fast) var(--ds-ease-out);
 }
-.ds-navitem svg { color: var(--ds-icon-muted); flex: none; }
-.ds-navitem:hover { background: var(--ds-state-hover); }
+.ds-navitem svg { color: var(--ds-icon-on-brand); flex: none; }
+.ds-navitem:hover { background: var(--ds-alpha-white-8); }
+.ds-navitem:focus-visible { outline: 2px solid var(--ds-neutral-0); outline-offset: 2px; box-shadow: none; }
 .ds-navitem[aria-current="page"] { background: var(--ds-bg-elevated); color: var(--ds-text-primary); font: var(--ds-type-body-strong); }
 .ds-navitem[aria-current="page"] svg { color: var(--ds-icon-default); }
+.ds-navitem[data-soon] { color: var(--ds-text-on-media-muted); }
+.ds-navitem[data-soon] > svg:first-child { opacity: 0.56; }
+.ds-navitem .ds-navcheck { color: var(--ds-icon-on-brand-accent); }
 
-.ds-studiocard { display: flex; align-items: center; gap: var(--ds-space-12); padding: var(--ds-space-12) var(--ds-space-8); border-radius: var(--ds-radius-md); }
-.ds-studiocard:hover { background: var(--ds-state-hover); }
-.ds-studiocard > div { min-width: 0; }
-.ds-studiocard strong { display: block; font: var(--ds-type-body-strong); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Sidebar · Studio: bg/subtle, pad 12, radius 12, gap 12 · Avatar 40 · name Body/Medium · role Label tertiary */
+.ds-studiocard { display: flex; align-items: center; gap: var(--ds-space-12); padding: var(--ds-space-12); border-radius: var(--ds-radius-md); background: var(--ds-bg-subtle); color: var(--ds-text-primary); flex: none; transition: background-color var(--ds-duration-fast) var(--ds-ease-out); }
+.ds-studiocard:hover { background: var(--ds-bg-elevated); }
+.ds-studiocard:focus-visible { outline: 2px solid var(--ds-neutral-0); outline-offset: 2px; box-shadow: none; }
+.ds-studiocard > div { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ds-studiocard strong { display: block; font: var(--ds-type-body-medium); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+img.ds-avatar { object-fit: cover; background: var(--ds-bg-muted); }
 .ds-avatar {
   display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: var(--ds-radius-full);
   background: var(--ds-brand-subtle); color: var(--ds-text-brand); font: var(--ds-type-label-strong);
@@ -385,9 +421,12 @@
 
 /* DayCell Large (desktop, Figma 3:79: 148×112, r16, pad 12, gap 8, event chips r8) */
 @media (min-width: 1024px) {
-  .ds-gridcard { background: none; padding: 0; border-radius: 0; }
-  .ds-grid { gap: var(--ds-space-8); }
-  .ds-grid [role="row"] { gap: var(--ds-space-8); }
+  /* Figma S3 · Kalendar (137:16383): Meta bar bg/canvas r12 pad 8/16 · Month grid bg/canvas r24 pad 16, gap 12.
+     Inside the white grid card the planes revert, so DayCells sit grey (bg/surface) with white chips. */
+  .ds-cal-meta { padding: var(--ds-space-8) var(--ds-space-16); border-radius: var(--ds-radius-md); background: var(--ds-plane-canvas); }
+  .ds-gridcard { padding: var(--ds-space-16); border-radius: var(--ds-radius-xl); background: var(--ds-plane-canvas); --ds-bg-canvas: var(--ds-plane-canvas); --ds-bg-surface: var(--ds-plane-surface); }
+  .ds-grid { gap: var(--ds-space-12); }
+  .ds-grid [role="row"] { gap: var(--ds-space-12); }
   .ds-grid .ds-wd { text-align: left; padding: 0 var(--ds-space-12); }
   .ds-day {
     justify-self: stretch; width: auto; height: 112px; align-items: stretch; justify-content: flex-start; gap: var(--ds-space-8);
@@ -418,6 +457,14 @@
   .ds-day[data-outside] { visibility: hidden; }
 }
 .ds-day[data-outside] { pointer-events: none; }
+@media (min-width: 1024px) and (max-width: 1279.98px) { /* 1024–1279: Figma 1440 gaps would squeeze "25 Bugun" and weekday names */
+  .ds-gridcard { padding: var(--ds-space-12); }
+  .ds-grid, .ds-grid [role="row"] { gap: var(--ds-space-8); }
+  .ds-grid .ds-wd { padding: 0 var(--ds-space-8); }
+  .ds-grid .ds-wd abbr.ds-mobile-only { display: inline !important; } /* DU SE CH… instead of clipped full names */
+  .ds-grid .ds-wd span.ds-desktop-only { display: none !important; }
+}
+
 @media (max-width: 1023.98px) { .ds-day .ds-chip, .ds-day .ds-cap, .ds-day .ds-todaytag { display: none; } }
 .ds-todaytag { font: var(--ds-type-label-strong); color: var(--ds-text-brand); }
 
@@ -691,7 +738,7 @@ textarea.ds-input { height: auto; min-height: 48px; padding-top: 13px; padding-b
 .ds-timeline li > div { display: flex; flex-direction: column; gap: 2px; }
 
 /* NavItem Count (Figma: money/due on money/due-bg pill) */
-.ds-navcount { display: grid; place-items: center; min-width: 24px; height: 24px; padding: 0 var(--ds-space-8); border-radius: var(--ds-radius-full); background: var(--ds-money-due-bg); color: var(--ds-money-due); font: var(--ds-type-label-strong); font-variant-numeric: tabular-nums; }
+.ds-navcount { display: grid; place-items: center; min-width: 22px; height: 22px; padding: 0 var(--ds-space-8); border-radius: var(--ds-radius-full); background: var(--ds-money-due-bg); color: var(--ds-money-due); font: var(--ds-type-label-caps); letter-spacing: var(--ds-type-label-caps-tracking); font-variant-numeric: tabular-nums; } /* Figma NavItem · Badge 22 */
 
 /* ═════════ Phase 5 · Dashboard ═════════ */
 .ds-kpis { display: grid; grid-template-columns: 1fr; gap: var(--ds-space-12); }
@@ -836,7 +883,7 @@ textarea.ds-input { height: auto; min-height: 48px; padding-top: 13px; padding-b
 .ds-tag[data-tone="brand"], .ds-tag[data-tone="plan"] { background: var(--ds-brand-subtle); color: var(--ds-text-brand); }
 
 /* Stepper S (Figma 124×44: pad 4, buttons 36) */
-.ds-stepper[data-size="s"] { gap: var(--ds-space-4); background: none; }
+.ds-stepper[data-size="s"] { gap: var(--ds-space-4); background: var(--ds-bg-subtle); } /* Figma Stepper: bg/subtle track, white buttons */
 .ds-stepper[data-size="s"] button { width: 36px; height: 36px; display: grid; place-items: center; background: var(--ds-bg-elevated); }
 .ds-stepper[data-size="s"] button:hover:not(:disabled) { background: var(--ds-bg-surface-hover); }
 .ds-stepper[data-size="s"] output { width: 36px; }
