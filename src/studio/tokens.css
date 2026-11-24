@@ -10,7 +10,9 @@
   /* Primitives */
   --ds-neutral-0: #ffffff;
   --ds-neutral-50: #f7f7f8;
+  --ds-neutral-75: #f5f5f7;
   --ds-neutral-100: #f1f1f3;
+  --ds-neutral-150: #eeeef1;
   --ds-neutral-200: #e4e4e7;
   --ds-neutral-300: #d1d1d6;
   --ds-neutral-400: #a1a1a8;
@@ -108,8 +110,8 @@
 
   /* Semantic colors · Light */
   --ds-bg-canvas: var(--ds-neutral-0);
-  --ds-bg-surface: var(--ds-neutral-100);
-  --ds-bg-subtle: var(--ds-neutral-100);
+  --ds-bg-surface: var(--ds-neutral-75);
+  --ds-bg-subtle: var(--ds-neutral-75);
   --ds-bg-inverse: var(--ds-neutral-950);
   --ds-bg-elevated: var(--ds-neutral-0);
   --ds-bg-overlay: var(--ds-alpha-black-32);
@@ -125,6 +127,7 @@
   --ds-text-placeholder: var(--ds-neutral-600);
   --ds-text-disabled: var(--ds-neutral-400);
   --ds-text-on-brand: var(--ds-neutral-0);
+  --ds-text-on-media-muted: #ffffffcc; /* Figma text/on-media-muted (both modes) */
   --ds-text-on-danger: var(--ds-neutral-0);
   --ds-text-on-inverse: var(--ds-neutral-0);
   --ds-text-on-inverse-success: var(--ds-green-300);
@@ -159,6 +162,7 @@
   --ds-icon-disabled: var(--ds-neutral-300);
   --ds-icon-inverse: var(--ds-neutral-0);
   --ds-icon-on-brand: var(--ds-neutral-0);
+  --ds-icon-on-brand-accent: var(--ds-green-300); /* Figma icon/on-brand-accent (both modes) */
   --ds-icon-brand: var(--ds-green-700);
   --ds-icon-success: var(--ds-green-600);
   --ds-icon-warning: var(--ds-amber-600);
@@ -594,7 +598,7 @@
  * Brand, money, day and event colors stay ours; only surfaces/text/links follow the user's Telegram theme. */
 .studio[data-platform="telegram"] {
   --ds-bg-canvas: var(--tg-theme-bg-color, var(--ds-neutral-0));
-  --ds-bg-surface: var(--tg-theme-secondary-bg-color, var(--ds-neutral-100));
+  --ds-bg-surface: var(--tg-theme-secondary-bg-color, var(--ds-neutral-75));
   --ds-bg-elevated: var(--tg-theme-section-bg-color, var(--ds-neutral-0));
   --ds-text-primary: var(--tg-theme-text-color, var(--ds-neutral-950));
   --ds-text-tertiary: var(--tg-theme-hint-color, var(--ds-neutral-600));

@@ -1014,3 +1014,31 @@ describe("invite through the bot link — invitee already owns a studio", () => 
     assert.match((await startText(multiTg, `/start inv_${"x".repeat(24)}`)).text, /notoʻgʻri/);
   });
 });
+
+describe("tez orada — Menga kerak", () => {
+  test("vote is per member + studio, idempotent, validated, CSRF-protected", async () => {
+    const owner = new Client();
+    await owner.devLogin(tgId(), "Owner");
+    const studioId = (await owner.req("/api/panel/onboarding", { body: { name: "Interest Studio", category: "dekor", dailyCapacity: 3 } })).json.studio.id;
+    const manager = new Client();
+    const m = (await manager.devLogin(tgId(), "Menejer")).json.user;
+    await pool.query("insert into studio_members (studio_id, user_id, role) values ($1, $2, 'manager')", [studioId, m.id]);
+
+    assert.equal((await new Client().req("/api/panel/interest")).status, 401);
+    assert.deepEqual((await owner.req("/api/panel/interest")).json.features, []);
+    assert.equal((await owner.req("/api/panel/interest", { body: { feature: "rekvizit" }, origin: "https://evil.example" })).status, 403);
+    assert.equal((await owner.req("/api/panel/interest", { body: { feature: "kosmos" } })).status, 422);
+
+    assert.deepEqual((await owner.req("/api/panel/interest", { body: { feature: "rekvizit" } })).json.features, ["rekvizit"]);
+    assert.deepEqual((await owner.req("/api/panel/interest", { body: { feature: "rekvizit" } })).json.features, ["rekvizit"]);
+    // the manager's own vote is separate
+    assert.deepEqual((await manager.req("/api/panel/interest")).json.features, []);
+    assert.equal((await manager.req("/api/panel/interest", { body: { feature: "xarajatlar" } })).status, 200);
+
+    const { rows } = await pool.query("select entity_id, action, diff->>'role' as role from studio_events where studio_id = $1 and entity = 'interest' order by created_at", [studioId]);
+    assert.deepEqual(rows, [
+      { entity_id: "rekvizit", action: "vote", role: "owner" },
+      { entity_id: "xarajatlar", action: "vote", role: "manager" },
+    ]);
+  });
+});

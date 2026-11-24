@@ -4,9 +4,12 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { api } from "@/lib/api";
+import { Button } from "./Button";
 import { useDataVersion } from "./data";
 import { StudioIcon, type StudioIconName } from "./icons";
+import { Modal } from "./Modal";
 import { PANEL, usePanel, useStudio, type Role } from "./PanelProvider";
+import { Toast, type ToastMsg } from "./Toast";
 import { LogoMark } from "@/components/ui/Logo";
 
 type NavDef = { href: string; label: string; icon: StudioIconName; roles: Role[] };
@@ -21,13 +24,14 @@ const SETTINGS: NavDef = { href: `${PANEL}/sozlamalar`, label: "Sozlamalar", ico
 /* Mobile tab order puts the daily tool first */
 const TAB_ORDER = ["kalendar", "buyurtmalar", "dashboard"];
 
-const initials = (name: string) =>
-  name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0]!.toUpperCase())
-    .join("");
+/* Figma Sidebar · "Tez orada" (NavItem State=soon / soon-voted) + 07 · Tez orada (fake door dialog).
+   Desktop only — the mobile TabBar has no room for them. */
+type Soon = { feature: "rekvizit" | "jamoa-jadvali" | "xarajatlar"; label: string; icon: StudioIconName; title: string; text: string };
+const SOON: Soon[] = [
+  { feature: "rekvizit", label: "Rekvizit", icon: "box", title: "Rekvizit hisobi", text: "Vaza, arka va bezaklar qaysi tadbirga ketgani va qachon qaytishini bir joyda kuzating. Sizga kerakmi?" },
+  { feature: "jamoa-jadvali", label: "Jamoa jadvali", icon: "users", title: "Jamoa jadvali", text: "Kim qaysi tadbirda ishlashini taqsimlang — har bir xodim oʻz vazifasini botda koʻradi. Sizga kerakmi?" },
+  { feature: "xarajatlar", label: "Xarajatlar", icon: "receipt", title: "Xarajatlar", text: "Gul, transport va ish haqini tadbirga bogʻlab, har bir buyurtmaning sof foydasini koʻring. Sizga kerakmi?" },
+];
 
 export function Shell({ children }: { children: ReactNode }) {
   const path = usePathname();
@@ -64,35 +68,95 @@ export function Shell({ children }: { children: ReactNode }) {
   }, [studio?.id, version]);
   const tabs = [...items].sort((a, b) => TAB_ORDER.indexOf(a.href.split("/").pop()!) - TAB_ORDER.indexOf(b.href.split("/").pop()!));
 
+  // "Tez orada" votes of this member in this studio (server-side, so they survive devices)
+  const [voted, setVoted] = useState<Soon["feature"][]>([]);
+  const [door, setDoor] = useState<Soon | null>(null);
+  const [toast, setToast] = useState<ToastMsg | null>(null);
+  useEffect(() => {
+    if (!studio?.id) return;
+    let alive = true;
+    api<{ features: Soon["feature"][] }>("/api/panel/interest")
+      .then((r) => alive && setVoted(r.features))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [studio?.id]);
+
   return (
     <div className="ds-shell">
       <aside className="ds-sidebar" aria-label="Asosiy menyu">
-        <div>
+        <div className="ds-sidebar-top">
           <div className="ds-brandline">
             <LogoMark size={28} />
             <span className="ds-body-strong">Floreal</span>
           </div>
-          <p className="ds-caps ds-navlabel">Studiya</p>
-          <nav className="ds-nav" aria-busy={!studio || undefined}>
-            {studio
-              ? [...items, SETTINGS].map((n) => <NavItem key={n.href} item={n} current={active(n.href)} count={n.href.endsWith("/buyurtmalar") ? debt : null} />)
-              : [0, 1, 2, 3].map((i) => <span key={i} className="ds-skeleton" style={{ height: 40, borderRadius: "var(--ds-radius-md)" }} />)}
-          </nav>
+          <div className="ds-navgroup">
+            <p className="ds-label ds-navlabel">Studiya</p>
+            <nav className="ds-nav" aria-busy={!studio || undefined}>
+              {studio
+                ? [...items, SETTINGS].map((n) => <NavItem key={n.href} item={n} current={active(n.href)} count={n.href.endsWith("/buyurtmalar") ? debt : null} />)
+                : [0, 1, 2, 3].map((i) => <span key={i} className="ds-skeleton" data-on="brand" style={{ height: 40, borderRadius: "var(--ds-radius-md)" }} />)}
+            </nav>
+          </div>
+          {studio && (
+            <div className="ds-navgroup">
+              <p className="ds-label ds-navlabel" id="soon-label">
+                Tez orada
+              </p>
+              <ul className="ds-nav" aria-labelledby="soon-label">
+                {SOON.map((s) => {
+                  const on = voted.includes(s.feature);
+                  return (
+                    <li key={s.feature}>
+                      <button
+                        type="button"
+                        className="ds-navitem"
+                        data-soon={on ? "voted" : ""}
+                        onClick={() => setDoor(s)}
+                        aria-haspopup="dialog"
+                        aria-label={on ? `${s.label} — soʻrovingiz qabul qilingan` : `${s.label} — tez orada`}
+                      >
+                        <StudioIcon name={s.icon} variant="Filled" />
+                        <span style={{ flex: 1 }}>{s.label}</span>
+                        {on && <StudioIcon name="check" className="ds-navcheck" />}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
         </div>
         {studio ? (
           <Link href={SETTINGS.href} className="ds-studiocard">
-            <span className="ds-avatar" aria-hidden>
-              {initials(studio.name)}
-            </span>
+            {/* Figma DataDisplay/Avatar Type=studio — default 3D bouquet until logo upload exists */}
+            {/* eslint-disable-next-line @next/next/no-img-element -- static 80px WebP (1.5 KB); next/image adds nothing here */}
+            <img className="ds-avatar" src="/studio/3d/guldasta.webp" alt="" width={40} height={40} />
             <div>
               <strong>{studio.name}</strong>
-              <span className="ds-label ds-secondary">{studio.role === "owner" ? "Egasi" : "Menejer"}</span>
+              <span className="ds-label ds-tertiary">{studio.role === "owner" ? "Egasi" : "Menejer"}</span>
             </div>
           </Link>
         ) : (
-          <span className="ds-skeleton" style={{ height: 64, borderRadius: "var(--ds-radius-md)" }} />
+          <span className="ds-skeleton" data-on="brand" style={{ height: 64, borderRadius: "var(--ds-radius-md)" }} />
         )}
       </aside>
+
+      {door && (
+        <FakeDoor
+          item={door}
+          voted={voted.includes(door.feature)}
+          onClose={() => setDoor(null)}
+          onVote={async () => {
+            const r = await api<{ features: Soon["feature"][] }>("/api/panel/interest", { body: { feature: door.feature } });
+            setVoted(r.features);
+            setDoor(null);
+            setToast({ id: Date.now(), text: "Rahmat — tayyor boʻlganda xabar beramiz" });
+          }}
+        />
+      )}
+      <Toast toast={toast} onDone={() => setToast(null)} />
 
       <main className="ds-main" id="main">
         <div className="ds-main-inner">{children}</div>
@@ -113,10 +177,50 @@ export function Shell({ children }: { children: ReactNode }) {
   );
 }
 
+/* Figma 07 · Tez orada · dialog: title + pitch, "Yopish" / "Menga kerak" */
+function FakeDoor({ item, voted, onClose, onVote }: { item: Soon; voted: boolean; onClose(): void; onVote(): Promise<void> }) {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  return (
+    <Modal title={item.title} size="sm" onClose={onClose}>
+      <p className="ds-body ds-secondary">{voted ? "Soʻrovingiz qabul qilingan — tayyor boʻlganda Telegram orqali xabar beramiz." : item.text}</p>
+      {err && (
+        <p className="ds-alert" role="alert">
+          {err}
+        </p>
+      )}
+      <div className="ds-modal-foot">
+        <Button variant="ghost" onClick={onClose} disabled={busy} data-autofocus={voted || undefined}>
+          Yopish
+        </Button>
+        {!voted && (
+          <Button
+            loading={busy}
+            data-autofocus
+            onClick={async () => {
+              setBusy(true);
+              setErr(null);
+              try {
+                await onVote();
+              } catch (e) {
+                setErr(e instanceof Error ? e.message : "Xatolik yuz berdi");
+                setBusy(false);
+              }
+            }}
+          >
+            Menga kerak
+          </Button>
+        )}
+      </div>
+    </Modal>
+  );
+}
+
 function NavItem({ item, current, count }: { item: NavDef; current: boolean; count?: number | null }) {
   return (
     <Link href={item.href} className="ds-navitem" aria-current={current ? "page" : undefined}>
-      <StudioIcon name={item.icon} variant={current ? "Filled" : "Line"} />
+      {/* Figma Sidebar: Filled icons in every state (white on brand, default on the active pill) */}
+      <StudioIcon name={item.icon} variant="Filled" />
       <span style={{ flex: 1 }}>{item.label}</span>
       {count ? (
         <span className="ds-navcount" aria-label={`${count} ta qoldiq`}>
