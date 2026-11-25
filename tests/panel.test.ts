@@ -533,6 +533,8 @@ describe("dashboard", () => {
     assert.equal(r.json.debt.total, 0);
     assert.deepEqual(r.json.setup, { hasOrders: false, hasBlockedDay: false, hasTeam: true });
     assert.equal(r.json.revenue.months.length, 12);
+    assert.equal(r.json.newOrders.count, 0);
+    assert.equal(r.json.next30.every((d: { load: number; blocked: boolean }) => d.load === 0 && !d.blocked), true);
   });
 
   test("numbers reconcile with orders and payments", async () => {
@@ -552,7 +554,19 @@ describe("dashboard", () => {
     assert.equal(r.month.paid, 4_000_000 + 1_000_000 + 2_000_000 + 1_000_000); // advances paid today, cancelled order's money was still received
     assert.equal(r.debt.total, 6_000_000 + 5_000_000 + 2_000_000);
     assert.equal(r.debt.count, 3);
-    assert.deepEqual(r.debt.overdue, { count: 1, total: 2_000_000 });
+    assert.equal(r.debt.overdue.count, 1);
+    assert.equal(r.debt.overdue.total, 2_000_000);
+    assert.deepEqual(r.debt.overdue.items.map((o: { id: string }) => o.id), [old.id]);
+    assert.deepEqual(r.debt.week, { count: 1, total: 6_000_000 }); // only `a` is due within 7 days
+    // Keyingi 30 kun strip: one cell per day, loads from active orders only (cancelled doesn't count)
+    assert.equal(r.next30.length, 30);
+    assert.equal(r.next30[0].date, today);
+    assert.equal(r.next30.find((d: { date: string }) => d.date === plus(2)).load, 1);
+    assert.equal(r.next30.find((d: { date: string }) => d.date === plus(4)).load, 0);
+    // Yangi buyurtmalar: everything was created today; cancelled is excluded, 3 of 4 paid an advance
+    assert.equal(r.newOrders.count, 4);
+    assert.equal(r.newOrders.advanced, 3);
+    assert.equal(r.newOrders.advancedSum, 4_000_000 + 1_000_000 + 2_000_000);
     assert.equal(r.debt.items[0].id, old.id); // overdue first
     assert.deepEqual(r.next7.map((o: { id: string }) => o.id), [paidUp.id, a.id]);
     assert.equal(r.next30Count, 3);
