@@ -318,6 +318,8 @@
   --ds-type-body-medium-tracking: 0.000em;
   --ds-type-body-strong: 600 15px/22px var(--ds-font-sans);
   --ds-type-body-strong-tracking: 0.000em;
+  --ds-type-body-small: 400 13px/18px var(--ds-font-sans); /* Figma Body/Small: helper, hint, meta lines, sentences at 13 */
+  --ds-type-body-small-tracking: 0.000em;
   --ds-type-label-default: 500 13px/18px var(--ds-font-sans);
   --ds-type-label-default-tracking: 0.000em;
   --ds-type-label-strong: 600 13px/18px var(--ds-font-sans);

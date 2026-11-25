@@ -114,7 +114,7 @@ export function OrderDetail({ id, onClose, toast }: { id: string; onClose(): voi
         <b>{Number(order.date.slice(8, 10))}</b>
         <div>
           <span className="ds-h3">{whenLabel(order.date)}</span>
-          <span className="ds-label ds-secondary">
+          <span className="ds-body-sm ds-secondary">
             {eventLabel(order.eventType)}
             {order.guests ? ` · ${order.guests} mehmon` : ""}
           </span>
@@ -158,7 +158,7 @@ export function OrderDetail({ id, onClose, toast }: { id: string; onClose(): voi
             <dd data-paid>{groupThousands(order.paid)}</dd>
           </div>
         </dl>
-        {order.lastReminder && order.balance > 0 && <p className="ds-label ds-secondary ds-remind-last">{reminderLine(order.lastReminder)}</p>}
+        {order.lastReminder && order.balance > 0 && <p className="ds-body-sm ds-secondary ds-remind-last">{reminderLine(order.lastReminder)}</p>}
       </section>
 
       {order.status !== "cancelled" && (
@@ -188,7 +188,7 @@ export function OrderDetail({ id, onClose, toast }: { id: string; onClose(): voi
               <span className="ds-body-medium">
                 {p.note ?? "Toʻlov"} · {methodLabel(p.method).toLowerCase()}
               </span>
-              <span className="ds-label ds-secondary">
+              <span className="ds-body-sm ds-secondary">
                 {dayLabel(p.paidOn)}
                 {p.by ? ` · ${p.by}` : ""}
               </span>
@@ -397,7 +397,7 @@ function History({ id, onBack, onClose }: { id: string; onBack(): void; onClose(
             <li key={e.id}>
               <div>
                 <span className="ds-body-medium">{describe(e)}</span>
-                <span className="ds-label ds-secondary">
+                <span className="ds-body-sm ds-secondary">
                   {new Date(e.at).toLocaleString("uz-UZ", { timeZone: "Asia/Tashkent", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
                   {e.actor ? ` · ${e.actor}` : ""}
                 </span>

@@ -95,7 +95,7 @@ export function SmetaDialog({ order, onClose, onSent }: { order: OrderFull; onCl
             {err}
           </p>
         )}
-        {inTelegram && <p className="ds-label ds-tertiary">PDF bot chatingizga keladi — bir tegishda mijozga forward qilasiz.</p>}
+        {inTelegram && <p className="ds-body-sm ds-tertiary">PDF bot chatingizga keladi — bir tegishda mijozga forward qilasiz.</p>}
         <div className="ds-modal-foot">
           {inTelegram ? (
             <>
@@ -160,7 +160,7 @@ export function RemindDialog({
   return (
     <Modal title="Qoldiqni eslatish" onClose={onClose}>
       <div className="ds-form" style={{ gap: "var(--ds-space-16)" }}>
-        {last && <p className="ds-label ds-secondary">{reminderLine(last)}</p>}
+        {last && <p className="ds-body-sm ds-secondary">{reminderLine(last)}</p>}
         <LangSwitch
           value={lang}
           onChange={(l) => {

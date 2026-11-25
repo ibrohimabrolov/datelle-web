@@ -815,7 +815,7 @@ function InviteDialog({ onClose, say }: { onClose(): void; say(t: string): void 
           ) : (
             <span className="ds-skeleton" style={{ height: 52, borderRadius: "var(--ds-radius-lg)" }} aria-label="Link tayyorlanmoqda" />
           )}
-          <p className="ds-label ds-secondary">Bir martalik · {invite ? `${dayMonth(invite.expiresAt)}gacha amal qiladi` : "7 kun amal qiladi"}</p>
+          <p className="ds-body-sm ds-secondary">Bir martalik · {invite ? `${dayMonth(invite.expiresAt)}gacha amal qiladi` : "7 kun amal qiladi"}</p>
         </div>
       )}
       <div className="ds-perms">
