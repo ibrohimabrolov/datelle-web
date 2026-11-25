@@ -421,54 +421,81 @@ img.ds-avatar { object-fit: cover; background: var(--ds-bg-muted); }
 .ds-day:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
 .ds-day[data-past]:not([aria-selected="true"]) { opacity: 0.56; }
 
-/* DayCell Large (desktop, Figma 3:79: 148×112, r16, pad 12, gap 8, event chips r8) */
+/* DayCell Large (desktop, Figma DataDisplay/DayCellLarge 3:79 · S3 Kalendar 137:16383)
+   149×112, r16, pad 12, gap 8. Head h20 gap 6: number Label/Strong · "Bugun" brand pill · spacer · "1 joy qoldi" | lock.
+   Chips bg/canvas r8 4/8, Label/Default: name text/primary + " · joy" text/tertiary. 2 chips max, "+N" pill on row 2.
+   States: free/has = bg/surface · one-left = day/limited-bg · booked = brand/subtle · blocked = day/blocked-bg ·
+   outside = no fill, number text/tertiary. Selected = 2px border/inverse on top of the state fill. */
 @media (min-width: 1024px) {
-  /* Figma S3 · Kalendar (137:16383): Meta bar bg/canvas r12 pad 8/16 · Month grid bg/canvas r24 pad 16, gap 12.
+  /* S3 Kalendar Main: Header · Meta · Month grid stacked 24 apart, full width of the card (1148 at 1440) —
+     the grid is the page, so it does not take the 1120 reading-width cap of the other screens */
+  .ds-main-inner:has(> .ds-cal-head) { max-width: none; gap: var(--ds-space-24); }
+  /* Meta bar bg/canvas r12 pad 8/16 · Month grid bg/canvas r24 pad 16, gap 12.
      Inside the white grid card the planes revert, so DayCells sit grey (bg/surface) with white chips. */
   .ds-cal-meta { padding: var(--ds-space-8) var(--ds-space-16); border-radius: var(--ds-radius-md); background: var(--ds-plane-canvas); }
+  .ds-cal-meta .ds-body-strong { margin-right: var(--ds-space-4); }
+  .ds-legend[data-desktop] { gap: var(--ds-space-24); }
+  .ds-legend[data-desktop] i { width: 12px; height: 12px; border-radius: 4px; box-shadow: inset 0 0 0 1px var(--ds-border-default); }
   .ds-gridcard { padding: var(--ds-space-16); border-radius: var(--ds-radius-xl); background: var(--ds-plane-canvas); --ds-bg-canvas: var(--ds-plane-canvas); --ds-bg-surface: var(--ds-plane-surface); }
   .ds-grid { gap: var(--ds-space-12); }
   .ds-grid [role="row"] { gap: var(--ds-space-12); }
-  .ds-grid .ds-wd { text-align: left; padding: 0 var(--ds-space-12); }
+  .ds-grid .ds-wd { text-align: left; padding: var(--ds-space-4) var(--ds-space-12); }
   .ds-day {
     justify-self: stretch; width: auto; height: 112px; align-items: stretch; justify-content: flex-start; gap: var(--ds-space-8);
     padding: var(--ds-space-12); border-radius: var(--ds-radius-lg); background: var(--ds-bg-surface);
-    font: var(--ds-type-label-default); text-align: left; overflow: hidden;
+    font: var(--ds-type-label-default); color: var(--ds-text-primary); text-align: left; overflow: hidden;
   }
   .ds-day .ds-dots { display: none; }
-  .ds-day .ds-dhead { display: flex; align-items: center; justify-content: space-between; min-height: 18px; }
-  .ds-day .ds-num { font: var(--ds-type-label-default); }
-  .ds-day .ds-cap { font: var(--ds-type-label-strong); }
+  .ds-day .ds-dhead { display: flex; align-items: center; gap: 6px; height: 20px; flex-shrink: 0; overflow: hidden; }
+  .ds-day .ds-num { font: var(--ds-type-label-strong); color: var(--ds-day-free-text); }
+  .ds-day .ds-todaytag {
+    display: inline-flex; align-items: center; height: 20px; padding: 0 var(--ds-space-8); border-radius: var(--ds-radius-full);
+    background: var(--ds-brand-solid); color: var(--ds-text-on-brand); font: var(--ds-type-label-strong); white-space: nowrap;
+  }
+  .ds-day .ds-cap { margin-left: auto; font: var(--ds-type-label-strong); color: var(--ds-text-warning); white-space: nowrap; }
+  .ds-day .ds-lock { margin-left: auto; flex-shrink: 0; color: var(--ds-day-blocked-text); }
   .ds-day .ds-chip {
-    display: block; padding: var(--ds-space-4) var(--ds-space-8); border-radius: var(--ds-radius-sm);
-    background: var(--ds-bg-elevated); color: var(--ds-text-primary); font: var(--ds-type-label-default);
+    display: block; flex-shrink: 0; padding: var(--ds-space-4) var(--ds-space-8); border-radius: var(--ds-radius-sm);
+    background: var(--ds-bg-canvas); color: var(--ds-text-primary); font: var(--ds-type-label-default);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .ds-day[data-status="limited"] .ds-chip { color: var(--ds-day-limited-text); }
-  .ds-day[data-status="booked"] .ds-chip { background: color-mix(in srgb, var(--ds-day-booked-chip) 16%, transparent); color: var(--ds-day-booked-text); }
+  .ds-day .ds-chip-sub { color: var(--ds-text-tertiary); }
+  .ds-day .ds-chip[data-more] { padding-right: 40px; }
+  .ds-day .ds-more { position: absolute; right: var(--ds-space-12); top: 74px; width: 32px; padding: var(--ds-space-4) 0; text-align: center; color: var(--ds-text-secondary); }
+  .ds-day[data-status="limited"] { background: var(--ds-day-limited-bg); color: var(--ds-text-primary); }
+  .ds-day[data-status="limited"] .ds-num, .ds-day[data-status="booked"] .ds-num { color: var(--ds-text-primary); }
+  .ds-day[data-status="booked"] { background: var(--ds-brand-subtle); color: var(--ds-text-primary); }
+  .ds-day[data-status="blocked"] { background: var(--ds-day-blocked-bg); color: var(--ds-day-blocked-text); }
+  .ds-day[data-status="blocked"] .ds-num { color: var(--ds-day-blocked-text); }
   .ds-day[data-status="blocked"] .ds-chip { background: none; padding-left: 0; color: var(--ds-day-blocked-text); }
   .ds-day[data-today] { font: var(--ds-type-label-default); box-shadow: none; }
-  .ds-day[data-today] .ds-num {
-    display: grid; place-items: center; width: 24px; height: 24px; margin: -3px 0; border-radius: var(--ds-radius-full);
-    background: var(--ds-day-selected-bg); color: var(--ds-day-selected-text); font: var(--ds-type-label-strong);
-  }
-  .ds-day[data-selected] { background: var(--ds-bg-surface); color: var(--ds-day-free-text); font: var(--ds-type-label-default); box-shadow: 0 0 0 2px var(--ds-border-inverse); }
-  .ds-day[data-selected][data-status="limited"] { background: var(--ds-day-limited-bg); color: var(--ds-day-limited-text); }
-  .ds-day[data-selected][data-status="booked"] { background: var(--ds-day-booked-bg); color: var(--ds-day-booked-text); }
-  .ds-day[data-selected][data-status="blocked"] { background: var(--ds-day-blocked-bg); color: var(--ds-day-blocked-text); }
-  .ds-day[data-outside] { visibility: hidden; }
+  .ds-day[data-selected] { background-color: var(--ds-bg-surface); color: var(--ds-text-primary); font: var(--ds-type-label-default); box-shadow: inset 0 0 0 2px var(--ds-border-inverse); }
+  .ds-day[data-selected][data-status="limited"] { background-color: var(--ds-day-limited-bg); }
+  .ds-day[data-selected][data-status="booked"] { background-color: var(--ds-brand-subtle); }
+  .ds-day[data-selected][data-status="blocked"] { background-color: var(--ds-day-blocked-bg); color: var(--ds-day-blocked-text); }
+  .ds-day:focus-visible { box-shadow: var(--ds-focus-ring); }
+  .ds-day[data-outside] { background: none; border-radius: var(--ds-radius-md); }
+  .ds-day[data-outside] .ds-num { color: var(--ds-text-tertiary); }
 }
 .ds-day[data-outside] { pointer-events: none; }
-@media (min-width: 1024px) and (max-width: 1279.98px) { /* 1024–1279: Figma 1440 gaps would squeeze "25 Bugun" and weekday names */
+@media (min-width: 1024px) and (max-width: 1279.98px) { /* 1024–1279: cells ~100px — Figma 1440 gaps would squeeze "12 Bugun" and weekday names */
   .ds-gridcard { padding: var(--ds-space-12); }
   .ds-grid, .ds-grid [role="row"] { gap: var(--ds-space-8); }
-  .ds-grid .ds-wd { padding: 0 var(--ds-space-8); }
+  .ds-grid .ds-wd { padding: var(--ds-space-4) var(--ds-space-8); }
   .ds-grid .ds-wd abbr.ds-mobile-only { display: inline !important; } /* DU SE CH… instead of clipped full names */
   .ds-grid .ds-wd span.ds-desktop-only { display: none !important; }
+  .ds-day { padding: var(--ds-space-8); }
+  .ds-day .ds-more { right: var(--ds-space-8); top: 70px; }
+  .ds-day .ds-cap-rest { display: none; } /* "1 joy" — the amber fill + legend carry "qoldi" */
+  .ds-day .ds-chip-sub { display: none; } /* ~70px chips: the name alone, not "Nodira · N…" */
+  /* "Bugun" pill would not fit next to the number: the number itself becomes the brand pill */
+  .ds-day .ds-todaytag { display: none; }
+  .ds-day[data-today] .ds-num { display: inline-flex; align-items: center; height: 20px; padding: 0 7px; border-radius: var(--ds-radius-full); background: var(--ds-brand-solid); color: var(--ds-text-on-brand); }
 }
+/* Today + "1 joy qoldi" in one 125px head: keep the pill, shorten the cap */
+@media (min-width: 1024px) { .ds-day[data-today] .ds-cap-rest { display: none; } }
 
 @media (max-width: 1023.98px) { .ds-day .ds-chip, .ds-day .ds-cap, .ds-day .ds-todaytag { display: none; } }
-.ds-todaytag { font: var(--ds-type-label-strong); color: var(--ds-text-brand); }
 
 /* ── Order card (Figma OrderCard: r24, pad 12/16/12/12, gap 14; date tile 52×56 r16 tinted by event) ── */
 .ds-ordercard { display: flex; align-items: center; gap: 14px; padding: var(--ds-space-12) var(--ds-space-16) var(--ds-space-12) var(--ds-space-12); border-radius: var(--ds-radius-xl); background: var(--ds-bg-surface); }
