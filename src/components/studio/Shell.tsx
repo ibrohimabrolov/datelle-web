@@ -9,6 +9,7 @@ import { StudioIcon, type StudioIconName } from "./icons";
 import { FakeDoor } from "./FakeDoor";
 import { PANEL, usePanel, useStudio, type Role } from "./PanelProvider";
 import { Toast, type ToastMsg } from "./Toast";
+import { TrialEndedGate } from "./TrialEnded";
 import { LogoMark } from "@/components/ui/Logo";
 
 type NavDef = { href: string; label: string; icon: StudioIconName; roles: Role[] };
@@ -162,6 +163,7 @@ export function Shell({ children }: { children: ReactNode }) {
         />
       )}
       <Toast toast={toast} onDone={() => setToast(null)} />
+      <TrialEndedGate />
 
       <main className="ds-main" id="main" ref={mainRef}>
         <div className="ds-main-inner">{children}</div>

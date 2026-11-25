@@ -10,6 +10,7 @@ import { StudioIcon, type StudioIconName } from "../icons";
 import { ConfirmDialog, Menu, Modal } from "../Modal";
 import { usePanel, useStudio, type Me, type Studio } from "../PanelProvider";
 import { PageHead } from "../Shell";
+import { PRICE_MONTH, PRICE_YEAR, SEATS_INCLUDED, TRIAL_DAYS } from "../plan";
 import { applyTheme, storedTheme, type PanelTheme } from "../theme";
 import { Toast, type ToastMsg } from "../Toast";
 
@@ -52,10 +53,6 @@ function seen(iso: string | null) {
 }
 
 
-const TRIAL_DAYS = 30; // onboarding gives a 30-day free month
-const SEATS_INCLUDED = 3; // landing PLANS: 299 000 soʻm/oy — 3 foydalanuvchi, keyingisi +49 000
-const PRICE_MONTH = "299 000";
-const PRICE_YEAR = "2 990 000";
 
 type SectionId = "studiyalar" | "umumiy" | "jamoa" | "obuna" | "studiya" | "eslatmalar" | "korinish" | "hisob";
 const SECTION_LABEL: Record<SectionId, string> = {
@@ -425,8 +422,6 @@ export function SettingsScreen() {
       )}
       {layer?.kind === "invite" && (
         <InviteDialog
-          studioName={studio.name}
-          seat={(members?.length ?? 1) + invites.length + 1}
           onClose={() => {
             setLayer(null);
             api<{ invites: Invite[] }>("/api/panel/invites")
@@ -441,7 +436,6 @@ export function SettingsScreen() {
           title={`${layer.member.name.split(" ")[0]}ni jamoadan chiqarasizmi?`}
           description="U kalendar va buyurtmalarga kira olmay qoladi. U qoʻshgan buyurtmalar va toʻlovlar studiyada qoladi."
           confirm="Chiqarish"
-          cancel="Bekor qilish"
           tone="destructive"
           onClose={() => setLayer(null)}
           onConfirm={async () => {
@@ -457,7 +451,6 @@ export function SettingsScreen() {
           title="Jamoani tark etasizmi?"
           description={`${studio.name} kalendari va buyurtmalariga kirishingiz yopiladi. Siz qoʻshgan buyurtmalar studiyada qoladi.`}
           confirm="Tark etish"
-          cancel="Bekor qilish"
           tone="destructive"
           onClose={() => setLayer(null)}
           onConfirm={async () => {
@@ -550,19 +543,20 @@ function StudioAvatar() {
 }
 
 /* What a manager can do (Sozlamalar · menejer, Menejer qoʻshish) */
-function Rights({ you }: { you?: boolean }) {
+function Rights({ you, small }: { you?: boolean; small?: boolean }) {
+  const sz = small ? 16 : 18;
   return (
     <ul className="ds-rights">
       <li>
-        <StudioIcon name="check" size={18} />
+        <StudioIcon name="check" size={sz} />
         Kalendar: kun ochish va yopish
       </li>
       <li>
-        <StudioIcon name="check" size={18} />
+        <StudioIcon name="check" size={sz} />
         Buyurtma va toʻlov qoʻshish
       </li>
       <li data-off>
-        <StudioIcon name="lock" size={18} />
+        <StudioIcon name="lock" variant={small ? "Filled" : "Line"} size={sz} />
         {you ? "Dashboard, obuna va jamoa — faqat egasida" : "Dashboard, obuna va jamoa koʻrinmaydi"}
       </li>
     </ul>
@@ -761,10 +755,12 @@ function CategoryDialog({ initial, onClose, onSave }: { initial: Category; onClo
   );
 }
 
-/* Menejer qoʻshish (Figma 596:12216). A fresh one-time link per open: the token is never stored in clear,
-   so an old link can't be shown again. */
-function InviteDialog({ studioName, seat, onClose, say }: { studioName: string; seat: number; onClose(): void; say(t: string): void }) {
+/* Menejer qoʻshish (Figma 596:12216): H2 + one-line description, link box + "Nusxalash", expiry,
+   rights, "Yopish" / "Telegram’da yuborish" side by side. A fresh one-time link per open: the token is
+   never stored in clear, so an old link can't be shown again. */
+function InviteDialog({ onClose, say }: { onClose(): void; say(t: string): void }) {
   const { tg } = usePanel();
+  const ctx = useStudio();
   const [invite, setInvite] = useState<{ link: string; expiresAt: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -793,12 +789,11 @@ function InviteDialog({ studioName, seat, onClose, say }: { studioName: string; 
     say("Link nusxalandi");
   }
 
-  const text = `${studioName} jamoasiga qoʻshiling — Floreal`;
+  const text = `${ctx?.studio.name ?? "Studiya"} jamoasiga qoʻshiling — Floreal`;
   const share = link ? `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}` : "#";
 
   return (
-    <Modal title="Menejer qoʻshish" size="lg" onClose={onClose}>
-      <p className="ds-body ds-secondary">Linkni menejerga Telegram’da yuboring. U bosganda bot uni {studioName} jamoasiga qoʻshadi</p>
+    <Modal title="Menejer qoʻshish" description="Menejerga yuboring: link orqali jamoaga qoʻshiladi." size="lg" variant="dialog" onClose={onClose}>
       {error ? (
         <p className="ds-alert" role="alert">
           {error}
@@ -820,18 +815,15 @@ function InviteDialog({ studioName, seat, onClose, say }: { studioName: string; 
           ) : (
             <span className="ds-skeleton" style={{ height: 52, borderRadius: "var(--ds-radius-lg)" }} aria-label="Link tayyorlanmoqda" />
           )}
-          <p className="ds-label ds-secondary">Bir martalik · {invite ? `${dayMonth(invite.expiresAt)}gacha amal qiladi` : `${7} kun amal qiladi`} · bekor qilsangiz darhol ishlamay qoladi</p>
+          <p className="ds-label ds-secondary">Bir martalik · {invite ? `${dayMonth(invite.expiresAt)}gacha amal qiladi` : "7 kun amal qiladi"}</p>
         </div>
       )}
       <div className="ds-perms">
         <p className="ds-label-strong">Menejer nima qila oladi</p>
-        <Rights />
+        <Rights small />
       </div>
-      <div className="ds-modal-foot ds-invfoot">
-        <span className="ds-label ds-secondary">
-          {seat}-oʻrin · {seat <= SEATS_INCLUDED ? "tarifga kiradi" : "+49 000 soʻm/oy"}
-        </span>
-        <Button variant="ghost" onClick={onClose}>
+      <div className="ds-modal-foot ds-invfoot" data-split>
+        <Button variant="secondary" onClick={onClose}>
           Yopish
         </Button>
         {tg ? (

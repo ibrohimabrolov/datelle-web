@@ -6,11 +6,34 @@ import { StudioIcon } from "./icons";
 
 const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
 
-/* Second layer above an Overlay: centered 480/420 dialog on desktop, bottom sheet on mobile.
-   Esc closes only this layer (stopPropagation), focus is trapped and returned. */
-export function Modal({ title, size, onClose, children }: { title: string; size?: "sm" | "lg"; onClose(): void; children: ReactNode }) {
+/* Second layer above an Overlay: centered 480/420/560 dialog on desktop, bottom sheet on mobile.
+   Esc closes only this layer (stopPropagation), focus is trapped and returned.
+   variant "dialog" = Figma Overlays/Dialog: [3D media] · H2 title + description (gap 4) · body · footer,
+   gap 20, no header row; the ✕ only when `closeButton` (Obuna tugadi). "alert" = role alertdialog (confirm). */
+export function Modal({
+  title,
+  description,
+  media,
+  size,
+  variant = "panel",
+  closeButton = variant === "panel",
+  alert,
+  onClose,
+  children,
+}: {
+  title: string;
+  description?: ReactNode;
+  media?: ReactNode;
+  size?: "sm" | "lg";
+  variant?: "panel" | "dialog";
+  closeButton?: boolean;
+  alert?: boolean;
+  onClose(): void;
+  children?: ReactNode;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const titleId = useId();
+  const descId = useId();
   const close = useEffectEvent(onClose);
 
   useEffect(() => {
@@ -47,22 +70,56 @@ export function Modal({ title, size, onClose, children }: { title: string; size?
   return (
     <>
       <div className="ds-modal-scrim" onClick={onClose} aria-hidden />
-      <div ref={ref} className="ds-modal" data-size={size} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}>
-        <div className="ds-panelhead" style={{ display: "flex" }}>
-          <h2 id={titleId} className="ds-h3">
-            {title}
-          </h2>
-          <button className="ds-iconbtn" data-style="ghost" onClick={onClose} aria-label="Yopish">
-            <StudioIcon name="cross" />
-          </button>
-        </div>
+      <div
+        ref={ref}
+        className="ds-modal"
+        data-size={size}
+        data-variant={variant}
+        role={alert ? "alertdialog" : "dialog"}
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={description ? descId : undefined}
+        tabIndex={-1}
+      >
+        {variant === "dialog" ? (
+          <>
+            {media && <div className="ds-dialog-media">{media}</div>}
+            <div className="ds-dialog-head" data-close={closeButton || undefined}>
+              <h2 id={titleId} className="ds-h2">
+                {title}
+              </h2>
+              {description && (
+                <p id={descId} className="ds-body ds-secondary">
+                  {description}
+                </p>
+              )}
+            </div>
+            {closeButton && (
+              <button className="ds-iconbtn ds-dialog-close" data-style="ghost" onClick={onClose} aria-label="Yopish">
+                <StudioIcon name="cross" />
+              </button>
+            )}
+          </>
+        ) : (
+          <div className="ds-panelhead" style={{ display: "flex" }}>
+            <h2 id={titleId} className="ds-h3">
+              {title}
+            </h2>
+            {closeButton && (
+              <button className="ds-iconbtn" data-style="ghost" onClick={onClose} aria-label="Yopish">
+                <StudioIcon name="cross" />
+              </button>
+            )}
+          </div>
+        )}
         {children}
       </div>
     </>
   );
 }
 
-/* Figma ConfirmDialog (420): Tone Destructive / Primary, buttons right on desktop */
+/* Figma Overlays/Dialog (420, 58:198): question title, consequence, "Ortga" + verb-led confirm side by side.
+   Focus lands on the safe button; Enter never fires the destructive one by default. */
 export function ConfirmDialog({
   title,
   description,
@@ -83,15 +140,14 @@ export function ConfirmDialog({
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   return (
-    <Modal title={title} size="sm" onClose={onClose}>
-      <p className="ds-body ds-secondary">{description}</p>
+    <Modal title={title} description={description} size="sm" variant="dialog" alert onClose={onClose}>
       {err && (
         <p className="ds-alert" role="alert">
           {err}
         </p>
       )}
-      <div className="ds-modal-foot">
-        <Button variant="ghost" onClick={onClose} disabled={busy} data-autofocus>
+      <div className="ds-modal-foot" data-split>
+        <Button variant="secondary" onClick={onClose} disabled={busy} data-autofocus>
           {cancel}
         </Button>
         <Button
