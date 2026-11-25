@@ -432,7 +432,7 @@ img.ds-avatar { object-fit: cover; background: var(--ds-bg-muted); }
 @media (min-width: 1024px) {
   /* S3 Kalendar Main: Header · Meta · Month grid stacked 24 apart, full width of the card (1148 at 1440) —
      the grid is the page, so it does not take the 1120 reading-width cap of the other screens */
-  .ds-main-inner:has(> .ds-cal-head) { max-width: none; gap: var(--ds-space-24); }
+  .ds-main-inner:has(> .ds-cal-head), .ds-main-inner:has(> .ds-list-head[data-wide]) { max-width: none; gap: var(--ds-space-24); }
   /* Meta bar bg/canvas r12 pad 8/16 · Month grid bg/canvas r24 pad 16, gap 12.
      Inside the white grid card the planes revert, so DayCells sit grey (bg/surface) with white chips. */
   .ds-cal-meta { padding: var(--ds-space-8) var(--ds-space-16); border-radius: var(--ds-radius-md); background: var(--ds-plane-canvas); }
@@ -627,38 +627,96 @@ img.ds-avatar { object-fit: cover; background: var(--ds-bg-muted); }
 .ds-search .ds-search-clear svg { position: static; }
 .ds-search .ds-search-clear:hover { background: var(--ds-state-hover); color: var(--ds-text-primary); }
 .ds-search .ds-search-clear:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
-@media (min-width: 1024px) { .ds-search { width: 280px; } }
+@media (min-width: 1024px) {
+  /* Figma Inputs/SearchField: bg/canvas pill, no stroke at rest; focus ring when typing */
+  .ds-search { width: 280px; }
+  .ds-search input { background: var(--ds-bg-surface); box-shadow: none; }
+  .ds-search input:not(:placeholder-shown), .ds-search input:focus { box-shadow: inset 0 0 0 1.5px var(--ds-border-focus); }
+}
 
 .ds-list-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--ds-space-16); }
 .ds-list-head > div:first-child { display: flex; flex-direction: column; gap: var(--ds-space-4); }
 .ds-list-tools { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-12); }
 
 /* DataTable (Figma DataTable/Head + Row: 56h rows, caps head, divider border/subtle) */
-.ds-table-wrap { background: var(--ds-bg-surface); border-radius: var(--ds-radius-xl); overflow: hidden; }
-.ds-table { width: 100%; border-collapse: collapse; font: var(--ds-type-body-default); }
-.ds-table th { height: 44px; padding: 0 var(--ds-space-16); text-align: left; font: var(--ds-type-label-caps); letter-spacing: var(--ds-type-label-caps-tracking); text-transform: uppercase; color: var(--ds-text-tertiary); box-shadow: inset 0 -1px 0 var(--ds-border-subtle); white-space: nowrap; }
+/* DataTable (Figma S4 · Buyurtmalar 10:368): card bg/canvas r24, pad 8/16/0 · Head 48 (Body/Medium text/primary,
+   sortable chevron 16 icon/muted → icon/default) · Row 72, border/subtle, px16 gap16:
+   check 24 · date 128 · client 280 (avatar 32 + name/phone) · place flex · sum 140 · due 140 (Label/Strong) */
+.ds-table-wrap { background: var(--ds-bg-surface); border-radius: var(--ds-radius-xl); padding: var(--ds-space-8) var(--ds-space-16) 0; }
+.ds-table { width: 100%; border-collapse: collapse; table-layout: fixed; font: var(--ds-type-body-default); color: var(--ds-text-primary); }
+.ds-table th, .ds-table td { padding: 0 var(--ds-space-8); text-align: left; box-shadow: inset 0 -1px 0 var(--ds-border-subtle); }
+.ds-table th:first-child, .ds-table td:first-child { padding-left: var(--ds-space-16); }
+.ds-table th:last-child, .ds-table td:last-child { padding-right: var(--ds-space-16); }
+.ds-table th { height: 48px; font: var(--ds-type-body-medium); color: var(--ds-text-primary); white-space: nowrap; }
 .ds-table th[data-num], .ds-table td[data-num] { text-align: right; }
-.ds-table th button { display: inline-flex; align-items: center; gap: var(--ds-space-4); font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit; border-radius: var(--ds-radius-sm); }
-.ds-table th[aria-sort] button { color: var(--ds-text-primary); }
+.ds-table th button { display: inline-flex; align-items: center; gap: var(--ds-space-4); font: inherit; color: inherit; border-radius: var(--ds-radius-sm); }
+.ds-table th button svg { color: var(--ds-icon-muted); transition: transform var(--ds-duration-fast) var(--ds-ease-out); }
+.ds-table th button[data-active] svg { color: var(--ds-icon-default); }
 .ds-table th button:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
-.ds-table td { height: 56px; padding: 0 var(--ds-space-16); box-shadow: inset 0 -1px 0 var(--ds-border-subtle); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 0; }
+.ds-table td { height: 72px; overflow: hidden; }
+.ds-table .c-check { width: 48px; }
+.ds-table .c-date { width: 144px; }
+.ds-table .c-client { width: 296px; }
+.ds-table .c-sum { width: 156px; }
+.ds-table .c-due { width: 164px; }
+.ds-table .ds-cell-main { display: block; font: var(--ds-type-body-medium); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-table .ds-cell-main.ds-regular { font: var(--ds-type-body-default); }
+.ds-table .ds-cell-sub { display: block; margin-top: 2px; font: var(--ds-type-body-small); color: var(--ds-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ds-table .ds-cell-person { display: flex; align-items: center; gap: var(--ds-space-12); min-width: 0; }
+.ds-table .ds-cell-person > span:last-child { min-width: 0; flex: 1; }
+.ds-table .ds-avatar { width: 32px; height: 32px; }
+.ds-table td.c-sum { font: var(--ds-type-body-medium); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ds-table td.c-due { font: var(--ds-type-label-strong); font-variant-numeric: tabular-nums; color: var(--ds-money-due); white-space: nowrap; }
+.ds-table td.c-due[data-paid] { color: var(--ds-text-brand); }
+.ds-table td.c-due[data-overdue] { color: var(--ds-money-overdue); }
 .ds-table tbody tr { cursor: pointer; transition: background-color var(--ds-duration-fast) var(--ds-ease-out); }
 .ds-table tbody tr:hover { background: var(--ds-state-hover); }
-.ds-table tbody tr[aria-selected="true"] { background: var(--ds-state-hover); box-shadow: inset 3px 0 0 var(--ds-icon-brand); }
+.ds-table tbody tr[aria-selected="true"] { background: var(--ds-brand-subtle); }
+.ds-table tbody tr[aria-selected="true"] td:first-child { box-shadow: inset 3px 0 0 var(--ds-brand-solid), inset 0 -1px 0 var(--ds-border-subtle); }
 .ds-table tbody tr:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--ds-border-focus); }
-.ds-table .c-date { color: var(--ds-text-secondary); width: 13%; }
-.ds-table .c-client { font: var(--ds-type-body-medium); width: 20%; }
-.ds-table .c-phone { color: var(--ds-text-secondary); font-variant-numeric: tabular-nums; width: 17%; }
-.ds-table .c-place { color: var(--ds-text-secondary); width: 24%; }
-.ds-table .c-sum { font: var(--ds-type-body-medium); font-variant-numeric: tabular-nums; width: 13%; }
-.ds-table .c-due { font: var(--ds-type-label-strong); font-variant-numeric: tabular-nums; color: var(--ds-money-due); width: 13%; }
-.ds-table .c-due[data-paid] { color: var(--ds-text-brand); }
-.ds-table .c-due[data-overdue] { color: var(--ds-money-overdue); }
-.ds-table-foot { display: flex; align-items: center; justify-content: space-between; padding: var(--ds-space-12) var(--ds-space-16) var(--ds-space-12) var(--ds-space-24); }
-.ds-table-foot > div { display: flex; gap: var(--ds-space-8); }
-.ds-table-foot .ds-iconbtn:disabled { opacity: 0.4; cursor: not-allowed; }
+.ds-table tbody tr:last-child td { box-shadow: inset 0 -1px 0 var(--ds-border-subtle); }
 
-/* Mobile list: grouped cards */
+/* Inputs/Selection · checkbox (Figma 56:181): 22, r8, 1.5px border/control on bg/canvas; checked = brand/solid + check 16 */
+.ds-checkbox { position: relative; display: grid; place-items: center; width: 24px; height: 24px; cursor: pointer; }
+.ds-checkbox input { position: absolute; inset: -10px; margin: 0; opacity: 0; cursor: pointer; } /* 44px hit area */
+.ds-checkbox > span { display: grid; place-items: center; width: 22px; height: 22px; border-radius: var(--ds-radius-sm); background: var(--ds-bg-canvas); box-shadow: inset 0 0 0 1.5px var(--ds-border-control); color: transparent; transition: background-color var(--ds-duration-fast) var(--ds-ease-out); }
+.ds-checkbox input:checked + span, .ds-checkbox input:indeterminate + span { background: var(--ds-brand-solid); box-shadow: none; color: var(--ds-text-on-brand); }
+.ds-checkbox input:focus-visible + span { box-shadow: var(--ds-focus-ring); }
+.ds-checkbox input:disabled + span { opacity: 0.4; }
+.ds-checkbox input:disabled { cursor: default; }
+
+/* TablePagination (Figma 575:23548): right-aligned, gap 12, pad 12/16 · "Sahifada" + select 72×40 r12 · range · ghost nav 44 */
+.ds-table-foot { display: flex; align-items: center; justify-content: flex-end; gap: var(--ds-space-12); padding: var(--ds-space-12) var(--ds-space-16); }
+.ds-pager-per { display: flex; align-items: center; gap: var(--ds-space-12); font: var(--ds-type-label-default); color: var(--ds-text-secondary); }
+.ds-select { position: relative; display: inline-flex; align-items: center; }
+.ds-select select { appearance: none; width: 72px; height: 40px; padding: 0 28px 0 var(--ds-space-12); border: 0; border-radius: var(--ds-radius-md); background: var(--ds-bg-canvas); box-shadow: inset 0 0 0 1px var(--ds-border-control); font: var(--ds-type-body-default); color: var(--ds-text-primary); cursor: pointer; }
+.ds-select select:focus-visible { outline: none; box-shadow: inset 0 0 0 1.5px var(--ds-border-focus); }
+.ds-select svg { position: absolute; right: var(--ds-space-8); pointer-events: none; color: var(--ds-icon-default); }
+.ds-pager-range { font: var(--ds-type-label-default); color: var(--ds-text-secondary); font-variant-numeric: tabular-nums; margin-right: var(--ds-space-4); }
+.ds-pager-nav { display: flex; gap: var(--ds-space-4); }
+.ds-table-foot .ds-iconbtn:disabled { color: var(--ds-icon-muted); opacity: 0.5; cursor: not-allowed; background: none; }
+
+/* Bulk bar (Figma 128:15489): replaces the toolbar while rows are checked */
+.ds-bulkbar { display: flex; align-items: center; gap: var(--ds-space-8); min-height: 52px; padding: var(--ds-space-4) var(--ds-space-4) var(--ds-space-4) var(--ds-space-16); border-radius: var(--ds-radius-full); background: var(--ds-brand-subtle); }
+.ds-bulkbar p { flex: 1; min-width: 0; font: var(--ds-type-body-strong); color: var(--ds-text-primary); }
+
+/* Bulk reminder queue */
+.ds-remind-queue { display: flex; flex-direction: column; max-height: min(52vh, 420px); overflow-y: auto; margin: 0 calc(-1 * var(--ds-space-4)); padding: 0 var(--ds-space-4); }
+.ds-remind-queue li { display: flex; align-items: center; gap: var(--ds-space-12); min-height: 64px; box-shadow: inset 0 -1px 0 var(--ds-border-subtle); }
+.ds-remind-queue li:last-child { box-shadow: none; }
+.ds-remind-queue .ds-avatar { width: 32px; height: 32px; }
+.ds-remind-who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ds-remind-who b { font: var(--ds-type-body-medium); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-remind-btns { display: flex; gap: var(--ds-space-8); }
+.ds-remind-queue .ds-label-strong { display: inline-flex; align-items: center; gap: var(--ds-space-4); }
+
+/* Menu as a radio list (month filter): label · count · check */
+.ds-menu:has([role="menuitemradio"]) { max-height: 360px; overflow-y: auto; min-width: 240px; }
+.ds-menu .ds-menu-label { flex: 1; }
+.ds-menu .ds-menu-meta { font: var(--ds-type-body-small); color: var(--ds-text-tertiary); font-variant-numeric: tabular-nums; }
+.ds-menu .ds-menu-check { color: var(--ds-icon-brand); }
+.ds-menu [aria-checked="true"] { font: var(--ds-type-body-strong); }
+
 .ds-groups { display: flex; flex-direction: column; gap: var(--ds-space-24); }
 .ds-group { display: flex; flex-direction: column; gap: var(--ds-space-8); }
 .ds-group > h2 { padding-bottom: var(--ds-space-4); }
@@ -1016,13 +1074,12 @@ a.ds-btn[aria-disabled] { pointer-events: none; opacity: 0.5; }
 
 /* ── Phase 7 QA: narrow desktop (1024–1279) and small phones ── */
 @media (max-width: 1279.98px) {
-  /* phone moves to the order panel; money columns never truncate */
-  .ds-table .c-phone { display: none; }
-  .ds-table th, .ds-table td { padding: 0 var(--ds-space-12); }
-  .ds-table .c-date { width: 20%; }
-  .ds-table .c-client { width: 22%; }
-  .ds-table .c-place { width: 24%; }
-  .ds-table .c-sum, .ds-table .c-due { width: 17%; }
+  /* 1024–1279: proportional columns, no avatar, so Joy va tadbir keeps ~140px; money never truncates */
+  .ds-table .c-check { width: 44px; }
+  .ds-table .c-date { width: 15%; }
+  .ds-table .c-client { width: 26%; }
+  .ds-table .c-sum, .ds-table .c-due { width: 16%; }
+  .ds-table .ds-cell-person .ds-avatar { display: none; }
 }
 @media (min-width: 1024px) and (max-width: 1279.98px) {
   .ds-kpi .ds-kpi-val { flex-wrap: wrap; row-gap: 0; }

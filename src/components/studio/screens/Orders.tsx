@@ -3,7 +3,7 @@
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api, ApiError } from "@/lib/api";
-import { isISODate, MONTHS, WD_SHORT, weekdayIdx } from "@/lib/dates";
+import { isISODate, MONTHS, WD_FULL, weekdayIdx } from "@/lib/dates";
 import { eventLabel } from "@/lib/studio/calendar";
 import { groupThousands, isOverdue, ORDER_VIEWS, weekGroup, type OrderView } from "@/lib/studio/orders";
 import { Button } from "../Button";
@@ -14,14 +14,26 @@ import { OrderCard } from "../OrderCard";
 import { OrderDetail } from "../OrderDetail";
 import { OrderForm, type Prefill } from "../OrderForm";
 import { useStudio } from "../PanelProvider";
+import { Menu, Modal } from "../Modal";
+import { reminderText, smsHref } from "@/lib/studio/clientDocs";
 import { Toast, type ToastMsg } from "../Toast";
 import { SettingsLink } from "../Shell";
 
 const BASE = "/panel/buyurtmalar";
 const VIEW_LABEL: Record<OrderView, string> = { upcoming: "Kelgusi", debt: "Qoldiq bor", past: "Oʻtgan", cancelled: "Bekor qilingan" };
-const rowDate = (iso: string) => `${Number(iso.slice(8, 10))}-${MONTHS[Number(iso.slice(5, 7)) - 1]}, ${WD_SHORT[weekdayIdx(iso)].toLowerCase()}`;
 const monthName = (iso: string) => MONTHS[Number(iso.slice(5, 7)) - 1];
 const fmtPhone = (p: string) => p.replace(/^(\+998)(\d{2})(\d{3})(\d{2})(\d{2})$/, "$1 $2 $3 $4 $5");
+const dayMonth = (iso: string) => `${Number(iso.slice(8, 10))}-${MONTHS[Number(iso.slice(5, 7)) - 1]}`;
+const cap1 = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+const ymLabel = (ym: string) => `${cap1(MONTHS[Number(ym.slice(5, 7)) - 1])} ${ym.slice(0, 4)}`;
+const initials = (name: string) =>
+  name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w.charAt(0).toUpperCase())
+    .join("");
+const PER = [10, 20, 50] as const;
 
 /* Figma S4 · Buyurtmalar — desktop DataTable, mobile grouped cards. URL holds the state:
    ?view&q&page&sort&dir, /panel/buyurtmalar/<id> opens the order, /panel/buyurtmalar/yangi?sana opens the form. */
@@ -39,6 +51,8 @@ export function OrdersScreen() {
   const page = Math.max(1, Number(params.get("page")) || 1);
   const sort = (["date", "total", "balance"] as const).find((s) => s === params.get("sort")) ?? "date";
   const dir = params.get("dir") === "asc" || params.get("dir") === "desc" ? (params.get("dir") as "asc" | "desc") : null;
+  const per = PER.find((n) => String(n) === params.get("per")) ?? 10;
+  const month = /^\d{4}-(0[1-9]|1[0-2])$/.test(params.get("oy") ?? "") ? params.get("oy")! : null;
   const isNew = path.endsWith("/yangi");
   const newDate = params.get("sana");
   const draftId = isNew ? params.get("qoralama") : null;
@@ -46,11 +60,12 @@ export function OrdersScreen() {
   const openId = !isNew && routeId ? routeId : null;
 
   const qs = useMemo(() => {
-    const s = new URLSearchParams({ view, page: String(page), sort });
+    const s = new URLSearchParams({ view, page: String(page), sort, per: String(per) });
     if (q) s.set("q", q);
     if (dir) s.set("dir", dir);
+    if (month) s.set("month", month);
     return s.toString();
-  }, [view, page, sort, dir, q]);
+  }, [view, page, sort, dir, q, per, month]);
 
   // list: stale-while-revalidate per query; refetch on any data change
   const studioId = ctx?.studio.id;
@@ -70,9 +85,26 @@ export function OrdersScreen() {
   const cur = state.for === qs ? state : { data: studioId ? (listCache.get(`${studioId}:${qs}`) ?? null) : null, error: null };
   const data = cur.data;
 
+  // bulk selection (Figma S4 · tanlangan): rows of the current list; any list change clears it
+  const [picked, setPicked] = useState<{ key: string; rows: Map<string, OrderRow> }>({ key: "", rows: new Map() });
+  const sel = picked.key === qs ? picked.rows : new Map<string, OrderRow>();
+  const toggle = (o: OrderRow) => {
+    const next = new Map(sel);
+    if (next.has(o.id)) next.delete(o.id);
+    else next.set(o.id, o);
+    setPicked({ key: qs, rows: next });
+  };
+  const pageRows = data?.items ?? [];
+  const allOn = pageRows.length > 0 && pageRows.every((o) => sel.has(o.id));
+  const someOn = !allOn && pageRows.some((o) => sel.has(o.id));
+  const toggleAll = () => setPicked({ key: qs, rows: allOn ? new Map() : new Map(pageRows.map((o) => [o.id, o])) });
+  const clearSel = () => setPicked({ key: "", rows: new Map() });
+  const selDue = [...sel.values()].reduce((a, o) => a + Math.max(0, o.balance), 0);
+  const [remind, setRemind] = useState<OrderRow[] | null>(null);
+
   // mobile "Yana yuklash": accumulate pages client-side
   const [extra, setExtra] = useState<{ key: string; items: OrderRow[]; page: number }>({ key: "", items: [], page: 1 });
-  const listKey = `${view}|${q}|${sort}|${dir}`;
+  const listKey = `${view}|${q}|${sort}|${dir}|${month}|${per}`;
   const mobileItems = useMemo(() => (extra.key === listKey ? [...(data?.items ?? []), ...extra.items] : (data?.items ?? [])), [extra, listKey, data]);
   const moreLeft = data ? data.total - (page - 1) * data.pageSize - mobileItems.length : 0;
 
@@ -133,12 +165,13 @@ export function OrdersScreen() {
 
   const first = data && data.total ? (page - 1) * data.pageSize + 1 : 0;
   const last = data ? Math.min(data.total, page * data.pageSize) : 0;
+  const lastPage = data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1;
 
   return (
     <>
-      <header className="ds-list-head">
+      <header className="ds-list-head" data-wide>
         <div>
-          <span className="ds-caps ds-tertiary" aria-live="polite">
+          <span className="ds-caps ds-tertiary ds-mobile-only" aria-live="polite">
             {data ? `${data.counts.active} ta faol · ${data.counts.debt} ta qoldiq` : " "}
           </span>
           <h1 className="ds-h1">Buyurtmalar</h1>
@@ -176,22 +209,56 @@ export function OrdersScreen() {
         </div>
       )}
 
-      <div className="ds-list-tools">
-        <div className="ds-segment" role="tablist" aria-label="Buyurtmalar boʻlimi">
-          {ORDER_VIEWS.map((v) => (
-            <button key={v} role="tab" aria-selected={view === v} onClick={() => nav({ view: v === "upcoming" ? null : v, page: null, sort: null, dir: null })}>
-              {VIEW_LABEL[v]}
-              {data && (v === "upcoming" || v === "debt") && data.counts[v] > 0 && (
-                <span className="ds-count">
-                  <span className="ds-desktop-only"> · </span>
-                  <span className="ds-mobile-only"> </span>
-                  {data.counts[v]}
-                </span>
-              )}
-            </button>
-          ))}
+      {sel.size > 0 ? (
+        /* Figma Bulk bar (128:15489): brand/subtle pill, Body/Strong summary · Eslatma yuborish · Eksport · ✕ */
+        <div className="ds-bulkbar ds-desktop-only" role="region" aria-label="Tanlangan buyurtmalar" onKeyDown={(e) => e.key === "Escape" && clearSel()}>
+          <p aria-live="polite">
+            {sel.size} ta tanlandi{selDue > 0 ? ` · qoldiq ${groupThousands(selDue)} soʻm` : ""}
+          </p>
+          <Button variant="secondary" icon={<StudioIcon name="bell" variant="Filled" />} disabled={selDue <= 0} onClick={() => setRemind([...sel.values()])}>
+            Eslatma yuborish
+          </Button>
+          <Button variant="secondary" onClick={() => exportCsv([...sel.values()], ctx?.studio.name ?? "Floreal")}>
+            Eksport
+          </Button>
+          <button className="ds-iconbtn" data-style="ghost" aria-label="Tanlovni bekor qilish" onClick={clearSel}>
+            <StudioIcon name="cross" />
+          </button>
         </div>
-      </div>
+      ) : (
+        <div className="ds-list-tools">
+          {/* Tabs: the count sits on the active tab only (Figma "Kelgusi · 24"), mobile too */}
+          <div className="ds-segment" role="tablist" aria-label="Buyurtmalar boʻlimi">
+            {ORDER_VIEWS.map((v) => (
+              <button key={v} role="tab" aria-selected={view === v} onClick={() => nav({ view: v === "upcoming" ? null : v, page: null, sort: null, dir: null })}>
+                {VIEW_LABEL[v]}
+                {data && view === v && (
+                  <span className="ds-count">
+                    <span className="ds-desktop-only"> · </span>
+                    <span className="ds-mobile-only"> </span>
+                    {data.counts[v]}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+          <div className="ds-desktop-only">
+            <Menu
+              label="Oy boʻyicha"
+              trigger={month ? ymLabel(month) : "Barcha oylar"}
+              triggerIcon={<StudioIcon name="calendar" variant="Filled" />}
+              triggerStyle="secondary"
+              items={[
+                { label: "Barcha oylar", checked: !month, onSelect: () => nav({ oy: null, page: null }) },
+                ...[...(data?.months ?? [])]
+                  .sort((a, b) => (view === "past" || view === "cancelled" ? b.ym.localeCompare(a.ym) : a.ym.localeCompare(b.ym)))
+                  .concat(month && data && !data.months.some((m) => m.ym === month) ? [{ ym: month, count: 0 }] : [])
+                  .map((m) => ({ label: ymLabel(m.ym), meta: String(m.count), checked: m.ym === month, onSelect: () => nav({ oy: m.ym, page: null }) })),
+              ]}
+            />
+          </div>
+        </div>
+      )}
 
       {cur.error && !data ? (
         <StateBlock alert art="xato" title="Buyurtmalar yuklanmadi" action={{ label: "Qayta urinish", icon: <StudioIcon name="refresh-cw" />, onClick: () => setNonce((n) => n + 1) }}>
@@ -203,33 +270,28 @@ export function OrdersScreen() {
           q={q}
           onNew={() => router.push(`${BASE}/yangi`)}
           onClear={clearSearch}
-          onAll={() => nav({ view: null, page: null, sort: null, dir: null })}
         />
       ) : (
         <>
-          {/* desktop table */}
+          {/* desktop table — Figma DataTableHead / DataTableRow / TablePagination (S4 · Buyurtmalar 10:368) */}
           <div className="ds-table-wrap ds-desktop-only" aria-busy={!data || undefined}>
             <table className="ds-table">
               <caption className="ds-sr-only">{VIEW_LABEL[view]} buyurtmalar</caption>
               <thead>
                 <tr>
-                  <th scope="col" aria-sort={ariaSort("date")}>
-                    <button onClick={() => sortBy("date")}>
-                      Sana <StudioIcon name="chevron-down" size={16} style={{ transform: ariaSort("date") === "ascending" ? undefined : "rotate(180deg)", opacity: sort === "date" ? 1 : 0.4 }} />
-                    </button>
+                  <th scope="col" className="c-check">
+                    <Check checked={allOn} mixed={someOn} label="Sahifadagi hammasini tanlash" onChange={toggleAll} disabled={!pageRows.length} />
                   </th>
-                  <th scope="col">Mijoz</th>
-                  <th scope="col" className="c-phone">Telefon</th>
-                  <th scope="col">Joy · tur</th>
-                  <th scope="col" data-num aria-sort={ariaSort("total")}>
-                    <button onClick={() => sortBy("total")}>
-                      Summa <StudioIcon name="chevron-down" size={16} style={{ opacity: sort === "total" ? 1 : 0.4, transform: ariaSort("total") === "ascending" ? "rotate(180deg)" : undefined }} />
-                    </button>
+                  <th scope="col" className="c-date" aria-sort={ariaSort("date")}>
+                    <SortBtn label="Sana" active={sort === "date"} asc={ariaSort("date") === "ascending"} onClick={() => sortBy("date")} />
                   </th>
-                  <th scope="col" data-num aria-sort={ariaSort("balance")}>
-                    <button onClick={() => sortBy("balance")}>
-                      Qoldiq <StudioIcon name="chevron-down" size={16} style={{ opacity: sort === "balance" ? 1 : 0.4, transform: ariaSort("balance") === "ascending" ? "rotate(180deg)" : undefined }} />
-                    </button>
+                  <th scope="col" className="c-client">Mijoz</th>
+                  <th scope="col" className="c-place">Joy va tadbir</th>
+                  <th scope="col" className="c-sum" data-num aria-sort={ariaSort("total")}>
+                    <SortBtn label="Summa" active={sort === "total"} asc={ariaSort("total") === "ascending"} onClick={() => sortBy("total")} />
+                  </th>
+                  <th scope="col" className="c-due" data-num aria-sort={ariaSort("balance")}>
+                    <SortBtn label="Qoldiq" active={sort === "balance"} asc={ariaSort("balance") === "ascending"} onClick={() => sortBy("balance")} />
                   </th>
                 </tr>
               </thead>
@@ -240,18 +302,42 @@ export function OrdersScreen() {
                         key={o.id}
                         tabIndex={0}
                         aria-selected={o.id === openId}
+                        data-checked={sel.has(o.id) || undefined}
                         onClick={() => open(o.id)}
                         onKeyDown={(e) => {
+                          if (e.target !== e.currentTarget) return;
                           if (e.key === "Enter" || e.key === " ") {
                             e.preventDefault();
                             open(o.id);
                           }
                         }}
                       >
-                        <td className="c-date">{rowDate(o.date)}</td>
-                        <td className="c-client">{o.client}</td>
-                        <td className="c-phone">{fmtPhone(o.phone)}</td>
-                        <td className="c-place">{[o.venue, eventLabel(o.eventType)].filter(Boolean).join(" · ")}</td>
+                        <td className="c-check" onClick={(e) => e.stopPropagation()}>
+                          <Check checked={sel.has(o.id)} label={`${o.client} — tanlash`} onChange={() => toggle(o)} />
+                        </td>
+                        <td className="c-date">
+                          <span className="ds-cell-main">{dayMonth(o.date)}</span>
+                          <span className="ds-cell-sub">{WD_FULL[weekdayIdx(o.date)]}</span>
+                        </td>
+                        <td className="c-client">
+                          <span className="ds-cell-person">
+                            <span className="ds-avatar" aria-hidden>
+                              {initials(o.client)}
+                            </span>
+                            <span>
+                              <span className="ds-cell-main" title={o.client}>
+                                {o.client}
+                              </span>
+                              <span className="ds-cell-sub">{fmtPhone(o.phone)}</span>
+                            </span>
+                          </span>
+                        </td>
+                        <td className="c-place">
+                          <span className="ds-cell-main ds-regular" title={o.venue ?? undefined}>
+                            {o.venue || eventLabel(o.eventType)}
+                          </span>
+                          {o.venue && <span className="ds-cell-sub">{eventLabel(o.eventType)}</span>}
+                        </td>
                         <td className="c-sum" data-num>
                           {groupThousands(o.total)}
                         </td>
@@ -269,17 +355,36 @@ export function OrdersScreen() {
                     ))}
               </tbody>
             </table>
-            {data && (
+            {data && data.total > 0 && (
               <div className="ds-table-foot">
-                <span className="ds-label ds-secondary">
-                  {first}–{last} · jami {data.total}
+                <label className="ds-pager-per">
+                  <span>Sahifada</span>
+                  <span className="ds-select">
+                    <select value={per} onChange={(e) => nav({ per: e.target.value === "10" ? null : e.target.value, page: null })}>
+                      {PER.map((n) => (
+                        <option key={n} value={n}>
+                          {n}
+                        </option>
+                      ))}
+                    </select>
+                    <StudioIcon name="chevron-down" size={16} />
+                  </span>
+                </label>
+                <span className="ds-pager-range" aria-live="polite">
+                  {first}–{last} / {data.total}
                 </span>
-                <div>
-                  <button className="ds-iconbtn" data-style="secondary" aria-label="Oldingi sahifa" disabled={page <= 1} onClick={() => nav({ page: page - 1 > 1 ? String(page - 1) : null })}>
+                <div className="ds-pager-nav">
+                  <button className="ds-iconbtn" data-style="ghost" aria-label="Birinchi sahifa" disabled={page <= 1} onClick={() => nav({ page: null })}>
+                    <StudioIcon name="chevrons-left" />
+                  </button>
+                  <button className="ds-iconbtn" data-style="ghost" aria-label="Oldingi sahifa" disabled={page <= 1} onClick={() => nav({ page: page - 1 > 1 ? String(page - 1) : null })}>
                     <StudioIcon name="chevron-left" />
                   </button>
-                  <button className="ds-iconbtn" data-style="secondary" aria-label="Keyingi sahifa" disabled={last >= data.total} onClick={() => nav({ page: String(page + 1) })}>
+                  <button className="ds-iconbtn" data-style="ghost" aria-label="Keyingi sahifa" disabled={last >= data.total} onClick={() => nav({ page: String(page + 1) })}>
                     <StudioIcon name="chevron-right" />
+                  </button>
+                  <button className="ds-iconbtn" data-style="ghost" aria-label="Oxirgi sahifa" disabled={last >= data.total} onClick={() => nav({ page: String(lastPage) })}>
+                    <StudioIcon name="chevrons-right" />
                   </button>
                 </div>
               </div>
@@ -336,12 +441,126 @@ export function OrdersScreen() {
       )}
       {openId && ctx && <OrderDetail key={openId} id={openId} onClose={closeLayer} toast={setToast} />}
 
+      {remind && <BulkRemind orders={remind} onClose={() => setRemind(null)} />}
+
       <Toast toast={toast} onDone={() => setToast(null)} />
     </>
   );
 }
 
-function Empty({ view, q, onNew, onClear, onAll }: { view: OrderView; q: string; onNew(): void; onClear(): void; onAll(): void }) {
+/* Figma Inputs/Selection · checkbox 22, r8, 1.5px border/control; checked = brand/solid + check 16 */
+function Check({ checked, mixed, label, onChange, disabled }: { checked: boolean; mixed?: boolean; label: string; onChange(): void; disabled?: boolean }) {
+  return (
+    <label className="ds-checkbox">
+      <input
+        type="checkbox"
+        checked={checked}
+        aria-label={label}
+        disabled={disabled}
+        ref={(el) => {
+          if (el) el.indeterminate = Boolean(mixed);
+        }}
+        onChange={onChange}
+      />
+      <span aria-hidden>{mixed ? <StudioIcon name="minus" size={16} /> : <StudioIcon name="check" size={16} />}</span>
+    </label>
+  );
+}
+
+/* DataTableHead sortable column: chevron 16 — icon/muted idle, icon/default + text/primary active */
+function SortBtn({ label, active, asc, onClick }: { label: string; active: boolean; asc: boolean; onClick(): void }) {
+  return (
+    <button type="button" data-active={active || undefined} onClick={onClick}>
+      {label}
+      <StudioIcon name="chevron-down" size={16} style={{ transform: active && !asc ? "rotate(180deg)" : undefined }} />
+    </button>
+  );
+}
+
+/* Eksport: selected rows → CSV (UTF-8 BOM so Excel opens Cyrillic/Uzbek letters correctly) */
+function exportCsv(rows: OrderRow[], studio: string) {
+  const esc = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
+  const head = ["Sana", "Mijoz", "Telefon", "Joy", "Tadbir", "Summa", "Toʻlangan", "Qoldiq", "Kod"];
+  const body = [...rows]
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .map((o) => [o.date, o.client, o.phone, o.venue ?? "", eventLabel(o.eventType), o.total, o.paid, o.balance, o.code].map(esc).join(","));
+  const blob = new Blob(["\ufeff" + [head.map(esc).join(","), ...body].join("\r\n")], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `${studio.replace(/[^\p{L}\p{N}]+/gu, "-")}-buyurtmalar.csv`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+/* Eslatma yuborish (bulk): the text leaves from the studio's own phone, so this is a queue —
+   one tap per client (Telegram copies the text and opens the chat; SMS opens the app), each tap is recorded. */
+function BulkRemind({ orders, onClose }: { orders: OrderRow[]; onClose(): void }) {
+  const ctx = useStudio();
+  const studio = ctx?.studio.name ?? "";
+  const due = orders.filter((o) => o.balance > 0).sort((a, b) => a.date.localeCompare(b.date));
+  const skipped = orders.length - due.length;
+  const [sent, setSent] = useState<Record<string, string>>({});
+  const text = (o: OrderRow) => reminderText({ client: o.client, date: o.date, eventType: o.eventType, total: o.total, paid: o.paid, studio }, "uz");
+  const record = (o: OrderRow, channel: "telegram" | "sms") => {
+    setSent((s) => ({ ...s, [o.id]: channel === "telegram" ? "Telegram" : "SMS" }));
+    void api(`/api/panel/orders/${o.id}/remind`, { body: { channel, lang: "uz" } }).catch(() => {});
+  };
+  const viaTelegram = (o: OrderRow) => {
+    void navigator.clipboard?.writeText(text(o)).catch(() => {});
+    const url = `https://t.me/${o.phone}`;
+    const wa = window.Telegram?.WebApp;
+    if (wa?.openTelegramLink) wa.openTelegramLink(url);
+    else window.open(url, "_blank", "noopener");
+    record(o, "telegram");
+  };
+  return (
+    <Modal
+      variant="dialog"
+      size="lg"
+      title="Eslatma yuborish"
+      description={`${due.length} ta mijozga qoldiq haqida xabar. Telegram matnni nusxalab chatni ochadi — qoʻying va yuboring.${skipped ? ` ${skipped} tasi toʻlangan, oʻtkazib yuborildi.` : ""}`}
+      onClose={onClose}
+    >
+      <ul className="ds-remind-queue">
+        {due.map((o) => (
+          <li key={o.id} data-done={sent[o.id] ? true : undefined}>
+            <span className="ds-avatar" aria-hidden>
+              {initials(o.client)}
+            </span>
+            <span className="ds-remind-who">
+              <b>{o.client}</b>
+              <span className="ds-body-sm ds-secondary">
+                {dayMonth(o.date)} · qoldiq {groupThousands(o.balance)}
+              </span>
+            </span>
+            {sent[o.id] ? (
+              <span className="ds-label-strong ds-brand">
+                <StudioIcon name="check" size={16} /> {sent[o.id]}
+              </span>
+            ) : (
+              <span className="ds-remind-btns">
+                <button className="ds-btn" data-style="secondary" data-size="m" onClick={() => viaTelegram(o)}>
+                  <StudioIcon name="send" variant="Filled" />
+                  <span>Telegram</span>
+                </button>
+                <a className="ds-btn" data-style="secondary" data-size="m" href={smsHref(o.phone, text(o))} onClick={() => record(o, "sms")}>
+                  <span>SMS</span>
+                </a>
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
+      <div className="ds-modal-foot">
+        <Button variant="secondary" block onClick={onClose}>
+          {Object.keys(sent).length >= due.length ? "Tayyor" : "Yopish"}
+        </Button>
+      </div>
+    </Modal>
+  );
+}
+
+function Empty({ view, q, onNew, onClear }: { view: OrderView; q: string; onNew(): void; onClear(): void }) {
   if (q)
     return (
       <StateBlock art="topilmadi" title="Topilmadi" action={{ label: "Qidiruvni tozalash", onClick: onClear }}>
@@ -350,7 +569,7 @@ function Empty({ view, q, onNew, onClear, onAll }: { view: OrderView; q: string;
     );
   if (view === "debt")
     return (
-      <StateBlock art="tolangan" title="Hamma toʻlangan" action={{ label: "Barcha buyurtmalar", onClick: onAll }}>
+      <StateBlock art="tolangan" title="Hamma toʻlangan">
         Qoldiq bor buyurtma yoʻq. Yangi qoldiq paydo boʻlsa, shu yerda chiqadi.
       </StateBlock>
     );
