@@ -478,6 +478,21 @@ describe("orders & payments", () => {
     assert.equal((await owner.req("/api/panel/orders?view=nope")).status, 422);
   });
 
+  test("list: page size, month filter and month menu", async () => {
+    const all = await owner.req("/api/panel/orders?view=upcoming&per=20");
+    assert.equal(all.json.pageSize, 20);
+    assert.equal((await owner.req("/api/panel/orders?view=upcoming&per=7")).status, 422);
+    assert.equal((await owner.req("/api/panel/orders?view=upcoming&month=2026-13")).status, 422);
+    const ym = all.json.items[0].date.slice(0, 7) as string;
+    const menu = all.json.months as { ym: string; count: number }[];
+    assert.ok(menu.some((m) => m.ym === ym && m.count >= 1));
+    const one = await owner.req(`/api/panel/orders?view=upcoming&month=${ym}`);
+    assert.equal(one.json.month, ym);
+    assert.ok(one.json.items.length >= 1 && one.json.items.every((o: { date: string }) => o.date.startsWith(ym)));
+    assert.equal(one.json.counts.upcoming, menu.find((m) => m.ym === ym)!.count);
+    assert.equal((await owner.req("/api/panel/orders?view=upcoming&month=2001-01")).json.items.length, 0);
+  });
+
   test("history lists order + payment events with actor names", async () => {
     const h = await owner.req(`/api/panel/orders/${orderId}/events`);
     const kinds = h.json.events.map((e: { entity: string; action: string }) => `${e.entity}:${e.action}`);

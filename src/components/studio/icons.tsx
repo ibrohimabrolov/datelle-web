@@ -13,6 +13,8 @@ const RAW = {
   "chevron-down/Line": "<path d=\"M6 9L12 15L18 9\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
   "chevron-left/Line": "<path d=\"M14 6L8 12L14 18\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
   "chevron-right/Line": "<path d=\"M10 6L16 12L10 18\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
+  "chevrons-left/Line": "<path d=\"M13 4L5 12L13 20M16 8L12 12L16 16\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
+  "chevrons-right/Line": "<path d=\"M11 4L19 12L11 20M8 8L12 12L8 16\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
   "plus/Line": "<path d=\"M5 12H12M19 12H12M12 12V5M12 12V19\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
   "cross/Line": "<path d=\"M6 18L18 6M6 6L18 18\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
   "check/Line": "<path d=\"M4.5 12.5L9.5 17.5L19.5 6.5\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",

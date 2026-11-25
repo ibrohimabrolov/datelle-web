@@ -172,14 +172,17 @@ export function ConfirmDialog({
 }
 
 /* ⋯ menu: button + role=menu, arrow keys, Esc returns focus */
-export function Menu({ label, trigger, items }: { label: string; trigger?: string; items: { label: string; icon?: ReactNode; danger?: boolean; disabled?: boolean; onSelect(): void }[] }) {
+type MenuItem = { label: string; icon?: ReactNode; danger?: boolean; disabled?: boolean; checked?: boolean; meta?: string; onSelect(): void };
+/* trigger: text button (ghost, or secondary with an icon); items with `checked` become a radio list (month filter) */
+export function Menu({ label, trigger, triggerIcon, triggerStyle = "ghost", items }: { label: string; trigger?: string; triggerIcon?: ReactNode; triggerStyle?: "ghost" | "secondary"; items: MenuItem[] }) {
+  const radio = items.some((it) => it.checked !== undefined);
   const [open, setOpen] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
   const btn = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!open) return;
-    wrap.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus();
+    (wrap.current?.querySelector<HTMLElement>('[aria-checked="true"]') ?? wrap.current?.querySelector<HTMLElement>('[role^="menuitem"]'))?.focus();
     const onDoc = (e: MouseEvent) => !wrap.current?.contains(e.target as Node) && setOpen(false);
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -199,8 +202,9 @@ export function Menu({ label, trigger, items }: { label: string; trigger?: strin
   return (
     <div className="ds-menu-wrap" ref={wrap}>
       {trigger ? (
-        <button ref={btn} type="button" className="ds-btn" data-style="ghost" aria-label={label} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
-          {trigger}
+        <button ref={btn} type="button" className="ds-btn" data-style={triggerStyle} data-size="m" aria-label={label} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+          {triggerIcon}
+          <span>{trigger}</span>
         </button>
       ) : (
         <button ref={btn} className="ds-iconbtn" data-style="secondary" aria-label={label} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
@@ -215,7 +219,7 @@ export function Menu({ label, trigger, items }: { label: string; trigger?: strin
           onKeyDown={(e) => {
             if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
             e.preventDefault();
-            const els = [...(wrap.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? [])];
+            const els = [...(wrap.current?.querySelectorAll<HTMLElement>('[role^="menuitem"]') ?? [])];
             const i = els.indexOf(document.activeElement as HTMLElement);
             els[(i + (e.key === "ArrowDown" ? 1 : -1) + els.length) % els.length]?.focus();
           }}
@@ -223,16 +227,20 @@ export function Menu({ label, trigger, items }: { label: string; trigger?: strin
           {items.map((it) => (
             <button
               key={it.label}
-              role="menuitem"
+              role={radio ? "menuitemradio" : "menuitem"}
+              aria-checked={radio ? Boolean(it.checked) : undefined}
               disabled={it.disabled}
               data-danger={it.danger || undefined}
               onClick={() => {
                 setOpen(false);
+                btn.current?.focus();
                 it.onSelect();
               }}
             >
               {it.icon}
-              {it.label}
+              <span className="ds-menu-label">{it.label}</span>
+              {it.meta && <span className="ds-menu-meta">{it.meta}</span>}
+              {radio && it.checked && <StudioIcon name="check" size={20} className="ds-menu-check" />}
             </button>
           ))}
         </div>

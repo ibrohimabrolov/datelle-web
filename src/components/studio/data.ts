@@ -12,7 +12,7 @@ export type CalDay = { date: string; status: DayStatus; load: number; blocked: b
 export type MonthData = { month: string; today: string; capacity: number; summary: { events: number; due: number }; days: CalDay[] };
 
 export type OrderRow = { id: string; code: string; date: string; client: string; phone: string; venue: string | null; eventType: string; total: number; paid: number; balance: number; status: OrderStatus };
-export type OrderList = { view: OrderView; page: number; pageSize: number; total: number; today: string; counts: Record<OrderView | "active", number>; items: OrderRow[] };
+export type OrderList = { view: OrderView; page: number; pageSize: number; month: string | null; months: { ym: string; count: number }[]; total: number; today: string; counts: Record<OrderView | "active", number>; items: OrderRow[] };
 
 export type Payment = { id: string; amount: number; method: string; paidOn: string; note: string | null; createdAt: string; by: string | null };
 export type OrderFull = {

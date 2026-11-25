@@ -72,14 +72,18 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 const notFound = () => new HttpError(404, "not_found", "Buyurtma topilmadi");
 
 /* ── list ── */
+export const PAGE_SIZES = [10, 20, 50] as const;
 export const listQuery = z.object({
   view: z.enum(ORDER_VIEWS).default("upcoming"),
   q: z.string().trim().max(60).optional(),
   sort: z.enum(["date", "total", "balance"]).default("date"),
   dir: z.enum(["asc", "desc"]).optional(),
   page: z.coerce.number().int().min(1).max(1000).default(1),
+  /* Figma TablePagination "Sahifada": 10 · 20 · 50 */
+  per: z.coerce.number().int().refine((n) => PAGE_SIZES.includes(n as (typeof PAGE_SIZES)[number])).default(10),
+  /* Figma Toolbar month button: one calendar month, YYYY-MM */
+  month: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).optional(),
 });
-export const PAGE_SIZE = 30;
 
 type Row = {
   id: string; code: string; event_date: string; client_name: string; client_phone: string; venue: string | null;
@@ -109,18 +113,21 @@ export async function listOrders(ctx: StudioCtx, input: z.infer<typeof listQuery
     ? sql`and (o.client_name ilike ${like} or o.venue ilike ${like} or o.code ilike ${like}${digits.length >= 3 ? sql` or o.client_phone like ${`%${digits}%`}` : sql``})`
     : sql``;
 
-  const base = sql`
+  const from = sql`
     from orders o
     left join (select order_id, sum(amount) as paid from order_payments where deleted_at is null group by order_id) p on p.order_id = o.id
     where o.studio_id = ${studioId}`;
+  const inMonth = input.month ? sql`and to_char(o.event_date, 'YYYY-MM') = ${input.month}` : sql``;
+  const base = sql`${from} ${inMonth}`;
+  const per = input.per;
 
-  const [{ rows }, { rows: counts }] = await Promise.all([
+  const [{ rows }, { rows: counts }, { rows: months }] = await Promise.all([
     db.execute<Row & { total_count: string }>(sql`
       select o.id, o.code, o.event_date::text, o.client_name, o.client_phone, o.venue, o.event_type, o.total,
              coalesce(p.paid, 0) as paid, o.status, count(*) over () as total_count
       ${base} and ${viewWhere[input.view]} ${search}
       order by ${order}
-      limit ${PAGE_SIZE} offset ${(input.page - 1) * PAGE_SIZE}`),
+      limit ${per} offset ${(input.page - 1) * per}`),
     db.execute<Record<OrderView | "active", string>>(sql`
       select count(*) filter (where ${viewWhere.upcoming}) as upcoming,
              count(*) filter (where ${viewWhere.debt}) as debt,
@@ -128,13 +135,20 @@ export async function listOrders(ctx: StudioCtx, input: z.infer<typeof listQuery
              count(*) filter (where ${viewWhere.cancelled}) as cancelled,
              count(*) filter (where o.status = 'active') as active
       ${base}`),
+    // months that hold orders in this view (search applied, month filter not) — the month menu
+    db.execute<{ ym: string; n: string }>(sql`
+      select to_char(o.event_date, 'YYYY-MM') as ym, count(*) as n
+      ${from} and ${viewWhere[input.view]} ${search}
+      group by 1 order by 1 desc limit 36`),
   ]);
 
   const c = counts[0];
   return {
     view: input.view,
     page: input.page,
-    pageSize: PAGE_SIZE,
+    pageSize: per,
+    month: input.month ?? null,
+    months: months.map((m) => ({ ym: m.ym, count: Number(m.n) })),
     total: rows.length ? Number(rows[0].total_count) : 0,
     counts: { upcoming: +c.upcoming, debt: +c.debt, past: +c.past, cancelled: +c.cancelled, active: +c.active },
     today,
