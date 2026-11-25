@@ -361,7 +361,7 @@ function Setup({ data, studio, onNew }: { data: Dash; studio: string; onNew(): v
           <h2 id="setup-h" className="ds-h3">
             Studiyani ishga tushiring
           </h2>
-          <p className="ds-label ds-secondary">
+          <p className="ds-body-sm ds-secondary">
             4 qadamdan {done} tasi bajarildi · taxminan 5 daqiqa
           </p>
         </div>
@@ -378,7 +378,7 @@ function Setup({ data, studio, onNew }: { data: Dash; studio: string; onNew(): v
             </span>
             <div>
               <strong className="ds-body-medium">{s.title}</strong>
-              <span className="ds-label ds-secondary">{s.text}</span>
+              <span className="ds-body-sm ds-secondary">{s.text}</span>
             </div>
             {s.done ? <span className="ds-label-strong ds-brand">Bajarildi</span> : s.action}
           </li>

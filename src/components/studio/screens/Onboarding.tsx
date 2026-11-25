@@ -164,7 +164,7 @@ export function OnboardingScreen() {
           <span className="ds-body-medium" id="cap-label">
             Kunlik sigʻim
           </span>
-          <span className="ds-label ds-secondary">Bir kunda nechta tadbir</span>
+          <span className="ds-body-sm ds-secondary">Bir kunda nechta tadbir</span>
         </div>
         <div className="ds-stepper" role="group" aria-labelledby="cap-label">
           <button type="button" aria-label="Kamaytirish" disabled={capacity <= CAP_MIN} onClick={() => setCapacity((c) => Math.max(CAP_MIN, c - 1))}>

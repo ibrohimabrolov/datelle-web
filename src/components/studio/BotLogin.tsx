@@ -125,7 +125,7 @@ export function BotLogin({ onDone, onCancel, onFallback }: { onDone(me: Me): voi
         <div className="ds-botlogin-code">
           <span className="ds-caps ds-secondary">Kod</span>
           <b aria-label={`Kod ${phase.login.code.split("").join(" ")}`}>{phase.login.code}</b>
-          <span className="ds-label ds-secondary">Botdagi kod bilan bir xil boʻlsin</span>
+          <span className="ds-body-sm ds-secondary">Botdagi kod bilan bir xil boʻlsin</span>
         </div>
       </div>
       <a className="ds-btn" data-style="primary" data-size="l" data-block href={phase.login.url} target="_blank" rel="noreferrer">
