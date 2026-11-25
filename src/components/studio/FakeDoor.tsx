@@ -10,8 +10,7 @@ export function FakeDoor({ title, text, voted, onClose, onVote }: { title: strin
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   return (
-    <Modal title={title} size="sm" onClose={onClose}>
-      <p className="ds-body ds-secondary">{voted ? "Soʻrovingiz qabul qilingan — tayyor boʻlganda Telegram orqali xabar beramiz." : text}</p>
+    <Modal title={title} description={voted ? "Soʻrovingiz qabul qilingan — tayyor boʻlganda Telegram orqali xabar beramiz." : text} size="sm" variant="dialog" onClose={onClose}>
       {err && (
         <p className="ds-alert" role="alert">
           {err}

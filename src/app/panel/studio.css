@@ -892,7 +892,6 @@ textarea.ds-input { height: auto; min-height: 48px; padding-top: 13px; padding-b
 .ds-perms { display: flex; flex-direction: column; gap: var(--ds-space-8); padding: var(--ds-space-16); border-radius: var(--ds-radius-lg); background: var(--ds-bg-subtle); }
 .ds-linkbox { display: flex; align-items: center; gap: var(--ds-space-12); min-height: 52px; padding: var(--ds-space-4) var(--ds-space-4) var(--ds-space-4) var(--ds-space-16); border-radius: var(--ds-radius-lg); background: var(--ds-bg-surface); }
 .ds-linkbox > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; user-select: all; }
-.ds-invfoot > span:first-child { text-align: center; }
 
 /* Theme segment on a card (Figma Inputs/Segment: container on-card pill, pad 4; selected = inverse) */
 .ds-segment[data-on-card] { margin: 0; padding: var(--ds-space-4); gap: 0; background: var(--ds-bg-canvas); }
@@ -913,8 +912,6 @@ textarea.ds-input { height: auto; min-height: 48px; padding-top: 13px; padding-b
   .ds-row-label { width: 184px; }
   .ds-row[data-wide] .ds-row-label { width: auto; }
   .ds-modal[data-size="lg"] { width: 560px; }
-  .ds-invfoot { align-items: center; }
-  .ds-invfoot > span:first-child { margin-right: auto; text-align: left; }
 }
 /* Mobile: label over value on the left, the action on the right (no room for three columns at 358) */
 @media (max-width: 1023.98px) {
@@ -944,6 +941,28 @@ textarea.ds-input { height: auto; min-height: 48px; padding-top: 13px; padding-b
 .ds-switch:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
 @media (prefers-reduced-motion: reduce) { .ds-switch, .ds-switch::after { transition: none; } }
 
+/* Figma Overlays/Dialog (58:198, Obuna tugadi 37:11742, Menejer qoʻshish 596:12216):
+   [3D 96] · H2 + description (gap 4) · body · footer; gap 20 (+4 above the footer); ✕ 44 at 16/16 when present.
+   Secondary in a dialog = grey pill (bg/surface), no stroke; footer buttons share the width. */
+.ds-modal[data-variant="dialog"] { gap: var(--ds-space-20); }
+.ds-modal[data-variant="dialog"] > .ds-modal-foot { margin-top: var(--ds-space-4); }
+.ds-dialog-head { display: flex; flex-direction: column; gap: var(--ds-space-4); }
+.ds-dialog-head[data-close] { padding-right: var(--ds-space-40); }
+.ds-dialog-media img { display: block; width: 96px; height: 96px; object-fit: contain; }
+.ds-dialog-close { position: absolute; top: var(--ds-space-16); right: var(--ds-space-16); }
+.ds-modal .ds-btn[data-style="secondary"] { background: var(--ds-bg-surface); box-shadow: none; }
+.ds-modal .ds-btn[data-style="secondary"]:hover { background: var(--ds-bg-surface-hover); }
+.ds-invfoot[data-split] { gap: var(--ds-space-12); }
+/* Obuna tugadi · Plan: bg/subtle r16, pad 16/20, gap 16; check-circle icon/brand 18 */
+.ds-planbox { display: flex; flex-direction: column; gap: var(--ds-space-16); padding: var(--ds-space-16) var(--ds-space-20); border-radius: var(--ds-radius-lg); background: var(--ds-bg-subtle); }
+.ds-planbox-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--ds-space-12); white-space: nowrap; }
+.ds-planbox ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ds-space-12); }
+.ds-planbox li { display: flex; align-items: center; gap: var(--ds-space-8); font: var(--ds-type-body-default); color: var(--ds-text-primary); }
+.ds-planbox li svg { flex: none; color: var(--ds-icon-brand); }
+@media (min-width: 1024px) {
+  .ds-modal { box-shadow: 0 16px 40px #0000001f; }
+  .ds-modal[data-size="lg"] { border-radius: var(--ds-radius-xl); box-shadow: 0 24px 64px #00000029; }
+}
 .ds-modal-foot[data-split] { flex-direction: column-reverse; }
 @media (min-width: 1024px) { .ds-modal-foot[data-split] { flex-direction: row; } .ds-modal-foot[data-split] > * { flex: 1; } }
 a.ds-btn[aria-disabled] { pointer-events: none; opacity: 0.5; }
