@@ -35,6 +35,7 @@
   --ds-green-900: #0f2f24;
   --ds-green-950: #0a1f18;
   --ds-amber-50: #fffaeb;
+  --ds-amber-75: #fcf3dc; /* Figma amber/75 — day/limited-bg */
   --ds-amber-100: #fef3c7;
   --ds-amber-200: #fde3a0;
   --ds-amber-300: #f8c96a;
@@ -191,7 +192,7 @@
   --ds-day-free-bg: var(--ds-neutral-0);
   --ds-day-free-border: var(--ds-neutral-200);
   --ds-day-free-text: var(--ds-neutral-950);
-  --ds-day-limited-bg: var(--ds-amber-100);
+  --ds-day-limited-bg: var(--ds-amber-75);
   --ds-day-limited-text: var(--ds-amber-800);
   --ds-day-booked-bg: var(--ds-green-700);
   --ds-day-booked-text: var(--ds-neutral-0);

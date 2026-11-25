@@ -15,10 +15,9 @@ import { Overlay } from "../Overlay";
 import { useStudio } from "../PanelProvider";
 import { Toast, type ToastMsg } from "../Toast";
 import { SettingsLink } from "../Shell";
-import { fetchMonth, monthCache, monthKey, useDataVersion, type CalDay, type CalOrder, type MonthData } from "../data";
+import { fetchMonth, monthCache, monthKey, useDataVersion, type CalDay, type MonthData } from "../data";
 
 /* ── data ── */
-type Order = CalOrder;
 type Day = CalDay;
 const cache = monthCache;
 const key = monthKey;
@@ -187,7 +186,7 @@ export function CalendarScreen() {
     <>
       <header className="ds-cal-head">
         <div>
-          <span className="ds-caps ds-tertiary">{ctx?.studio.name ?? " "}</span>
+          <span className="ds-caps ds-tertiary ds-mobile-only">{ctx?.studio.name ?? " "}</span>
           <h1 className="ds-h1" aria-live="polite">
             {monthName(month)} <span className="ds-year">{month.slice(0, 4)}</span>
           </h1>
@@ -217,7 +216,13 @@ export function CalendarScreen() {
             data.summary.events ? (
               <>
                 <b className="ds-body-strong">{data.summary.events} tadbir</b>
-                {data.summary.due > 0 && <span className="ds-due"> · {data.summary.due} ta qoldiq</span>}
+                {data.summary.due > 0 && (
+                  <span className="ds-due">
+                    {" "}· {data.summary.due}
+                    <span className="ds-mobile-only"> ta qoldiq</span>
+                    <span className="ds-desktop-only"> tasida qoldiq bor</span>
+                  </span>
+                )}
               </>
             ) : (
               <span className="ds-secondary">Bu oyda tadbir yoʻq</span>
@@ -263,7 +268,11 @@ export function CalendarScreen() {
                     </div>
                   ) : (
                     <div role="gridcell" key={`x${di}`} aria-hidden>
-                      <span className="ds-day" data-outside />
+                      <span className="ds-day" data-outside>
+                        <span className="ds-dhead ds-desktop-only">
+                          <span className="ds-num">{outsideDay(week, di)}</span>
+                        </span>
+                      </span>
                     </div>
                   ),
                 )}
@@ -338,14 +347,15 @@ export function CalendarScreen() {
 /* Legend — Figma differs per breakpoint: mobile swatches use the text colours of the round cells,
    desktop uses the cell fills of DayCell Large */
 function Legend({ className, desktop }: { className?: string; desktop?: boolean }) {
+  /* desktop (Figma Meta 571:11328): 12×12 r4 swatches with a 1px border/default, fills = DayCellLarge states */
   const items: [string, string][] = desktop
-    ? [["Boʻsh", "var(--ds-day-free-bg)"], ["1 joy", "var(--ds-day-limited-bg)"], ["Band", "var(--ds-day-booked-bg)"], ["Yopiq", "var(--ds-day-blocked-bg)"]]
+    ? [["Boʻsh", "var(--ds-plane-surface)"], ["1 joy qoldi", "var(--ds-day-limited-bg)"], ["Band", "var(--ds-brand-subtle)"], ["Yopiq", "var(--ds-day-blocked-bg)"]]
     : [["Boʻsh", "var(--ds-day-free-bg)"], ["1 joy", "var(--ds-day-limited-text)"], ["Band", "var(--ds-day-booked-bg)"], ["Yopiq", "var(--ds-bg-muted)"]];
   return (
-    <p className={`ds-legend ${className ?? ""}`} aria-hidden>
+    <p className={`ds-legend ${className ?? ""}`} data-desktop={desktop || undefined} aria-hidden>
       {items.map(([label, color], i) => (
         <span key={label}>
-          <i style={{ background: color, boxShadow: i === 0 ? `inset 0 0 0 ${desktop ? 1 : 1.5}px var(--ds-${desktop ? "day-free-border" : "border-strong"})` : undefined }} />
+          <i style={{ background: color, boxShadow: !desktop && i === 0 ? "inset 0 0 0 1.5px var(--ds-border-strong)" : undefined }} />
           {label}
         </span>
       ))}
@@ -357,7 +367,8 @@ function Legend({ className, desktop }: { className?: string; desktop?: boolean 
 function DayCell({ day, capacity, today, selected, tabbable, loading, onOpen }: { day: Day; capacity: number; today: string; selected: boolean; tabbable: boolean; loading: boolean; onOpen(): void }) {
   const n = Number(day.date.slice(8, 10));
   const isToday = day.date === today;
-  const chips = day.orders.length > 2 ? [...day.orders.slice(0, 1).map(chipText), `+${day.orders.length - 1}`] : day.orders.map(chipText);
+  const shown = day.orders.slice(0, 2);
+  const more = day.orders.length - shown.length;
   const label = [
     `${n}-${MONTHS[Number(day.date.slice(5, 7)) - 1]}, ${WD_FULL[weekdayIdx(day.date)]}`,
     isToday ? "bugun" : "",
@@ -380,11 +391,16 @@ function DayCell({ day, capacity, today, selected, tabbable, loading, onOpen }: 
       tabIndex={tabbable ? 0 : -1}
       onClick={onOpen}
     >
+      {/* Head (Figma 3:79): number · "Bugun" pill (any state) · spacer · "1 joy qoldi" | lock */}
       <span className="ds-dhead">
         <span className="ds-num">{n}</span>
-        {day.status === "limited" && <span className="ds-cap">1 joy</span>}
-        {day.status === "blocked" && <StudioIcon name="lock" variant="Filled" size={14} className="ds-desktop-only" />}
-        {isToday && day.status !== "limited" && day.status !== "blocked" && <span className="ds-todaytag">Bugun</span>}
+        {isToday && <span className="ds-todaytag">Bugun</span>}
+        {day.status === "limited" && (
+          <span className="ds-cap">
+            1 joy<span className="ds-cap-rest"> qoldi</span>
+          </span>
+        )}
+        {day.status === "blocked" && <StudioIcon name="lock" variant="Filled" size={14} className="ds-desktop-only ds-lock" />}
       </span>
       {day.status === "blocked" ? (
         <>
@@ -395,11 +411,13 @@ function DayCell({ day, capacity, today, selected, tabbable, loading, onOpen }: 
         </>
       ) : (
         <>
-          {chips.map((c, i) => (
-            <span className="ds-chip" key={i}>
-              {c}
+          {shown.map((o, i) => (
+            <span className="ds-chip" key={o.id} data-more={i === 1 && more > 0 ? true : undefined}>
+              {o.client.split(/\s+/)[0]}
+              {o.venue && <span className="ds-chip-sub"> · {o.venue}</span>}
             </span>
           ))}
+          {more > 0 && <span className="ds-chip ds-more">+{more}</span>}
           <span className="ds-dots">
             {Array.from({ length: Math.min(day.load, 3) }, (_, i) => (
               <i key={i} />
@@ -410,7 +428,11 @@ function DayCell({ day, capacity, today, selected, tabbable, loading, onOpen }: 
     </button>
   );
 }
-const chipText = (o: Order) => [o.client.split(/\s+/)[0], o.venue].filter(Boolean).join(" · ");
+/* Outside-month cell: Figma shows the neighbour month's date (27–30) in text/tertiary */
+function outsideDay(week: (string | null)[], i: number) {
+  const k = week.findIndex(Boolean);
+  return Number(addDays(week[k]!, i - k).slice(8, 10));
+}
 
 /* ── Day panel: view / close (Figma S3 Kalendar + panel, Kunni yopish, Kun · yopiq) ── */
 function DayPanel({
