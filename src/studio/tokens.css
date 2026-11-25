@@ -156,6 +156,7 @@
   --ds-brand-pressed: var(--ds-green-900);
   --ds-brand-subtle: var(--ds-green-50);
   --ds-brand-subtle-hover: var(--ds-green-100);
+  --ds-brand-glow: rgb(37 107 82 / 0.9); /* Figma brand/glow — KPI bars */
   --ds-brand-border: var(--ds-green-200);
   --ds-icon-default: var(--ds-neutral-950);
   --ds-icon-secondary: var(--ds-neutral-700);
@@ -401,6 +402,7 @@
   --ds-brand-pressed: var(--ds-green-600);
   --ds-brand-subtle: var(--ds-green-900);
   --ds-brand-subtle-hover: var(--ds-green-800);
+  --ds-brand-glow: rgb(47 125 96 / 0.6); /* Figma brand/glow — KPI bars */
   --ds-brand-border: var(--ds-green-700);
   --ds-icon-default: var(--ds-neutral-50);
   --ds-icon-secondary: var(--ds-neutral-300);
@@ -520,6 +522,7 @@
     --ds-brand-pressed: var(--ds-green-600);
     --ds-brand-subtle: var(--ds-green-900);
     --ds-brand-subtle-hover: var(--ds-green-800);
+    --ds-brand-glow: rgb(47 125 96 / 0.6); /* Figma brand/glow — KPI bars */
     --ds-brand-border: var(--ds-green-700);
     --ds-icon-default: var(--ds-neutral-50);
     --ds-icon-secondary: var(--ds-neutral-300);

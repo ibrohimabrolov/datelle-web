@@ -14,8 +14,8 @@ import { OrderCard } from "../OrderCard";
 import { OrderDetail } from "../OrderDetail";
 import { OrderForm, type Prefill } from "../OrderForm";
 import { useStudio } from "../PanelProvider";
-import { Menu, Modal } from "../Modal";
-import { reminderText, smsHref } from "@/lib/studio/clientDocs";
+import { Menu } from "../Modal";
+import { BulkRemind, initials } from "../BulkRemind";
 import { Toast, type ToastMsg } from "../Toast";
 import { SettingsLink } from "../Shell";
 
@@ -26,13 +26,6 @@ const fmtPhone = (p: string) => p.replace(/^(\+998)(\d{2})(\d{3})(\d{2})(\d{2})$
 const dayMonth = (iso: string) => `${Number(iso.slice(8, 10))}-${MONTHS[Number(iso.slice(5, 7)) - 1]}`;
 const cap1 = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const ymLabel = (ym: string) => `${cap1(MONTHS[Number(ym.slice(5, 7)) - 1])} ${ym.slice(0, 4)}`;
-const initials = (name: string) =>
-  name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w.charAt(0).toUpperCase())
-    .join("");
 const PER = [10, 20, 50] as const;
 
 /* Figma S4 · Buyurtmalar — desktop DataTable, mobile grouped cards. URL holds the state:
@@ -490,74 +483,6 @@ function exportCsv(rows: OrderRow[], studio: string) {
   a.download = `${studio.replace(/[^\p{L}\p{N}]+/gu, "-")}-buyurtmalar.csv`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-}
-
-/* Eslatma yuborish (bulk): the text leaves from the studio's own phone, so this is a queue —
-   one tap per client (Telegram copies the text and opens the chat; SMS opens the app), each tap is recorded. */
-function BulkRemind({ orders, onClose }: { orders: OrderRow[]; onClose(): void }) {
-  const ctx = useStudio();
-  const studio = ctx?.studio.name ?? "";
-  const due = orders.filter((o) => o.balance > 0).sort((a, b) => a.date.localeCompare(b.date));
-  const skipped = orders.length - due.length;
-  const [sent, setSent] = useState<Record<string, string>>({});
-  const text = (o: OrderRow) => reminderText({ client: o.client, date: o.date, eventType: o.eventType, total: o.total, paid: o.paid, studio }, "uz");
-  const record = (o: OrderRow, channel: "telegram" | "sms") => {
-    setSent((s) => ({ ...s, [o.id]: channel === "telegram" ? "Telegram" : "SMS" }));
-    void api(`/api/panel/orders/${o.id}/remind`, { body: { channel, lang: "uz" } }).catch(() => {});
-  };
-  const viaTelegram = (o: OrderRow) => {
-    void navigator.clipboard?.writeText(text(o)).catch(() => {});
-    const url = `https://t.me/${o.phone}`;
-    const wa = window.Telegram?.WebApp;
-    if (wa?.openTelegramLink) wa.openTelegramLink(url);
-    else window.open(url, "_blank", "noopener");
-    record(o, "telegram");
-  };
-  return (
-    <Modal
-      variant="dialog"
-      size="lg"
-      title="Eslatma yuborish"
-      description={`${due.length} ta mijozga qoldiq haqida xabar. Telegram matnni nusxalab chatni ochadi — qoʻying va yuboring.${skipped ? ` ${skipped} tasi toʻlangan, oʻtkazib yuborildi.` : ""}`}
-      onClose={onClose}
-    >
-      <ul className="ds-remind-queue">
-        {due.map((o) => (
-          <li key={o.id} data-done={sent[o.id] ? true : undefined}>
-            <span className="ds-avatar" aria-hidden>
-              {initials(o.client)}
-            </span>
-            <span className="ds-remind-who">
-              <b>{o.client}</b>
-              <span className="ds-body-sm ds-secondary">
-                {dayMonth(o.date)} · qoldiq {groupThousands(o.balance)}
-              </span>
-            </span>
-            {sent[o.id] ? (
-              <span className="ds-label-strong ds-brand">
-                <StudioIcon name="check" size={16} /> {sent[o.id]}
-              </span>
-            ) : (
-              <span className="ds-remind-btns">
-                <button className="ds-btn" data-style="secondary" data-size="m" onClick={() => viaTelegram(o)}>
-                  <StudioIcon name="send" variant="Filled" />
-                  <span>Telegram</span>
-                </button>
-                <a className="ds-btn" data-style="secondary" data-size="m" href={smsHref(o.phone, text(o))} onClick={() => record(o, "sms")}>
-                  <span>SMS</span>
-                </a>
-              </span>
-            )}
-          </li>
-        ))}
-      </ul>
-      <div className="ds-modal-foot">
-        <Button variant="secondary" block onClick={onClose}>
-          {Object.keys(sent).length >= due.length ? "Tayyor" : "Yopish"}
-        </Button>
-      </div>
-    </Modal>
-  );
 }
 
 function Empty({ view, q, onNew, onClear }: { view: OrderView; q: string; onNew(): void; onClear(): void }) {

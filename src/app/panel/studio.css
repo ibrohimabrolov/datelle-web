@@ -831,6 +831,105 @@ textarea.ds-input { height: auto; min-height: 48px; padding-top: 13px; padding-b
 .ds-navcount { display: grid; place-items: center; min-width: 22px; height: 22px; padding: 0 var(--ds-space-8); border-radius: var(--ds-radius-full); background: var(--ds-money-due-bg); color: var(--ds-money-due); font: var(--ds-type-label-caps); letter-spacing: var(--ds-type-label-caps-tracking); font-variant-numeric: tabular-nums; } /* Figma NavItem · Badge 22 */
 
 /* ═════════ Phase 5 · Dashboard ═════════ */
+/* ── Dashboard desktop (Figma S2 · Dashboard 9:3) ── */
+.ds-kpihero, .ds-dcard { display: flex; flex-direction: column; min-width: 0; padding: var(--ds-space-24); border-radius: var(--ds-radius-xl); background: var(--ds-bg-surface); }
+.ds-kpihero { gap: var(--ds-space-20); }
+.ds-hero-head { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-12); }
+.ds-hero-head h2 { font: var(--ds-type-label-default); color: var(--ds-text-tertiary); }
+.ds-hero-pill { padding: var(--ds-space-4) var(--ds-space-12); border-radius: var(--ds-radius-full); background: var(--ds-bg-canvas); font: var(--ds-type-label-default); color: var(--ds-text-secondary); white-space: nowrap; }
+.ds-hero-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--ds-space-12); }
+/* KPI tile: bg/surface (grey on the white card) r16, pad 16/4/4 · tray bg/canvas r12 pad 8 */
+.ds-ktile { display: flex; flex-direction: column; gap: var(--ds-space-16); min-width: 0; padding: var(--ds-space-16) var(--ds-space-4) var(--ds-space-4); border-radius: var(--ds-radius-lg); background: var(--ds-bg-canvas); }
+.ds-tile-main { display: flex; flex-direction: column; gap: var(--ds-space-12); padding: 0 var(--ds-space-12); min-width: 0; }
+.ds-ktile h3 { display: flex; align-items: center; gap: var(--ds-space-8); height: 24px; font: var(--ds-type-label-strong); color: var(--ds-text-secondary); }
+.ds-ktile h3 > span:first-of-type { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-ktile h3 svg { flex: none; color: var(--ds-icon-muted); }
+.ds-tile-val { display: flex; align-items: baseline; gap: 6px; min-width: 0; white-space: nowrap; overflow: hidden; }
+.ds-tile-val b { font: var(--ds-type-heading-h1); letter-spacing: var(--ds-type-heading-h1-tracking); color: var(--ds-text-primary); font-variant-numeric: tabular-nums; }
+.ds-tile-val span { font: var(--ds-type-body-default); color: var(--ds-text-tertiary); }
+.ds-tile-val[data-tone="due"] b { color: var(--ds-money-due); }
+.ds-ktile[data-empty] .ds-tile-val b { color: var(--ds-icon-muted); }
+.ds-tile-tray { display: flex; flex-direction: column; justify-content: center; gap: var(--ds-space-12); height: 66px; padding: var(--ds-space-8); border-radius: var(--ds-radius-md); background: var(--ds-bg-surface); overflow: hidden; }
+.ds-ktile[data-empty] .ds-tile-tray { height: 72px; }
+.ds-tile-tray:has(.ds-mbars) { justify-content: space-between; }
+.ds-tile-tray:has(.ds-aging) { gap: var(--ds-space-4); }
+.ds-delta-pill { display: inline-flex; align-items: center; height: 24px; padding: 0 var(--ds-space-8); border-radius: var(--ds-radius-full); background: var(--ds-status-success-bg); color: var(--ds-status-success); font: var(--ds-type-label-strong); white-space: nowrap; }
+.ds-delta-pill[data-down] { background: var(--ds-status-danger-bg); color: var(--ds-status-danger); }
+.ds-track { position: relative; display: block; height: 8px; border-radius: var(--ds-radius-full); background: var(--ds-bg-muted); overflow: hidden; }
+.ds-track i { position: absolute; inset: 0 auto 0 0; border-radius: var(--ds-radius-full); background: var(--ds-brand-glow); }
+/* Bu oy tushum: "Noyabr ▬▬▬ 48,6 mln" over "Oktabr ▬▬ 41,2 mln" */
+.ds-mbars { display: contents; }
+.ds-mbars > div { display: grid; grid-template-columns: 52px 1fr 60px; align-items: center; gap: var(--ds-space-8); font: var(--ds-type-label-default); color: var(--ds-text-secondary); font-variant-numeric: tabular-nums; }
+.ds-mbars > div > span:last-child { text-align: right; white-space: nowrap; }
+.ds-mbars > div[data-now] > span:last-child { color: var(--ds-text-primary); }
+.ds-mbar { position: relative; height: 6px; }
+.ds-mbar i { position: absolute; left: 0; top: 0; height: 6px; min-width: 6px; border-radius: var(--ds-radius-full); background: var(--ds-border-strong); }
+.ds-mbars > div[data-now] .ds-mbar i { background: var(--ds-brand-glow); }
+/* Aging bar + legend dots (Qoldiq tile and card) */
+.ds-aging { display: flex; flex-direction: column; gap: var(--ds-space-4); }
+.ds-aging-bar { display: flex; gap: 3px; height: 8px; }
+.ds-aging[data-variant="kpi"] .ds-aging-bar { height: 8px; margin: 6px 0; }
+.ds-aging[data-variant="card"] { gap: var(--ds-space-12); }
+.ds-aging[data-variant="card"] .ds-aging-bar { height: 6px; }
+.ds-aging-bar i { flex-basis: 0; min-width: 8px; border-radius: var(--ds-radius-full); }
+.ds-aging-bar i[data-k="over"] { background: var(--ds-status-danger-solid); }
+.ds-aging-bar i[data-k="week"] { background: var(--ds-status-warning-solid); }
+.ds-aging-bar i[data-k="later"] { background: var(--ds-border-strong); }
+.ds-aging[data-variant="card"] .ds-aging-bar i[data-k="later"] { background: var(--ds-bg-muted); }
+.ds-legend-dots { display: flex; flex-wrap: wrap; gap: var(--ds-space-4) var(--ds-space-12); font: var(--ds-type-label-default); color: var(--ds-text-secondary); }
+.ds-aging[data-variant="card"] .ds-legend-dots { gap: var(--ds-space-16); }
+.ds-legend-dots > span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.ds-legend-dots > span::before { content: ""; width: 6px; height: 6px; border-radius: var(--ds-radius-full); background: var(--dot); }
+.ds-legend-dots [data-k="over"] { --dot: var(--ds-status-danger-solid); }
+.ds-legend-dots [data-k="week"], .ds-legend-dots [data-k="one"] { --dot: var(--ds-status-warning-solid); }
+.ds-legend-dots [data-k="later"], .ds-legend-dots [data-k="free"] { --dot: var(--ds-border-strong); }
+.ds-legend-dots [data-k="band"] { --dot: var(--ds-day-booked-bg); }
+.ds-legend-dots [data-k="glow"] { --dot: var(--ds-brand-glow); }
+/* Keyingi 30 kun ticks */
+.ds-ticks { display: flex; gap: 3px; height: 20px; }
+.ds-ticks i { flex: 1; min-width: 0; border-radius: 2px; background: var(--ds-border-strong); }
+.ds-ticks i[data-s="band"] { background: var(--ds-day-booked-bg); }
+.ds-ticks i[data-s="one"] { background: var(--ds-status-warning-solid); }
+.ds-ticks[data-muted] i { background: var(--ds-bg-muted); }
+/* Cards row: Keyingi 7 kun (flex) · Qoldiq 380 */
+.ds-dash-cols { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: var(--ds-space-16); align-items: stretch; }
+.ds-dcard { gap: var(--ds-space-16); }
+.ds-revenue { gap: var(--ds-space-24); }
+.ds-dcard-head { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-12); }
+.ds-dcard-head h2 { font: var(--ds-type-heading-h3); letter-spacing: var(--ds-type-heading-h3-tracking); }
+.ds-dcard-head a { font: var(--ds-type-label-strong); color: var(--ds-text-brand); border-radius: var(--ds-radius-sm); }
+.ds-dcard-head a:hover { text-decoration: underline; }
+.ds-dcard-head a:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
+.ds-n7 { display: flex; flex-direction: column; }
+.ds-n7 li + li { box-shadow: inset 0 1px 0 var(--ds-border-subtle); }
+.ds-n7 button { display: flex; align-items: center; gap: var(--ds-space-16); width: 100%; padding: 14px 0; text-align: left; border-radius: var(--ds-radius-sm); }
+.ds-n7 button:hover .n-client { text-decoration: underline; }
+.ds-n7 button:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
+.ds-n7 .n-date { flex: none; width: 56px; font: var(--ds-type-label-default); color: var(--ds-text-tertiary); }
+.ds-n7 .n-date[data-today] { color: var(--ds-text-primary); }
+.ds-n7 .n-dot { flex: none; width: 8px; height: 8px; border-radius: var(--ds-radius-full); }
+.ds-n7 .n-client { flex: none; width: 170px; font: var(--ds-type-body-medium); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-n7 .n-place { flex: 1; min-width: 0; font: var(--ds-type-body-default); color: var(--ds-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-n7 .n-money { flex: none; font: var(--ds-type-body-medium); color: var(--ds-money-due); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ds-n7 .n-money[data-urgent] { color: var(--ds-status-danger); }
+.ds-n7 .n-money[data-paid] { font: var(--ds-type-body-default); color: var(--ds-text-tertiary); }
+.ds-debt-total { display: flex; flex-direction: column; gap: var(--ds-space-12); }
+.ds-debt-total .ds-tile-val span { font: var(--ds-type-body-medium); }
+.ds-debtors { display: flex; flex-direction: column; padding-top: var(--ds-space-8); box-shadow: inset 0 1px 0 var(--ds-border-subtle); }
+.ds-debtors li + li { box-shadow: inset 0 1px 0 var(--ds-border-subtle); }
+.ds-debtors button { display: flex; align-items: center; gap: var(--ds-space-12); width: 100%; padding: var(--ds-space-12) 0; text-align: left; border-radius: var(--ds-radius-sm); font: var(--ds-type-body-medium); }
+.ds-debtors button:hover .d-who > span:first-child { text-decoration: underline; }
+.ds-debtors button:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
+.ds-debtors .d-who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ds-debtors .d-who > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-debtors .d-who > span:last-child { font: var(--ds-type-label-default); color: var(--ds-text-secondary); }
+.ds-debtors .d-who > span[data-late] { color: var(--ds-status-danger); }
+.ds-debtors .d-sum { flex: none; font-variant-numeric: tabular-nums; }
+.ds-debt-remind { margin-top: auto; width: 100%; color: var(--ds-text-brand); }
+@media (min-width: 1024px) and (max-width: 1279.98px) {
+  .ds-hero-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ds-dash-cols { grid-template-columns: 1fr; }
+}
 .ds-kpis { display: grid; grid-template-columns: 1fr; gap: var(--ds-space-12); }
 @media (min-width: 1024px) { .ds-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--ds-space-16); } }
 /* KpiCard (Figma: r28, pad 20, gap 8; Tone Inverse / Due / Default) */
@@ -881,29 +980,29 @@ textarea.ds-input { height: auto; min-height: 48px; padding-top: 13px; padding-b
 .ds-alert-icon { display: grid; place-items: center; flex: none; width: 20px; height: 20px; border-radius: var(--ds-radius-full); background: var(--ds-status-danger-solid); color: var(--ds-text-on-danger); font: 700 12px/1 var(--ds-font-sans); }
 
 /* Revenue chart — single series, one hue; current period one step darker (validated: ΔL ≥ 0.06, light end 4.41:1 on surface) */
-.ds-chart { --bar: var(--ds-chart-1-weak); --bar-now: var(--ds-green-700); position: relative; display: grid; grid-template-columns: auto 1fr; gap: var(--ds-space-12); height: 240px; }
-.studio[data-theme="dark"] .ds-chart { --bar-now: var(--ds-green-300); }
-@media (prefers-color-scheme: dark) { .studio:not([data-theme="light"]) .ds-chart { --bar-now: var(--ds-green-300); } }
-.ds-yaxis { position: relative; width: 28px; font: var(--ds-type-label-default); color: var(--ds-text-tertiary); text-align: right; }
-.ds-yaxis span { position: absolute; right: 0; transform: translateY(-50%); }
-.ds-plot { position: relative; display: flex; align-items: flex-end; gap: 2px; padding: 0 0 26px; }
-.ds-plot .ds-gridline { position: absolute; left: 0; right: 0; height: 1px; background: var(--ds-chart-grid); pointer-events: none; }
-.ds-col { position: relative; flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; border-radius: var(--ds-radius-sm); outline: none; }
-.ds-col .ds-bar { width: min(40px, 64%); min-height: 2px; border-radius: 4px 4px 0 0; background: var(--bar); transition: filter var(--ds-duration-fast) var(--ds-ease-out); }
-.ds-col[data-now] .ds-bar { background: var(--bar-now); }
-.ds-col .ds-xlabel { position: absolute; bottom: -26px; font: var(--ds-type-label-default); color: var(--ds-text-tertiary); white-space: nowrap; }
-.ds-col[data-now] .ds-xlabel { color: var(--ds-text-primary); font: var(--ds-type-label-strong); }
+/* Tushum chart (Figma 101:12264, desktop only): y axis Label/Default tertiary · plot pad 16 top/sides,
+   180px value area + 26px labels · grid border/default · bars 40, r8 top, chart/1-weak, current chart/1
+   with a bg/inverse tooltip · x labels Label/Default tertiary, current text/primary */
+.ds-chart { position: relative; display: flex; gap: var(--ds-space-16); height: 222px; }
+.ds-yaxis { position: relative; flex: none; min-width: 17px; font: var(--ds-type-label-default); color: var(--ds-text-tertiary); text-align: right; font-variant-numeric: tabular-nums; }
+.ds-yaxis span { position: absolute; right: 0; transform: translateY(50%); white-space: nowrap; }
+.ds-plot { position: relative; flex: 1; min-width: 0; display: flex; align-items: stretch; justify-content: space-between; gap: 4px; padding: var(--ds-space-16) var(--ds-space-16) 0; }
+.ds-plot .ds-gridline { position: absolute; left: 0; right: 0; height: 1px; background: var(--ds-border-default); pointer-events: none; }
+.ds-col { position: relative; flex: 0 1 40px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; border-radius: var(--ds-radius-sm); outline: none; cursor: default; }
+.ds-col .ds-bar { position: relative; width: 100%; max-width: 40px; min-height: 2px; border-radius: var(--ds-radius-sm) var(--ds-radius-sm) 0 0; background: var(--ds-chart-1-weak); transition: filter var(--ds-duration-fast) var(--ds-ease-out); }
+.ds-col[data-now] .ds-bar { background: var(--ds-chart-1); }
+.ds-col .ds-xlabel { height: 18px; margin-top: var(--ds-space-8); font: var(--ds-type-label-default); color: var(--ds-text-tertiary); white-space: nowrap; }
+.ds-col[data-now] .ds-xlabel { color: var(--ds-text-primary); }
 .ds-col:hover .ds-bar, .ds-col:focus-visible .ds-bar { filter: brightness(0.92); }
 .ds-col:focus-visible { box-shadow: var(--ds-focus-ring); }
-.ds-tip { position: absolute; z-index: 2; transform: translate(-50%, calc(-100% - 8px)); padding: var(--ds-space-4) var(--ds-space-8); border-radius: var(--ds-radius-sm); background: var(--ds-bg-inverse); color: var(--ds-text-on-inverse); font: var(--ds-type-label-strong); white-space: nowrap; pointer-events: none; }
-.ds-chart-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--ds-space-16); flex-wrap: wrap; }
-.ds-chart-head .ds-segment { background: var(--ds-bg-subtle); border-radius: var(--ds-radius-md); }
-@media (max-width: 1023.98px) {
-  .ds-chart { height: 200px; }
-  .ds-col .ds-xlabel { font-size: 11px; }
-  .ds-chart-head .ds-segment { margin: 0; padding: var(--ds-space-4); background: var(--ds-bg-subtle); }
-  .ds-chart-head .ds-segment button { height: 36px; padding: 0 var(--ds-space-12); background: none; color: var(--ds-text-secondary); }
-}
+.ds-tip { position: absolute; z-index: 2; left: 50%; transform: translateX(-50%); padding: var(--ds-space-4) var(--ds-space-8); border-radius: var(--ds-radius-sm); background: var(--ds-bg-inverse); color: var(--ds-text-on-inverse); font: var(--ds-type-label-strong); white-space: nowrap; pointer-events: none; }
+.ds-col:first-child .ds-tip { left: 0; transform: none; }
+.ds-col:last-child .ds-tip { left: auto; right: 0; transform: none; }
+.ds-chart-head { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-16); }
+.ds-chart-head h2 { font: var(--ds-type-heading-h3); letter-spacing: var(--ds-type-heading-h3-tracking); }
+/* Segmented control on the card: bg/subtle pill, pad 4, 206 wide, equal segments */
+.ds-chart-head .ds-segment { width: 206px; padding: var(--ds-space-4); border-radius: var(--ds-radius-full); background: var(--ds-bg-subtle); }
+.ds-chart-head .ds-segment button { flex: 1; }
 
 /* Next 7 days strip (mobile, Figma: pills per day, height by load) */
 .ds-strip { display: grid; grid-template-columns: repeat(7, 1fr); align-items: end; gap: var(--ds-space-8); height: 120px; }
@@ -1071,6 +1170,22 @@ a.ds-btn[aria-disabled] { pointer-events: none; opacity: 0.5; }
 .ds-setup-head { align-items: center; gap: var(--ds-space-16); }
 .ds-setup-art { width: 64px; height: 64px; }
 @media (min-width: 1024px) { .ds-setup-art { width: 88px; height: 88px; } } /* Figma S2 · Dashboard · boʻsh 36:10893 */
+/* Setup checklist desktop (Figma 104:12272): r28 pad 24 gap 20 · H2 title · progress bg/muted 8 · steps py16, border/subtle,
+   done = check-circle brand + struck Body/Strong secondary + Label/Default · pending = 24 ring border/control */
+@media (min-width: 1024px) {
+  .ds-setup { gap: var(--ds-space-20); border-radius: var(--ds-radius-2xl); }
+  .ds-setup-title { font: var(--ds-type-heading-h2); letter-spacing: var(--ds-type-heading-h2-tracking); }
+  .ds-setup .ds-progress { height: 8px; border-radius: var(--ds-radius-full); background: var(--ds-bg-muted); }
+  .ds-setup .ds-progress i { border-radius: var(--ds-radius-full); }
+  .ds-setup .ds-steps li { min-height: 0; padding: var(--ds-space-16) 0; box-shadow: inset 0 1px 0 var(--ds-border-subtle); }
+  .ds-setup .ds-steps li:first-child { box-shadow: none; }
+  .ds-setup .ds-steps li > div { gap: var(--ds-space-4); }
+  .ds-setup .ds-steps strong { font: var(--ds-type-body-strong); }
+  .ds-setup .ds-steps .ds-check { box-shadow: inset 0 0 0 1.5px var(--ds-border-control); }
+  .ds-setup .ds-steps li[data-done] .ds-check { background: none; box-shadow: none; color: var(--ds-icon-brand); }
+  .ds-setup .ds-steps li[data-done] .ds-body-sm { font: var(--ds-type-label-default); }
+  .ds-setup .ds-steps .ds-brand { color: var(--ds-text-success); }
+}
 
 /* ── Phase 7 QA: narrow desktop (1024–1279) and small phones ── */
 @media (max-width: 1279.98px) {
