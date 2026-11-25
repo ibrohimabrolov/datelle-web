@@ -138,7 +138,7 @@
   --ds-text-danger: var(--ds-red-600);
   --ds-text-info: var(--ds-blue-700);
   --ds-border-default: var(--ds-neutral-200);
-  --ds-border-subtle: var(--ds-neutral-200);
+  --ds-border-subtle: var(--ds-neutral-150); /* Figma border/subtle (Light) = neutral/150 #EEEEF1 */
   --ds-border-strong: var(--ds-neutral-300);
   --ds-border-control: var(--ds-neutral-500);
   --ds-border-focus: var(--ds-green-700);

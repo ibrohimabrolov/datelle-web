@@ -472,7 +472,8 @@ export function SettingsScreen() {
   );
 }
 
-/* In-page nav: the section nearest the top of the viewport is current */
+/* In-page nav: the section nearest the top of the scroller is current.
+   Desktop scrolls inside the content card (.ds-main), mobile scrolls the window. */
 function useScrollSpy(ids: SectionId[]) {
   const [active, setActive] = useState<SectionId | null>(null);
   const key = ids.join(",");
@@ -483,19 +484,24 @@ function useScrollSpy(ids: SectionId[]) {
       .map((id) => document.getElementById(`s-${id}`))
       .filter((e): e is HTMLElement => Boolean(e));
     if (!els.length) return;
+    const card = els[0].closest<HTMLElement>(".ds-main");
+    const inner = card && getComputedStyle(card).overflowY !== "visible" ? card : null;
     const onScroll = () => {
-      const line = 120;
+      const top = inner ? inner.getBoundingClientRect().top : 0;
+      const line = top + 120;
       let cur = els[0];
       for (const el of els) if (el.getBoundingClientRect().top - line <= 0) cur = el;
       // at the very bottom the last section wins even if it never reaches the line
-      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) cur = els[els.length - 1];
+      const atEnd = inner ? inner.scrollTop + inner.clientHeight >= inner.scrollHeight - 2 : window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+      if (atEnd) cur = els[els.length - 1];
       setActive(cur.id.slice(2) as SectionId);
     };
     onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
+    const target: HTMLElement | Window = inner ?? window;
+    target.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
     return () => {
-      window.removeEventListener("scroll", onScroll);
+      target.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
   }, [key]);

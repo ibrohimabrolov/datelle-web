@@ -119,7 +119,10 @@
    Overlays/modals rendered inside the card restore the theme's own planes. */
 @media (min-width: 1024px) {
   .ds-shell {
-    display: grid; grid-template-columns: var(--ds-layout-sidebar-width) minmax(0, 1fr); align-items: start;
+    /* The page itself never scrolls on desktop: the content card does, so the 12px green inset
+       (and the card's rounded corners) stay visible at the top and bottom while scrolling */
+    display: grid; grid-template-columns: var(--ds-layout-sidebar-width) minmax(0, 1fr);
+    height: 100dvh; overflow: hidden;
     padding: var(--ds-space-12) var(--ds-space-12) var(--ds-space-12) 0;
     /* Figma frame fill: linear green/700 → green/900 (55%) → green/950, bottom-left → top-right */
     background: linear-gradient(69deg, var(--ds-green-700) 7%, var(--ds-green-900) 54%, var(--ds-green-950) 93%) fixed;
@@ -127,14 +130,14 @@
     --ds-plane-surface: var(--ds-bg-surface);
   }
   .ds-sidebar {
-    position: sticky; top: var(--ds-space-12); height: calc(100dvh - 2 * var(--ds-space-12)); overflow-y: auto; scrollbar-width: none;
+    min-height: 0; overflow-y: auto; scrollbar-width: none;
     display: flex; flex-direction: column; justify-content: space-between; gap: var(--ds-space-24);
     padding: var(--ds-space-20) var(--ds-space-16);
     color: var(--ds-text-on-brand);
     --ds-logo-petal: var(--ds-neutral-0); /* Brand/Mark on brand: white petals, coral accent */
   }
   .ds-main {
-    min-height: calc(100dvh - 2 * var(--ds-space-12));
+    min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable;
     padding: var(--ds-space-24) var(--ds-space-20) var(--ds-space-48);
     border-radius: var(--ds-radius-xl);
     background: var(--ds-plane-surface);
@@ -899,7 +902,7 @@ textarea.ds-input { height: auto; min-height: 48px; padding-top: 13px; padding-b
 @media (min-width: 1024px) {
   .ds-set { flex-direction: row; align-items: flex-start; gap: var(--ds-space-16); }
   /* SubNav 275 incl. 40 right padding, items pad 8/12 r16; active = white card pill */
-  .ds-set-nav { position: sticky; top: calc(var(--ds-space-12) + var(--ds-space-24)); display: flex; flex-direction: column; gap: var(--ds-space-8); flex: none; width: 275px; padding-right: var(--ds-space-40); }
+  .ds-set-nav { position: sticky; top: var(--ds-space-24); display: flex; flex-direction: column; gap: var(--ds-space-8); flex: none; width: 275px; padding-right: var(--ds-space-40); }
   .ds-set-nav a { padding: var(--ds-space-8) var(--ds-space-12); border-radius: var(--ds-radius-lg); font: var(--ds-type-body-medium); color: var(--ds-text-secondary); transition: background-color var(--ds-duration-fast) var(--ds-ease-out); }
   .ds-set-nav a:hover { background: var(--ds-state-hover); }
   .ds-set-nav a[aria-current] { background: var(--ds-bg-surface); color: var(--ds-text-primary); }

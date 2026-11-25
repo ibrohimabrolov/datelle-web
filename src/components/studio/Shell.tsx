@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { api } from "@/lib/api";
 import { useDataVersion } from "./data";
 import { StudioIcon, type StudioIconName } from "./icons";
@@ -34,6 +34,11 @@ const SOON: Soon[] = [
 
 export function Shell({ children }: { children: ReactNode }) {
   const path = usePathname();
+  // Desktop scrolls inside the content card (the page doesn't), so a new page must start at its top
+  const mainRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    mainRef.current?.scrollTo({ top: 0 });
+  }, [path]);
   const ctx = useStudio();
   const { tg } = usePanel();
   const router = useRouter();
@@ -158,7 +163,7 @@ export function Shell({ children }: { children: ReactNode }) {
       )}
       <Toast toast={toast} onDone={() => setToast(null)} />
 
-      <main className="ds-main" id="main">
+      <main className="ds-main" id="main" ref={mainRef}>
         <div className="ds-main-inner">{children}</div>
       </main>
 
