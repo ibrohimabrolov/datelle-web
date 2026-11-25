@@ -465,10 +465,14 @@ export function SettingsScreen() {
   );
 }
 
-/* In-page nav: the section nearest the top of the scroller is current.
-   Desktop scrolls inside the content card (.ds-main), mobile scrolls the window. */
+/* In-page nav (scroll-spy). Desktop scrolls inside the content card (.ds-main), mobile scrolls the window.
+   The current section is the last one whose top passed a reading line. The settings page is short, so the
+   lower sections can never scroll up to a fixed line — near the end the line slides down the viewport, giving
+   every section its own stretch of scroll (before, Obuna · Eslatmalar · Koʻrinish were skipped straight to Hisob).
+   A click pins its section until that smooth scroll settles, so the item you pressed is the one that lights up. */
 function useScrollSpy(ids: SectionId[]) {
   const [active, setActive] = useState<SectionId | null>(null);
+  const pinned = useRef<{ id: SectionId; until: number } | null>(null);
   const key = ids.join(",");
   useEffect(() => {
     const els = key
@@ -479,23 +483,61 @@ function useScrollSpy(ids: SectionId[]) {
     if (!els.length) return;
     const card = els[0].closest<HTMLElement>(".ds-main");
     const inner = card && getComputedStyle(card).overflowY !== "visible" ? card : null;
+    const metrics = () =>
+      inner
+        ? { top: inner.getBoundingClientRect().top, h: inner.clientHeight, left: inner.scrollHeight - inner.clientHeight - inner.scrollTop }
+        : { top: 0, h: window.innerHeight, left: document.documentElement.scrollHeight - window.innerHeight - window.scrollY };
+    let settle: ReturnType<typeof setTimeout> | undefined;
     const onScroll = () => {
-      const top = inner ? inner.getBoundingClientRect().top : 0;
-      const line = top + 120;
+      const pin = pinned.current;
+      if (pin) {
+        // keep the clicked section until the smooth scroll stops (no scroll events for 150ms) or times out
+        clearTimeout(settle);
+        settle = setTimeout(() => (pinned.current = null), 150);
+        if (Date.now() < pin.until) return setActive(pin.id);
+        pinned.current = null;
+      }
+      const { top, h, left } = metrics();
+      const base = 120;
+      const ramp = h * 0.6; // the last 60% of a screen of scroll moves the line from 120px to near the bottom
+      const f = Math.max(0, Math.min(1, 1 - left / ramp));
+      const line = top + base + f * Math.max(0, h - base - 80);
       let cur = els[0];
-      for (const el of els) if (el.getBoundingClientRect().top - line <= 0) cur = el;
-      // at the very bottom the last section wins even if it never reaches the line
-      const atEnd = inner ? inner.scrollTop + inner.clientHeight >= inner.scrollHeight - 2 : window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
-      if (atEnd) cur = els[els.length - 1];
+      for (const el of els) if (el.getBoundingClientRect().top <= line) cur = el;
       setActive(cur.id.slice(2) as SectionId);
     };
+    const onClick = (e: MouseEvent) => {
+      const a = (e.target as HTMLElement).closest<HTMLAnchorElement>(".ds-set-nav a[href^='#s-']");
+      if (!a) return;
+      const id = a.getAttribute("href")!.slice(3) as SectionId;
+      const el = document.getElementById(`s-${id}`);
+      if (!el) return;
+      e.preventDefault();
+      pinned.current = { id, until: Date.now() + 1500 };
+      setActive(id);
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+      history.replaceState(null, "", `#s-${id}`);
+      // nothing to scroll (already there) → release the pin right away
+      settle = setTimeout(() => (pinned.current = null), 400);
+    };
+    const release = () => (pinned.current = null); // the user took over (wheel / touch / keys)
     onScroll();
     const target: HTMLElement | Window = inner ?? window;
     target.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
+    document.addEventListener("click", onClick);
+    window.addEventListener("wheel", release, { passive: true });
+    window.addEventListener("touchstart", release, { passive: true });
+    window.addEventListener("keydown", release);
     return () => {
+      clearTimeout(settle);
       target.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
+      document.removeEventListener("click", onClick);
+      window.removeEventListener("wheel", release);
+      window.removeEventListener("touchstart", release);
+      window.removeEventListener("keydown", release);
     };
   }, [key]);
   return active;
