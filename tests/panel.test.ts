@@ -1104,3 +1104,260 @@ describe("sozlamalar v2 — studiya egasi va jamoani tark etish", () => {
     assert.deepEqual((await c.req("/api/panel/interest", { body: { feature: "logo" } })).json.features, ["logo"]);
   });
 });
+
+describe("xarajatlar", () => {
+  test("owner records expenses; month view = cash in − cash out; per-event profit; tenancy, roles, CSRF, soft delete + undo", async () => {
+    const owner = new Client();
+    await owner.devLogin(tgId(), "Xarajat Ega");
+    const studioId = (await owner.req("/api/panel/onboarding", { body: { name: "Xarajat Studio", category: "dekor", dailyCapacity: 3 } })).json.studio.id;
+    const today = new Date(Date.now() + 5 * 3600_000).toISOString().slice(0, 10);
+    const month = today.slice(0, 7);
+
+    // empty studio → hasAny false, all zero
+    const empty = await owner.req("/api/panel/expenses");
+    assert.equal(empty.status, 200, JSON.stringify(empty.json));
+    assert.equal(empty.json.hasAny, false);
+    assert.equal(empty.json.kpi.expense, 0);
+    assert.equal(empty.json.chart.length, 6);
+
+    // an order today with a 5 mln advance
+    const o = await owner.req("/api/panel/orders", {
+      body: { clientName: "Kamola Yusupova", clientPhone: "+998901234567", eventDate: today, eventType: "toy", venue: "Oqsaroy", total: 12_000_000, advance: { amount: 5_000_000, method: "cash" } },
+    });
+    assert.equal(o.status, 201, JSON.stringify(o.json));
+    const orderId = o.json.order.id;
+
+    // validation
+    const bad = await owner.req("/api/panel/expenses", { body: { amount: 0, category: "x", title: "", spentOn: "2099-01-01" } });
+    assert.equal(bad.status, 422);
+    assert.ok(bad.json.error.fields.amount && bad.json.error.fields.category && bad.json.error.fields.title);
+    const future = await owner.req("/api/panel/expenses", { body: { amount: 1000, category: "gullar", title: "Gul", spentOn: "2099-01-01" } });
+    assert.equal(future.status, 422);
+    assert.equal(future.json.error.fields.spentOn, "Bugun yoki oldingi kun");
+    // CSRF
+    assert.equal((await owner.req("/api/panel/expenses", { body: { amount: 1000, category: "gullar", title: "Gul", spentOn: today }, origin: "https://evil.example" })).status, 403);
+
+    const a = await owner.req("/api/panel/expenses", { body: { amount: 1_800_000, category: "gullar", title: "Atirgul, 300 dona", spentOn: today, orderId } });
+    assert.equal(a.status, 201, JSON.stringify(a.json));
+    assert.equal(a.json.expense.order.client, "Kamola Yusupova");
+    assert.equal(a.json.expense.paidBy.name, "Xarajat Ega"); // defaults to the author
+    const b = await owner.req("/api/panel/expenses", { body: { amount: 240_000, category: "boshqa", title: "Oasis gubka", spentOn: today, orderId: null, paidBy: null } });
+    assert.equal(b.status, 201);
+    assert.equal(b.json.expense.order, null);
+    assert.equal(b.json.expense.paidBy, null);
+
+    const v = await owner.req(`/api/panel/expenses?month=${month}`);
+    assert.equal(v.json.hasAny, true);
+    assert.equal(v.json.kpi.revenue, 5_000_000);
+    assert.equal(v.json.kpi.expense, 2_040_000);
+    assert.equal(v.json.kpi.profit, 2_960_000);
+    assert.equal(v.json.kpi.events, 1);
+    assert.equal(v.json.kpi.perEvent, 2_040_000);
+    assert.deepEqual(v.json.categories.map((c: { category: string }) => c.category), ["gullar", "boshqa"]);
+    assert.equal(v.json.count, 2);
+    assert.equal(v.json.chart.at(-1).expense, 2_040_000);
+    const ev = v.json.events[0];
+    assert.equal(ev.id, orderId);
+    assert.equal(ev.expense, 1_800_000); // only linked expenses count toward the event
+    assert.equal(ev.profit, 10_200_000);
+
+    // edit: re-categorise, unlink
+    const p = await owner.req(`/api/panel/expenses/${a.json.expense.id}`, { method: "PATCH", body: { category: "transport", orderId: null } });
+    assert.equal(p.status, 200, JSON.stringify(p.json));
+    assert.equal(p.json.expense.category, "transport");
+    assert.equal(p.json.expense.order, null);
+
+    // future month is clamped to the current one
+    assert.equal((await owner.req("/api/panel/expenses?month=2099-01")).json.month, month);
+
+    // stranger: 404 on another studio's expense, cannot link someone else's order
+    const stranger = new Client();
+    await stranger.devLogin(tgId(), "Begona");
+    await stranger.req("/api/panel/onboarding", { body: { name: "Begona Studio", category: "dekor", dailyCapacity: 3 } });
+    assert.equal((await stranger.req(`/api/panel/expenses/${a.json.expense.id}`)).status, 404);
+    const foreign = await stranger.req("/api/panel/expenses", { body: { amount: 1000, category: "gullar", title: "Gul", spentOn: today, orderId } });
+    assert.equal(foreign.status, 422);
+    assert.equal(foreign.json.error.fields.orderId, "Tadbir topilmadi");
+
+    // manager: no money view (403), like Dashboard
+    const manager = new Client();
+    const m = (await manager.devLogin(tgId(), "Menejer")).json.user;
+    await pool.query("insert into studio_members (studio_id, user_id, role) values ($1, $2, 'manager')", [studioId, m.id]);
+    assert.equal((await manager.req("/api/panel/expenses", { headers: { "x-studio-id": studioId } })).status, 403);
+
+    // options: the order and both members (owner first)
+    const opts = await owner.req("/api/panel/expenses/options");
+    assert.equal(opts.json.orders[0].id, orderId);
+    assert.deepEqual(opts.json.members.map((x: { role: string }) => x.role), ["owner", "manager"]);
+    // paidBy may be a member of this studio only
+    const outsider = await owner.req("/api/panel/expenses", { body: { amount: 1000, category: "gullar", title: "Gul", spentOn: today, paidBy: m.id } });
+    assert.equal(outsider.status, 201);
+
+    // soft delete → gone from totals; restore brings it back; audit trail kept
+    assert.equal((await owner.req(`/api/panel/expenses/${b.json.expense.id}`, { method: "DELETE", body: {} })).status, 200);
+    assert.equal((await owner.req(`/api/panel/expenses/${b.json.expense.id}`)).status, 404);
+    assert.equal((await owner.req(`/api/panel/expenses?month=${month}`)).json.kpi.expense, 1_801_000);
+    assert.equal((await owner.req(`/api/panel/expenses/${b.json.expense.id}/restore`, { body: {} })).status, 200);
+    assert.equal((await owner.req(`/api/panel/expenses?month=${month}`)).json.kpi.expense, 2_041_000);
+    const { rows } = await pool.query("select action from studio_events where studio_id = $1 and entity = 'expense' order by created_at", [studioId]);
+    assert.deepEqual(rows.map((r) => r.action), ["create", "create", "update", "create", "delete", "restore"]);
+  });
+});
+
+describe("rekvizit", () => {
+  test("stock, bookings, shortage, overdue return with broken/lost; manager allowed, stranger 404, CSRF", async () => {
+    const owner = new Client();
+    await owner.devLogin(tgId(), "Rekvizit Ega");
+    const studioId = (await owner.req("/api/panel/onboarding", { body: { name: "Rekvizit Studio", category: "dekor", dailyCapacity: 3 } })).json.studio.id;
+    const day = (n: number) => new Date(Date.now() + 5 * 3600_000 + n * 86_400_000).toISOString().slice(0, 10);
+    const order = async (name: string, date: string) =>
+      (await owner.req("/api/panel/orders", { body: { clientName: name, clientPhone: "+998901234567", eventDate: date, eventType: "toy", venue: "Oqsaroy", total: 1_000_000 } })).json.order.id;
+
+    assert.equal((await owner.req("/api/panel/props")).json.hasAny, false);
+    const bad = await owner.req("/api/panel/props", { body: { name: "", category: "x", total: -1 } });
+    assert.equal(bad.status, 422);
+    assert.ok(bad.json.error.fields.name && bad.json.error.fields.category && bad.json.error.fields.total);
+
+    const vase = await owner.req("/api/panel/props", { body: { name: "Shisha vaza, 40 sm", category: "vazalar", total: 60 } });
+    assert.equal(vase.status, 201, JSON.stringify(vase.json));
+    assert.equal(vase.json.prop.code, "VZ-01"); // auto code
+    const v2 = await owner.req("/api/panel/props", { body: { name: "Kichik vaza", category: "vazalar", total: 10 } });
+    assert.equal(v2.json.prop.code, "VZ-02");
+    assert.equal((await owner.req("/api/panel/props", { body: { name: "Dup", category: "vazalar", total: 1, code: "vz-01" } })).json.error.fields.code, "Bu kod boshqa buyumda bor");
+    const vaseId = vase.json.prop.id;
+
+    // past event (overdue), two events on the same future day → shortage
+    const past = await order("Bekzod Karimov", day(-4));
+    const f1 = await order("Malika Karimova", day(4));
+    const f2 = await order("Javlon Aliyev", day(4));
+    assert.equal((await owner.req(`/api/panel/props/${vaseId}/book`, { body: { orderId: past, qty: 36 } })).status, 200);
+    await owner.req(`/api/panel/props/${vaseId}/book`, { body: { orderId: f1, qty: 40 } });
+    const b2 = await owner.req(`/api/panel/props/${vaseId}/book`, { body: { orderId: f2, qty: 26 } });
+    // day+4: 66 booked, 60 owned (outstanding units are expected back by then) → 6 missing
+    assert.deepEqual(b2.json.warnings, ["6 ta yetishmaydi"]);
+    assert.equal(b2.json.prop.overdue, 36);
+    assert.equal(b2.json.prop.stock, 24);
+    assert.equal(b2.json.prop.state, "qaytmagan");
+
+    const ov = await owner.req("/api/panel/props");
+    assert.equal(ov.json.kpi.out, 36);
+    assert.equal(ov.json.kpi.missing, 6);
+    assert.equal(ov.json.kpi.next.name, "Shisha vaza, 40 sm");
+    assert.equal(ov.json.returning[0].orderId, past);
+    assert.equal(ov.json.returning[0].overdue, true);
+    assert.equal(ov.json.counts.vazalar, 2);
+
+    // return: 33 back, 2 broken (→ repair), 1 lost (→ written off)
+    const ret = await owner.req(`/api/panel/props/returns/${past}`);
+    const line = ret.json.lines[0];
+    assert.equal(line.outstanding, 36);
+    assert.equal((await owner.req(`/api/panel/props/returns/${past}`, { body: { lines: [{ bookingId: line.id, back: 40, broken: 0, lost: 0 }] } })).status, 422);
+    assert.equal((await owner.req(`/api/panel/props/returns/${past}`, { body: { lines: [{ bookingId: line.id, back: 33, broken: 2, lost: 1 }] } })).status, 200);
+    const after = (await owner.req(`/api/panel/props/${vaseId}`)).json.prop;
+    assert.equal(after.total, 59);
+    assert.equal(after.repair, 2);
+    assert.equal(after.overdue, 0);
+    assert.equal(after.stock, 57);
+    assert.equal(after.shortages[0].missing, 9); // 66 booked, now 59 owned − 2 in repair
+    assert.deepEqual(after.history.slice(0, 1).map((h: { action: string }) => h.action), ["return"]);
+
+    // repaired → back to stock; cannot repair more than in repair
+    assert.equal((await owner.req(`/api/panel/props/${vaseId}/repair`, { body: { fixed: 5 } })).status, 422);
+    assert.equal((await owner.req(`/api/panel/props/${vaseId}/repair`, { body: { fixed: 2 } })).json.prop.repair, 0);
+    // total can't drop below what's out/in repair; booking qty 0 removes it
+    assert.equal((await owner.req(`/api/panel/props/${vaseId}`, { method: "PATCH", body: { total: 59 } })).status, 200);
+    const removed = (await owner.req(`/api/panel/props/${vaseId}/book`, { body: { orderId: f2, qty: 0 } })).json.prop;
+    assert.equal(removed.bookings.length, 1);
+    assert.equal(removed.shortages.length, 0);
+
+    // manager can book and return, cannot delete; stranger sees nothing; CSRF
+    const manager = new Client();
+    const m = (await manager.devLogin(tgId(), "Menejer")).json.user;
+    await pool.query("insert into studio_members (studio_id, user_id, role) values ($1, $2, 'manager')", [studioId, m.id]);
+    const h = { "x-studio-id": studioId };
+    assert.equal((await manager.req("/api/panel/props", { headers: h })).status, 200);
+    assert.equal((await manager.req(`/api/panel/props/${vaseId}`, { method: "DELETE", body: {}, headers: h })).status, 403);
+    const stranger = new Client();
+    await stranger.devLogin(tgId(), "Begona");
+    await stranger.req("/api/panel/onboarding", { body: { name: "Begona", category: "dekor", dailyCapacity: 3 } });
+    assert.equal((await stranger.req(`/api/panel/props/${vaseId}`)).status, 404);
+    assert.equal((await stranger.req(`/api/panel/props/returns/${past}`)).status, 404);
+    assert.equal((await owner.req("/api/panel/props", { body: { name: "X vaza", category: "vazalar", total: 1 }, origin: "https://evil.example" })).status, 403);
+
+    // delete (owner): soft, frees the code for reuse
+    assert.equal((await owner.req(`/api/panel/props/${v2.json.prop.id}`, { method: "DELETE", body: {} })).status, 200);
+    assert.equal((await owner.req("/api/panel/props", { body: { name: "Yangi", category: "vazalar", total: 1, code: "VZ-02" } })).status, 201);
+  });
+});
+
+describe("jamoa jadvali", () => {
+  test("staff roster, tasks with people, week view, task details with props; tenancy, validation, release on staff delete", async () => {
+    const owner = new Client();
+    await owner.devLogin(tgId(), "Jadval Ega");
+    const studioId = (await owner.req("/api/panel/onboarding", { body: { name: "Jadval Studio", category: "dekor", dailyCapacity: 3 } })).json.studio.id;
+    const day = (n: number) => new Date(Date.now() + 5 * 3600_000 + n * 86_400_000).toISOString().slice(0, 10);
+
+    const empty = await owner.req("/api/panel/schedule");
+    assert.equal(empty.status, 200);
+    assert.equal(empty.json.hasAny, false);
+    assert.equal(empty.json.days.length, 7);
+
+    assert.equal((await owner.req("/api/panel/schedule/staff", { body: { name: "", role: "" } })).status, 422);
+    const badPhone = await owner.req("/api/panel/schedule/staff", { body: { name: "Ali", role: "Florist", phone: "123" } });
+    assert.equal(badPhone.status, 422);
+    const dil = await owner.req("/api/panel/schedule/staff", { body: { name: "Dilshod Rahimov", role: "Bosh dekorator", phone: "+998 90 412 33 21", telegram: "@dilshod" } });
+    assert.equal(dil.status, 201, JSON.stringify(dil.json));
+    assert.equal(dil.json.staff.telegram, "dilshod");
+    const jas = (await owner.req("/api/panel/schedule/staff", { body: { name: "Jasur Normatov", role: "Haydovchi" } })).json.staff;
+
+    const order = (await owner.req("/api/panel/orders", { body: { clientName: "Otabek Nurmatov", clientPhone: "+998901234567", eventDate: day(2), eventType: "toy", venue: "Versal", total: 4_000_000 } })).json.order.id;
+    const prop = (await owner.req("/api/panel/props", { body: { name: "Oltin arka", category: "arkalar", total: 2 } })).json.prop.id;
+    await owner.req(`/api/panel/props/${prop}/book`, { body: { orderId: order, qty: 1 } });
+
+    assert.equal((await owner.req("/api/panel/schedule/tasks", { body: { kind: "montaj", day: day(2), startsAt: "25:00" } })).status, 422);
+    const t = await owner.req("/api/panel/schedule/tasks", { body: { orderId: order, kind: "montaj", day: day(2), startsAt: "07:00", endsAt: "11:00", staffIds: [dil.json.staff.id, jas.id] } });
+    assert.equal(t.status, 201, JSON.stringify(t.json));
+    assert.equal(t.json.task.place, "Versal"); // defaults to the venue
+    assert.deepEqual(t.json.task.staff.map((s: { name: string }) => s.name), ["Dilshod Rahimov", "Jasur Normatov"]);
+    assert.equal(t.json.task.order.balance, 4_000_000);
+    assert.deepEqual(t.json.task.props, [{ name: "Oltin arka", code: "ARK-01", qty: 1 }]);
+    const open = await owner.req("/api/panel/schedule/tasks", { body: { orderId: order, kind: "demontaj", day: day(2), startsAt: "23:00", endsAt: "01:00" } });
+    assert.equal(open.json.task.staff.length, 0);
+
+    const wk = await owner.req(`/api/panel/schedule?week=${day(2)}`);
+    assert.equal(wk.json.hasAny, true);
+    assert.equal(wk.json.staff.length, 2);
+    assert.equal(wk.json.orders[0].id, order);
+    const mine = wk.json.tasks.filter((x: { orderId: string }) => x.orderId === order);
+    assert.equal(mine.length, 2);
+    assert.equal(mine.find((x: { kind: string }) => x.kind === "montaj").eventType, "toy");
+
+    // reassign: replace the crew
+    const p = await owner.req(`/api/panel/schedule/tasks/${open.json.task.id}`, { method: "PATCH", body: { staffIds: [jas.id] } });
+    assert.equal(p.status, 200);
+    assert.deepEqual(p.json.task.staff.map((s: { id: string }) => s.id), [jas.id]);
+
+    // stranger: no access, cannot assign foreign staff
+    const stranger = new Client();
+    await stranger.devLogin(tgId(), "Begona");
+    await stranger.req("/api/panel/onboarding", { body: { name: "Begona", category: "dekor", dailyCapacity: 3 } });
+    assert.equal((await stranger.req(`/api/panel/schedule/tasks/${t.json.task.id}`)).status, 404);
+    const foreign = await stranger.req("/api/panel/schedule/tasks", { body: { kind: "montaj", day: day(2), startsAt: "07:00", staffIds: [jas.id] } });
+    assert.equal(foreign.status, 422);
+    assert.equal(foreign.json.error.fields.staffIds, "Xodim topilmadi");
+    // manager can plan
+    const manager = new Client();
+    const m = (await manager.devLogin(tgId(), "Menejer")).json.user;
+    await pool.query("insert into studio_members (studio_id, user_id, role) values ($1, $2, 'manager')", [studioId, m.id]);
+    assert.equal((await manager.req("/api/panel/schedule", { headers: { "x-studio-id": studioId } })).status, 200);
+    // CSRF
+    assert.equal((await owner.req("/api/panel/schedule/staff", { body: { name: "X Y", role: "Florist" }, origin: "https://evil.example" })).status, 403);
+
+    // deleting staff releases their future jobs
+    assert.equal((await owner.req(`/api/panel/schedule/staff/${jas.id}`, { method: "DELETE", body: {} })).status, 200);
+    const after = (await owner.req(`/api/panel/schedule/tasks/${open.json.task.id}`)).json.task;
+    assert.equal(after.staff.length, 0);
+    assert.equal((await owner.req(`/api/panel/schedule/tasks/${t.json.task.id}`, { method: "DELETE", body: {} })).status, 200);
+    assert.equal((await owner.req(`/api/panel/schedule/tasks/${t.json.task.id}`)).status, 404);
+  });
+});

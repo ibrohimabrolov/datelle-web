@@ -381,3 +381,129 @@ export const orderDrafts = pgTable(
   },
   (t) => [index("order_drafts_user_idx").on(t.tgUserId, t.updatedAt), index("order_drafts_expires_idx").on(t.expiresAt)],
 );
+
+/* Xarajatlar (Figma 10 · Xarajatlar): money the studio spent — flowers, wages, transport, rent.
+   order_id null = a general expense ("Umumiy"). Soft delete like payments: profit history stays honest. */
+export const expenseCategory = pgEnum("expense_category", ["gullar", "ish_haqi", "transport", "ijara", "boshqa"]);
+export const expenses = pgTable(
+  "expenses",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    studioId: uuid("studio_id").notNull().references(() => studios.id, { onDelete: "cascade" }),
+    orderId: uuid("order_id").references(() => orders.id, { onDelete: "set null" }),
+    amount: bigint("amount", { mode: "number" }).notNull(),
+    category: expenseCategory("category").notNull(),
+    title: text("title").notNull(), // "Nima uchun": Atirgul, 300 dona
+    spentOn: date("spent_on", { mode: "string" }).notNull(),
+    paidBy: uuid("paid_by").references(() => users.id, { onDelete: "set null" }), // "Kim toʻladi" — a studio member
+    createdBy: uuid("created_by").notNull().references(() => users.id),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    updatedAt: ts("updated_at").notNull().defaultNow(),
+    deletedAt: ts("deleted_at"),
+    deletedBy: uuid("deleted_by").references(() => users.id),
+  },
+  (t) => [
+    index("expenses_studio_spent_idx").on(t.studioId, t.spentOn),
+    index("expenses_order_idx").on(t.orderId),
+    check("expenses_amount_pos", sql`${t.amount} > 0`),
+  ],
+);
+
+/* Rekvizit (Figma 08 · Rekvizit): the studio's reusable decor stock — vases, arches, candlesticks, cloths.
+   total = units owned; repair = units in repair (not usable). Stock is never a stored counter of "in the warehouse":
+   it is total − repair − units still out on bookings, so it can't drift. */
+export const props = pgTable(
+  "props",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    studioId: uuid("studio_id").notNull().references(() => studios.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    code: text("code").notNull(), // VZ-12 — shown to humans, unique per studio among live items
+    category: text("category").notNull(), // PROP_CATEGORIES slug
+    total: integer("total").notNull(),
+    repair: integer("repair").notNull().default(0),
+    note: text("note"),
+    createdBy: uuid("created_by").notNull().references(() => users.id),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    updatedAt: ts("updated_at").notNull().defaultNow(),
+    deletedAt: ts("deleted_at"),
+  },
+  (t) => [
+    index("props_studio_idx").on(t.studioId),
+    uniqueIndex("props_studio_code").on(t.studioId, t.code).where(sql`deleted_at is null`),
+    check("props_counts", sql`${t.total} >= 0 and ${t.repair} >= 0 and ${t.repair} <= ${t.total}`),
+  ],
+);
+
+/* A prop booked for an order. It leaves on the event day and is outstanding until accounted for:
+   outstanding = qty − back − broken − lost ("Keyin qaytadi" simply leaves it outstanding). */
+export const propBookings = pgTable(
+  "prop_bookings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    studioId: uuid("studio_id").notNull().references(() => studios.id, { onDelete: "cascade" }),
+    propId: uuid("prop_id").notNull().references(() => props.id, { onDelete: "cascade" }),
+    orderId: uuid("order_id").notNull().references(() => orders.id, { onDelete: "cascade" }),
+    qty: integer("qty").notNull(),
+    back: integer("back").notNull().default(0), // returned to the warehouse
+    broken: integer("broken").notNull().default(0), // returned broken → props.repair
+    lost: integer("lost").notNull().default(0), // written off → props.total
+    createdBy: uuid("created_by").notNull().references(() => users.id),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    updatedAt: ts("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("prop_bookings_prop_order").on(t.propId, t.orderId),
+    index("prop_bookings_order_idx").on(t.orderId),
+    check("prop_bookings_counts", sql`${t.qty} > 0 and ${t.back} >= 0 and ${t.broken} >= 0 and ${t.lost} >= 0 and ${t.back} + ${t.broken} + ${t.lost} <= ${t.qty}`),
+  ],
+);
+
+/* Jamoa jadvali (Figma 09 · Jamoa jadvali): the studio's field crew — florists, installers, drivers.
+   Staff are a roster, not app users: they don't need to sign in (user_id links one when they are a member). */
+export const staff = pgTable(
+  "staff",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    studioId: uuid("studio_id").notNull().references(() => studios.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    role: text("role").notNull(), // Bosh dekorator · Florist · Montajchi · Haydovchi · Yordamchi (free text)
+    phone: text("phone"),
+    telegram: text("telegram"), // username without @
+    createdBy: uuid("created_by").notNull().references(() => users.id),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    deletedAt: ts("deleted_at"),
+  },
+  (t) => [index("staff_studio_idx").on(t.studioId)],
+);
+
+/* A job on a day: Montaj 10:00 · Oqsaroy. ends_at earlier than starts_at = ends the next day (demontaj 23:00–01:00). */
+export const tasks = pgTable(
+  "tasks",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    studioId: uuid("studio_id").notNull().references(() => studios.id, { onDelete: "cascade" }),
+    orderId: uuid("order_id").references(() => orders.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(), // TASK_KINDS slug
+    day: date("day", { mode: "string" }).notNull(),
+    startsAt: text("starts_at").notNull(), // HH:MM, Tashkent
+    endsAt: text("ends_at"),
+    place: text("place"),
+    note: text("note"),
+    createdBy: uuid("created_by").notNull().references(() => users.id),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    updatedAt: ts("updated_at").notNull().defaultNow(),
+    deletedAt: ts("deleted_at"),
+  },
+  (t) => [index("tasks_studio_day_idx").on(t.studioId, t.day), index("tasks_order_idx").on(t.orderId)],
+);
+
+export const taskStaff = pgTable(
+  "task_staff",
+  {
+    taskId: uuid("task_id").notNull().references(() => tasks.id, { onDelete: "cascade" }),
+    staffId: uuid("staff_id").notNull().references(() => staff.id, { onDelete: "cascade" }),
+    createdAt: ts("created_at").notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.taskId, t.staffId] }), index("task_staff_staff_idx").on(t.staffId)],
+);

@@ -1218,3 +1218,297 @@ a.ds-btn[aria-disabled] { pointer-events: none; opacity: 0.5; }
 .ds-doc-preview b { font: var(--ds-type-label-strong); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ds-doc-preview:hover { background: var(--ds-state-hover); }
 .ds-doc-preview:focus-visible { outline: 2px solid var(--ds-border-focus); outline-offset: 2px; }
+
+/* ═════════ Xarajatlar (Figma 10 · Xarajatlar, S9 487:9121) ═════════ */
+/* One colour per category everywhere (KPI split, category bars, pills). Figma used three different mappings; unified here. */
+.studio { --xp-gullar: var(--ds-brand-solid); --xp-ish_haqi: var(--ds-status-info-solid); --xp-transport: var(--ds-chart-2); --xp-ijara: var(--ds-chart-4); --xp-boshqa: var(--ds-border-strong); }
+.ds-xp-period { display: flex; align-items: center; gap: var(--ds-space-8); }
+.ds-xp-period > span { min-width: 72px; text-align: center; white-space: nowrap; }
+.ds-xp-period .ds-iconbtn:disabled { opacity: 0.4; cursor: not-allowed; }
+.ds-xp-row { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: var(--ds-space-16); align-items: stretch; }
+@media (max-width: 1279.98px) { .ds-xp-row { grid-template-columns: 1fr; } }
+.ds-xp-link { font: var(--ds-type-label-strong); color: var(--ds-text-brand); border-radius: var(--ds-radius-sm); white-space: nowrap; }
+.ds-xp-link:hover { text-decoration: underline; }
+.ds-xp-link:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
+
+/* KPI tiles: tray 80 (Figma Secondary h80, gap 12) */
+.ds-xp-tile .ds-tile-tray { height: 80px; }
+.ds-xp-tile[data-empty] .ds-tile-tray { height: 80px; }
+.ds-xp-tile .ds-tile-tray:has(.ds-xp-split) { gap: var(--ds-space-12); }
+.ds-xp-tile .ds-tile-tray:has(.ds-mbars) { justify-content: center; gap: var(--ds-space-8); }
+.ds-mbars[data-xp] .ds-mbar i { background: var(--ds-border-strong); }
+.ds-mbars[data-xp] > div[data-now] .ds-mbar i { background: var(--ds-brand-solid); }
+.ds-mbars[data-xp] > div > span:last-child { font: var(--ds-type-label-default); }
+.ds-xp-split { display: flex; gap: 3px; height: 8px; }
+.ds-xp-split i { flex-basis: 0; min-width: 8px; border-radius: var(--ds-radius-full); }
+.ds-xp-split i[data-k="profit"] { background: var(--ds-brand-solid); }
+.ds-xp-split i[data-k="cost"] { background: var(--ds-border-strong); }
+.ds-xp-split i[data-cat] { background: var(--xp-c); }
+:is(.ds-xp-split i, .ds-legend-dots span, .ds-xp-track i)[data-cat="gullar"] { --xp-c: var(--xp-gullar); --dot: var(--xp-gullar); }
+:is(.ds-xp-split i, .ds-legend-dots span, .ds-xp-track i)[data-cat="ish_haqi"] { --xp-c: var(--xp-ish_haqi); --dot: var(--xp-ish_haqi); }
+:is(.ds-xp-split i, .ds-legend-dots span, .ds-xp-track i)[data-cat="transport"] { --xp-c: var(--xp-transport); --dot: var(--xp-transport); }
+:is(.ds-xp-split i, .ds-legend-dots span, .ds-xp-track i)[data-cat="ijara"] { --xp-c: var(--xp-ijara); --dot: var(--xp-ijara); }
+:is(.ds-xp-split i, .ds-legend-dots span, .ds-xp-track i)[data-cat="boshqa"] { --xp-c: var(--xp-boshqa); --dot: var(--xp-boshqa); }
+.ds-legend-dots [data-k="xp-profit"] { --dot: var(--ds-brand-solid); }
+.ds-legend-dots [data-k="none"]::before { display: none; }
+.ds-xp-cols { display: flex; align-items: flex-end; gap: 4px; height: 28px; }
+.ds-xp-cols i { flex: 1; min-width: 0; max-width: 24px; border-radius: 3px; background: var(--ds-chart-1-weak); }
+
+/* Tushum va xarajat: two 24px bars per month, gap 4, r6 top; past months at 85% */
+.ds-xp-chart { gap: var(--ds-space-24); }
+.ds-xp-legend { display: flex; gap: var(--ds-space-16); font: var(--ds-type-label-default); color: var(--ds-text-secondary); }
+.ds-xp-legend span { display: inline-flex; align-items: center; gap: var(--ds-space-8); }
+.ds-xp-legend span::before { content: ""; width: 10px; height: 10px; border-radius: 3px; background: var(--ds-brand-solid); }
+.ds-xp-legend [data-k="exp"]::before { background: var(--ds-money-due); }
+.ds-xp-plotwrap { flex: 1; min-height: 222px; }
+.ds-xp-plot { justify-content: space-around; }
+.ds-xp-col { flex: 1 1 0; max-width: 112px; }
+.ds-xp-bars { display: flex; align-items: flex-end; gap: 4px; }
+.ds-xp-bars i { width: 24px; min-height: 2px; border-radius: 6px 6px 0 0; opacity: 0.85; transition: filter var(--ds-duration-fast) var(--ds-ease-out); }
+.ds-xp-bars i[data-k="rev"] { background: var(--ds-brand-solid); }
+.ds-xp-bars i[data-k="exp"] { background: var(--ds-money-due); }
+.ds-xp-col[data-now] .ds-xp-bars i { opacity: 1; }
+.ds-xp-col[data-now] .ds-xlabel { font: var(--ds-type-label-strong); }
+.ds-xp-col:hover .ds-xp-bars i, .ds-xp-col:focus-visible .ds-xp-bars i { filter: brightness(0.92); }
+
+/* Kategoriyalar (380): total H2 · rows 15/22 Medium + 13 tertiary %, track 8 on bg/subtle */
+.ds-xp-side { gap: var(--ds-space-16); }
+.ds-xp-total { display: flex; flex-direction: column; gap: var(--ds-space-4); }
+.ds-xp-total .ds-h2 { font-variant-numeric: tabular-nums; }
+.ds-xp-cats { display: flex; flex-direction: column; gap: var(--ds-space-16); }
+.ds-xp-cats li { display: flex; flex-direction: column; gap: var(--ds-space-8); }
+.ds-xp-cats li > div { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-8); font: var(--ds-type-body-medium); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ds-xp-cats small { margin-left: var(--ds-space-4); font: var(--ds-type-label-default); color: var(--ds-text-tertiary); }
+.ds-xp-track { display: block; height: 8px; border-radius: var(--ds-radius-full); background: var(--ds-bg-subtle); overflow: hidden; }
+.ds-xp-track i { display: block; height: 8px; min-width: 8px; border-radius: var(--ds-radius-full); background: var(--xp-c); }
+
+/* Oxirgi xarajatlar: table 48 head / 72 rows, Sana 88 · Xarajat flex · Kategoriya 96 · Summa 112 */
+.ds-xp-list { gap: var(--ds-space-8); }
+.ds-xp-table th, .ds-xp-table td { padding: 0 var(--ds-space-8); }
+.ds-xp-table .x-date { width: 104px; }
+.ds-xp-table .x-cat { width: 112px; }
+.ds-xp-table .x-sum { width: 128px; }
+.ds-xp-pill { display: inline-flex; align-items: center; height: 24px; padding: 0 var(--ds-space-8); border-radius: var(--ds-radius-full); font: var(--ds-type-label-strong); white-space: nowrap; background: var(--ds-bg-subtle); color: var(--ds-text-secondary); }
+.ds-xp-pill[data-cat="gullar"] { background: var(--ds-brand-subtle); color: var(--ds-text-brand); }
+.ds-xp-pill[data-cat="ish_haqi"] { background: var(--ds-status-info-bg); color: var(--ds-status-info); }
+.ds-xp-pill[data-cat="transport"] { background: var(--ds-money-due-bg); color: var(--ds-money-due); }
+.ds-xp-pill[data-cat="ijara"] { background: var(--ds-event-engagement-bg); color: var(--ds-event-engagement-text); }
+
+/* Tadbirlar foydasi: grey r16 cards, pad 16, gap 8 */
+.ds-xp-events { display: flex; flex-direction: column; gap: var(--ds-space-16); }
+.ds-xp-events li { display: flex; flex-direction: column; gap: var(--ds-space-8); padding: var(--ds-space-16); border-radius: var(--ds-radius-lg); background: var(--ds-bg-canvas); }
+.ds-xp-events .x-top { display: flex; align-items: flex-start; gap: var(--ds-space-8); }
+.ds-xp-events .x-who { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ds-xp-events .x-who > span, .ds-xp-events .x-profit > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-xp-events .x-who > span:first-child, .ds-xp-events .x-profit > span:first-child { font: var(--ds-type-body-medium); font-variant-numeric: tabular-nums; }
+.ds-xp-events .x-who > span:last-child { font: var(--ds-type-label-default); color: var(--ds-text-secondary); }
+.ds-xp-events .x-profit { flex: none; display: flex; flex-direction: column; align-items: flex-end; }
+.ds-xp-events .x-profit > span:last-child { font: var(--ds-type-label-default); color: var(--ds-text-success); }
+.ds-xp-events .x-profit[data-low] > span { color: var(--ds-money-due); }
+
+/* Boʻsh holat (499:10752): white card, 3D 120, H2 center, 3 step tiles */
+.ds-xp-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--ds-space-24); min-height: 528px; padding: var(--ds-space-48) var(--ds-space-24); border-radius: var(--ds-radius-xl); background: var(--ds-bg-surface); text-align: center; }
+.ds-xp-empty-art { width: 140px; height: 140px; }
+.ds-xp-empty-text { display: flex; flex-direction: column; gap: var(--ds-space-8); max-width: 420px; }
+.ds-xp-empty-text h2 { font: var(--ds-type-heading-h1); letter-spacing: var(--ds-type-heading-h1-tracking); }
+.ds-xp-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 264px)); gap: var(--ds-space-16); margin-top: var(--ds-space-16); text-align: left; }
+.ds-xp-steps li { display: flex; align-items: flex-start; gap: var(--ds-space-12); padding: var(--ds-space-12) var(--ds-space-16); border-radius: var(--ds-radius-md); background: var(--ds-bg-canvas); }
+.ds-xp-steps li > span { flex: none; display: grid; place-items: center; width: 28px; height: 28px; border-radius: var(--ds-radius-full); background: var(--ds-bg-surface); font: var(--ds-type-label-strong); }
+.ds-xp-steps li > div { display: flex; flex-direction: column; }
+.ds-xp-steps strong { font: var(--ds-type-label-strong); }
+.ds-xp-steps li span:not(:first-child) { font: var(--ds-type-body-small); color: var(--ds-text-secondary); }
+@media (max-width: 767.98px) { .ds-xp-steps { grid-template-columns: 1fr; } .ds-xp-empty-text h2 { font: var(--ds-type-heading-h2); } }
+
+/* Forma: full-width select field (Tadbir, Kim toʻladi) */
+.ds-xp-form { gap: var(--ds-space-16); }
+.ds-xp-select { display: flex; width: 100%; }
+.ds-xp-select select { width: 100%; height: 48px; padding: 0 44px 0 var(--ds-space-16); border-radius: var(--ds-radius-lg); background: var(--ds-bg-surface); text-overflow: ellipsis; }
+.ds-xp-select svg { right: var(--ds-space-16); }
+
+/* Xarajat paneli: pill · H1 amount · title · key/value rows */
+.ds-xp-dhead { display: flex; flex-direction: column; align-items: flex-start; gap: var(--ds-space-8); }
+.ds-xp-damount { font: var(--ds-type-heading-h1); letter-spacing: var(--ds-type-heading-h1-tracking); font-variant-numeric: tabular-nums; }
+.ds-xp-info { display: flex; flex-direction: column; }
+.ds-xp-info > div { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-16); padding: var(--ds-space-12) 0; box-shadow: inset 0 -1px 0 var(--ds-border-subtle); }
+.ds-xp-info > div:last-child { box-shadow: none; }
+.ds-xp-info dt { font: var(--ds-type-body-default); color: var(--ds-text-secondary); }
+.ds-xp-info dd { font: var(--ds-type-body-medium); text-align: right; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-xp-info dd[data-brand] { color: var(--ds-text-brand); }
+
+/* ═════════ Rekvizit (Figma 08 · Rekvizit, S7 487:8713) ═════════ */
+.ds-xp-split i[data-rk="out"], .ds-legend-dots [data-rk="out"] { background: var(--ds-status-info-solid); --dot: var(--ds-status-info-solid); }
+.ds-legend-dots [data-rk="out"] { background: none; }
+.ds-xp-split i[data-rk="miss"] { background: var(--ds-status-danger-solid); }
+.ds-legend-dots [data-rk="miss"] { --dot: var(--ds-status-danger-solid); }
+.ds-rk-store { gap: var(--ds-space-16); }
+.ds-rk-store .ds-search { width: 200px; }
+.ds-rk-store .ds-search input { background: var(--ds-bg-subtle); box-shadow: none; }
+.ds-rk-store .ds-search input:focus { box-shadow: inset 0 0 0 1.5px var(--ds-border-focus); }
+.ds-rk-chips .ds-chip-btn { background: var(--ds-bg-subtle); }
+.ds-rk-chips .ds-chip-btn[aria-checked="true"] { background: var(--ds-bg-inverse); }
+.ds-rk-count { margin-left: 2px; color: var(--ds-money-due); font: var(--ds-type-label-strong); }
+.ds-chip-btn[aria-checked="true"] .ds-rk-count { color: inherit; }
+.ds-rk-table .r-n { width: 88px; }
+.ds-rk-table .r-st { width: 132px; }
+.ds-rk-table td[data-num] { font: var(--ds-type-body-medium); font-variant-numeric: tabular-nums; }
+.ds-rk-ic { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: var(--ds-radius-md); background: var(--ds-bg-subtle); color: var(--ds-icon-default); }
+.ds-rk-ic[data-size="l"] { width: 56px; height: 56px; border-radius: var(--ds-radius-lg); }
+.ds-rk-pill[data-state="omborda"] { background: var(--ds-brand-subtle); color: var(--ds-text-brand); }
+.ds-rk-pill[data-state="tadbirda"] { background: var(--ds-status-info-bg); color: var(--ds-status-info); }
+.ds-rk-pill[data-state="kam"] { background: var(--ds-status-warning-bg); color: var(--ds-status-warning); }
+.ds-rk-pill[data-state="qaytmagan"] { background: var(--ds-status-danger-bg); color: var(--ds-status-danger); }
+.ds-rk-evpill[data-tone="wedding"] { background: var(--ds-event-wedding-bg); color: var(--ds-event-wedding-text); }
+.ds-rk-evpill[data-tone="engagement"] { background: var(--ds-event-engagement-bg); color: var(--ds-event-engagement-text); }
+.ds-rk-evpill[data-tone="birthday"] { background: var(--ds-event-birthday-bg); color: var(--ds-event-birthday-text); }
+.ds-rk-none { padding: var(--ds-space-32) 0; }
+
+/* Bugun card */
+.ds-rk-today { gap: var(--ds-space-16); }
+.ds-rk-alert { width: 100%; text-align: left; cursor: pointer; }
+.ds-rk-alert:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
+.ds-alert > .ds-rk-tri { background: none !important; color: var(--ds-status-warning-solid) !important; border-radius: 0; }
+.ds-rk-sec { display: flex; flex-direction: column; gap: var(--ds-space-8); }
+.ds-rk-sec > p { display: flex; align-items: center; gap: var(--ds-space-8); font: var(--ds-type-body-small); color: var(--ds-text-secondary); }
+.ds-rk-tag { display: inline-flex; align-items: center; height: 24px; padding: 0 var(--ds-space-8); border-radius: var(--ds-radius-full); font: var(--ds-type-label-strong); background: var(--ds-status-info-bg); color: var(--ds-status-info); }
+.ds-rk-tag[data-k="back"] { background: var(--ds-brand-subtle); color: var(--ds-text-brand); }
+.ds-rk-group { display: flex; flex-direction: column; gap: var(--ds-space-12); width: 100%; padding: var(--ds-space-16); border-radius: var(--ds-radius-lg); background: var(--ds-bg-canvas); text-align: left; }
+button.ds-rk-group:hover { background: var(--ds-bg-surface-hover, var(--ds-bg-canvas)); filter: brightness(0.98); }
+button.ds-rk-group:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
+.ds-rk-group .r-top { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--ds-space-8); padding-bottom: var(--ds-space-12); box-shadow: inset 0 -1px 0 var(--ds-border-subtle); }
+.ds-rk-group .r-top > span:first-child { display: flex; flex-direction: column; min-width: 0; }
+.ds-rk-group .r-top > span:first-child > span:first-child { font: var(--ds-type-body-medium); }
+.ds-rk-group .r-top > span:first-child > span:last-child { font: var(--ds-type-label-default); color: var(--ds-text-secondary); }
+.ds-rk-late { flex: none; font: var(--ds-type-label-strong); color: var(--ds-status-danger); }
+.ds-rk-group .r-lines { display: flex; flex-direction: column; gap: var(--ds-space-4); }
+.ds-rk-group .r-lines > span { display: flex; justify-content: space-between; gap: var(--ds-space-8); font: var(--ds-type-body-default); color: var(--ds-text-secondary); }
+.ds-rk-group .r-lines b { font: var(--ds-type-body-medium); color: var(--ds-text-primary); font-variant-numeric: tabular-nums; }
+
+/* Buyum paneli */
+.ds-rk-dhead { display: flex; align-items: center; gap: var(--ds-space-16); }
+.ds-rk-dhead > div { min-width: 0; }
+.ds-rk-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--ds-space-8); }
+.ds-rk-stats > div { display: flex; flex-direction: column; gap: 2px; padding: var(--ds-space-12) var(--ds-space-12); border-radius: var(--ds-radius-md); background: var(--ds-bg-surface); }
+.ds-rk-stats b { font: var(--ds-type-heading-h2); font-variant-numeric: tabular-nums; }
+.ds-rk-stats span { font: var(--ds-type-label-default); color: var(--ds-text-secondary); }
+.ds-rk-stats > div[data-k="out"] { background: var(--ds-status-info-bg); }
+.ds-rk-stats > div[data-k="out"] b { color: var(--ds-status-info); }
+.ds-rk-list { display: flex; flex-direction: column; }
+.ds-rk-list > h3, .ds-rk-listhead { padding-bottom: var(--ds-space-8); }
+.ds-rk-row { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-12); width: 100%; padding: var(--ds-space-12) 0; text-align: left; box-shadow: inset 0 -1px 0 var(--ds-border-subtle); }
+.ds-rk-row:last-child { box-shadow: none; }
+button.ds-rk-row { border-radius: var(--ds-radius-sm); }
+button.ds-rk-row:hover > span > span:first-child { text-decoration: underline; }
+button.ds-rk-row:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
+.ds-rk-row > span { display: flex; flex-direction: column; min-width: 0; }
+.ds-rk-row > span > span:first-child { font: var(--ds-type-body-medium); }
+.ds-rk-row > span > span:last-child { font: var(--ds-type-body-small); color: var(--ds-text-secondary); }
+.ds-rk-row > span > span[data-alert] { color: var(--ds-money-due); }
+.ds-rk-row > b { flex: none; font: var(--ds-type-body-medium); font-variant-numeric: tabular-nums; }
+.ds-rk-row > b[data-tone="plus"] { color: var(--ds-text-success); }
+.ds-rk-row > b[data-tone="minus"] { color: var(--ds-status-danger); }
+
+/* Qaytarishni qabul qilish */
+.ds-rk-ret { display: flex; flex-direction: column; gap: var(--ds-space-12); padding: var(--ds-space-12) 0; box-shadow: inset 0 -1px 0 var(--ds-border-subtle); }
+.ds-rk-ret .r-line { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-12); }
+.ds-rk-ret .r-line > span { display: flex; flex-direction: column; min-width: 0; }
+.ds-rk-ret .r-line > span > span:last-child { color: var(--ds-text-success); }
+.ds-rk-ret .r-line > span > span[data-short] { color: var(--ds-status-danger); }
+.ds-rk-stepper { background: none; padding: 0; }
+.ds-rk-stepper button { box-shadow: inset 0 0 0 1px var(--ds-border-default); background: var(--ds-bg-elevated, var(--ds-bg-surface)); }
+.ds-rk-stepper output { width: 64px; }
+.ds-rk-sum { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-12); margin-top: var(--ds-space-16); padding: var(--ds-space-12) var(--ds-space-16); border-radius: var(--ds-radius-lg); background: var(--ds-bg-surface); }
+.ds-rk-sum > span:first-child { display: flex; flex-direction: column; }
+.ds-rk-sum b { font: var(--ds-type-heading-h3); font-variant-numeric: tabular-nums; }
+
+/* ═════════ Jamoa jadvali (Figma 09 · Jamoa jadvali, S8 487:8916) ═════════ */
+.ds-xp-split i[data-jj="open"] { background: var(--ds-status-warning-solid); }
+.ds-legend-dots [data-jj="open"] { --dot: var(--ds-status-warning-solid); }
+/* Bu hafta: one bar per weekday + labels */
+.ds-jj-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; align-items: end; }
+.ds-jj-days > span { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.ds-jj-days i { width: 100%; border-radius: 4px; background: var(--ds-chart-1-weak); }
+.ds-jj-days [data-today] i { background: var(--ds-brand-solid); }
+.ds-jj-days b { font: var(--ds-type-label-default); color: var(--ds-text-secondary); }
+.ds-jj-days [data-today] b { font: var(--ds-type-label-strong); color: var(--ds-text-primary); }
+.ds-jj-load { display: flex; align-items: flex-end; gap: 4px; height: 24px; }
+.ds-jj-load i { flex: 1; min-width: 0; max-width: 28px; border-radius: 3px; background: var(--ds-border-strong); }
+.ds-jj-load i[data-top] { background: var(--ds-status-warning-solid); }
+
+/* Grid */
+.ds-jj-grid { gap: var(--ds-space-16); }
+.ds-jj-legend { display: flex; flex-wrap: wrap; gap: var(--ds-space-16); font: var(--ds-type-label-default); color: var(--ds-text-secondary); }
+.ds-jj-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.ds-jj-legend span::before { content: ""; width: 8px; height: 8px; border-radius: var(--ds-radius-full); background: var(--dot); }
+:is(.ds-jj-legend span, .ds-jj-event)[data-tone="wedding"] { --dot: var(--ds-event-wedding-dot); }
+:is(.ds-jj-legend span, .ds-jj-event)[data-tone="engagement"] { --dot: var(--ds-event-engagement-dot); }
+:is(.ds-jj-legend span, .ds-jj-event)[data-tone="birthday"] { --dot: var(--ds-event-birthday-dot); }
+:is(.ds-jj-legend span, .ds-jj-event)[data-tone="other"] { --dot: var(--ds-event-other-dot, var(--ds-icon-muted)); }
+.ds-jj-legend [data-tone="open"] { --dot: var(--ds-money-due); }
+.ds-jj-scroll { overflow-x: auto; margin: 0 calc(-1 * var(--ds-space-8)); padding: 0 var(--ds-space-8); }
+.ds-jj-table { display: flex; flex-direction: column; min-width: 920px; }
+.ds-jj-row { display: grid; grid-template-columns: minmax(200px, 2.4fr) repeat(7, minmax(96px, 1fr)); align-items: start; gap: 8px; padding: var(--ds-space-12) 0; box-shadow: inset 0 -1px 0 var(--ds-border-subtle); }
+.ds-jj-headrow { align-items: center !important; padding: var(--ds-space-8) 0; }
+.ds-jj-day { justify-self: start; display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 var(--ds-space-8); border-radius: var(--ds-radius-sm); font: var(--ds-type-label-caps); letter-spacing: var(--ds-type-label-caps-tracking); color: var(--ds-text-tertiary); white-space: nowrap; }
+.ds-jj-day b { color: var(--ds-text-primary); font-weight: 600; }
+.ds-jj-day[data-today] { background: var(--ds-bg-inverse); color: var(--ds-text-on-inverse); }
+.ds-jj-day[data-today] b { color: inherit; }
+.ds-jj-events-h { padding-top: var(--ds-space-4); }
+.ds-jj-cell { display: flex; flex-direction: column; gap: 6px; min-width: 0; min-height: 44px; border-radius: var(--ds-radius-md); }
+.ds-jj-cell[data-today] { background: var(--ds-bg-subtle); padding: 4px; margin: -4px 0; }
+.ds-jj-event { display: flex; align-items: center; gap: 6px; height: 24px; padding: 0 var(--ds-space-8); border-radius: var(--ds-radius-full); font: var(--ds-type-label-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ds-jj-event::before { content: ""; flex: none; width: 6px; height: 6px; border-radius: var(--ds-radius-full); background: var(--dot); }
+.ds-jj-event[data-tone="wedding"] { background: var(--ds-event-wedding-bg); color: var(--ds-event-wedding-text); }
+.ds-jj-event[data-tone="engagement"] { background: var(--ds-event-engagement-bg); color: var(--ds-event-engagement-text); }
+.ds-jj-event[data-tone="birthday"] { background: var(--ds-event-birthday-bg); color: var(--ds-event-birthday-text); }
+.ds-jj-event[data-tone="other"] { background: var(--ds-event-other-bg); color: var(--ds-event-other-text); }
+.ds-jj-task { display: flex; flex-direction: column; gap: 2px; width: 100%; padding: var(--ds-space-8) 10px; border-radius: var(--ds-radius-md); text-align: left; background: var(--ds-event-other-bg); color: var(--ds-text-secondary); font: var(--ds-type-label-default); }
+.ds-jj-task b { font: var(--ds-type-label-strong); color: var(--ds-event-other-text); }
+.ds-jj-task[data-tone="wedding"] { background: var(--ds-event-wedding-bg); } .ds-jj-task[data-tone="wedding"] b { color: var(--ds-event-wedding-text); }
+.ds-jj-task[data-tone="engagement"] { background: var(--ds-event-engagement-bg); } .ds-jj-task[data-tone="engagement"] b { color: var(--ds-event-engagement-text); }
+.ds-jj-task[data-tone="birthday"] { background: var(--ds-event-birthday-bg); } .ds-jj-task[data-tone="birthday"] b { color: var(--ds-event-birthday-text); }
+.ds-jj-task[data-tone="open"] { background: transparent; border: 1px dashed var(--ds-money-due); }
+.ds-jj-task[data-tone="open"] b { color: var(--ds-money-due); }
+.ds-jj-task:hover { filter: brightness(0.97); }
+.ds-jj-task:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
+.ds-jj-person { display: flex; align-items: center; gap: var(--ds-space-12); min-width: 0; text-align: left; border-radius: var(--ds-radius-sm); }
+button.ds-jj-person:hover > span:last-child > span:first-child { text-decoration: underline; }
+button.ds-jj-person:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
+.ds-jj-person > span:last-child { display: flex; flex-direction: column; min-width: 0; }
+.ds-jj-person > span:last-child > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-jj-person > span:last-child > span:first-child { font: var(--ds-type-body-medium); }
+.ds-jj-person > span:last-child > span:last-child { font: var(--ds-type-body-small); color: var(--ds-text-secondary); }
+.ds-jj-person [data-warn] { color: var(--ds-money-due) !important; }
+.ds-jj-avatar { flex: none; display: grid; place-items: center; width: 32px; height: 32px; border-radius: var(--ds-radius-full); background: var(--ds-brand-subtle); color: var(--ds-text-brand); font: var(--ds-type-label-strong); }
+.ds-jj-avatar[data-open] { background: var(--ds-money-due-bg); color: var(--ds-money-due); }
+.ds-jj-avatar[data-size="l"] { width: 56px; height: 56px; font: var(--ds-type-body-strong); }
+.ds-jj-addrow { box-shadow: none; padding-bottom: 0; }
+.ds-jj-addrow .ds-btn { justify-self: start; color: var(--ds-text-brand); }
+
+/* Odam biriktirish modal */
+.ds-jj-ctx { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--ds-space-12); padding: var(--ds-space-16); border-radius: var(--ds-radius-lg); background: var(--ds-bg-surface); }
+.ds-jj-ctx > span:first-child { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ds-jj-ctx b { font: var(--ds-type-body-medium); }
+.ds-jj-ctx > span:first-child > span { font: var(--ds-type-body-small); color: var(--ds-text-secondary); }
+.ds-jj-times { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr); gap: var(--ds-space-12); }
+.ds-jj-times .ds-input { min-width: 0; padding: 0 var(--ds-space-12); }
+.ds-jj-pick { display: flex; flex-direction: column; }
+.ds-jj-pick > h3 { padding-bottom: var(--ds-space-4); }
+.ds-jj-pickrow { display: flex; align-items: center; gap: var(--ds-space-12); padding: var(--ds-space-12) 0; box-shadow: inset 0 -1px 0 var(--ds-border-subtle); cursor: pointer; }
+.ds-jj-pickrow[data-busy] .r-who > span:first-child { color: var(--ds-text-secondary); }
+.ds-jj-pickrow[data-busy] .ds-jj-avatar { background: var(--ds-bg-subtle); color: var(--ds-text-secondary); }
+.ds-jj-pickrow .r-who { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ds-jj-pickrow .r-who > span:first-child { font: var(--ds-type-body-medium); }
+.ds-jj-pickrow .r-who > span:last-child { font: var(--ds-type-body-small); color: var(--ds-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-jj-pickrow .r-who > span[data-warn] { color: var(--ds-money-due); }
+.ds-jj-free { flex: none; height: 24px; display: inline-flex; align-items: center; padding: 0 var(--ds-space-8); border-radius: var(--ds-radius-full); font: var(--ds-type-label-strong); background: var(--ds-brand-subtle); color: var(--ds-text-brand); }
+.ds-jj-free[data-busy] { background: var(--ds-money-due-bg); color: var(--ds-money-due); }
+
+/* Panels */
+.ds-xp-info dd[data-due] { color: var(--ds-money-due); }
+.ds-jj-listhead { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-12); padding-bottom: var(--ds-space-8); }
+.ds-jj-crew { justify-content: flex-start; }
+.ds-jj-note { display: flex; flex-direction: column; gap: var(--ds-space-8); padding: var(--ds-space-16); border-radius: var(--ds-radius-lg); background: var(--ds-bg-surface); }
+.ds-jj-wrow { justify-content: flex-start; }
+.ds-jj-date { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 40px; height: 44px; border-radius: var(--ds-radius-md); background: var(--ds-bg-surface); }
+.ds-jj-date b { font: var(--ds-type-body-medium); line-height: 1.1; }
+.ds-jj-date span { font: var(--ds-type-label-caps); color: var(--ds-text-tertiary); }

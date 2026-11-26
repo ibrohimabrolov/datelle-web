@@ -19,19 +19,20 @@ const NAV: NavDef[] = [
   { href: `${PANEL}/dashboard`, label: "Dashboard", icon: "chart-column", roles: ["owner"] },
   { href: `${PANEL}/kalendar`, label: "Kalendar", icon: "calendar", roles: ["owner", "manager"] },
   { href: `${PANEL}/buyurtmalar`, label: "Buyurtmalar", icon: "clipboard-text", roles: ["owner", "manager"] },
+  /* Figma draws these under "Tez orada"; they are live now, so they sit with the working pages. Xarajatlar is owner only, like Dashboard. */
+  { href: `${PANEL}/rekvizit`, label: "Rekvizit", icon: "box", roles: ["owner", "manager"] },
+  { href: `${PANEL}/jadval`, label: "Jamoa jadvali", icon: "users", roles: ["owner", "manager"] },
+  { href: `${PANEL}/xarajatlar`, label: "Xarajatlar", icon: "receipt", roles: ["owner"] },
 ];
 const SETTINGS: NavDef = { href: `${PANEL}/sozlamalar`, label: "Sozlamalar", icon: "gear", roles: ["owner", "manager"] };
-/* Mobile tab order puts the daily tool first */
+/* Mobile tab order puts the daily tool first; Xarajatlar is desktop-only for now (no mobile design yet) */
 const TAB_ORDER = ["kalendar", "buyurtmalar", "dashboard"];
 
 /* Figma Sidebar · "Tez orada" (NavItem State=soon / soon-voted) + 07 · Tez orada (fake door dialog).
    Desktop only — the mobile TabBar has no room for them. */
-type Soon = { feature: "rekvizit" | "jamoa-jadvali" | "xarajatlar"; label: string; icon: StudioIconName; title: string; text: string };
-const SOON: Soon[] = [
-  { feature: "rekvizit", label: "Rekvizit", icon: "box", title: "Rekvizit hisobi", text: "Vaza, arka va bezaklar qaysi tadbirga ketgani va qachon qaytishini bir joyda kuzating. Sizga kerakmi?" },
-  { feature: "jamoa-jadvali", label: "Jamoa jadvali", icon: "users", title: "Jamoa jadvali", text: "Kim qaysi tadbirda ishlashini taqsimlang — har bir xodim oʻz vazifasini botda koʻradi. Sizga kerakmi?" },
-  { feature: "xarajatlar", label: "Xarajatlar", icon: "receipt", title: "Xarajatlar", text: "Gul, transport va ish haqini tadbirga bogʻlab, har bir buyurtmaning sof foydasini koʻring. Sizga kerakmi?" },
-];
+type Soon = { feature: "jamoa-jadvali"; label: string; icon: StudioIconName; title: string; text: string };
+/* Every former fake door is live now; the group comes back when a new idea needs demand testing */
+const SOON: Soon[] = [];
 
 export function Shell({ children }: { children: ReactNode }) {
   const path = usePathname();
@@ -71,7 +72,7 @@ export function Shell({ children }: { children: ReactNode }) {
       alive = false;
     };
   }, [studio?.id, version]);
-  const tabs = [...items].sort((a, b) => TAB_ORDER.indexOf(a.href.split("/").pop()!) - TAB_ORDER.indexOf(b.href.split("/").pop()!));
+  const tabs = items.filter((n) => TAB_ORDER.includes(n.href.split("/").pop()!)).sort((a, b) => TAB_ORDER.indexOf(a.href.split("/").pop()!) - TAB_ORDER.indexOf(b.href.split("/").pop()!));
 
   // "Tez orada" votes of this member in this studio (server-side, so they survive devices)
   const [voted, setVoted] = useState<Soon["feature"][]>([]);
@@ -101,10 +102,10 @@ export function Shell({ children }: { children: ReactNode }) {
             <nav className="ds-nav" aria-busy={!studio || undefined}>
               {studio
                 ? [...items, SETTINGS].map((n) => <NavItem key={n.href} item={n} current={active(n.href)} count={n.href.endsWith("/buyurtmalar") ? debt : null} />)
-                : [0, 1, 2, 3].map((i) => <span key={i} className="ds-skeleton" data-on="brand" style={{ height: 40, borderRadius: "var(--ds-radius-md)" }} />)}
+                : [0, 1, 2, 3, 4, 5, 6].map((i) => <span key={i} className="ds-skeleton" data-on="brand" style={{ height: 40, borderRadius: "var(--ds-radius-md)" }} />)}
             </nav>
           </div>
-          {studio && (
+          {studio && SOON.length > 0 && (
             <div className="ds-navgroup">
               <p className="ds-label ds-navlabel" id="soon-label">
                 Tez orada

@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { Button } from "./Button";
 
 /* Figma "Illustration/3D" set — transparent 512px WebP in /public/studio/3d. */
-export type StudioArt = "kalendar" | "pul" | "jamoa" | "bot" | "tolangan" | "topilmadi" | "xato" | "muddat" | "qulf";
+export type StudioArt = "kalendar" | "rekvizit" | "pul" | "jamoa" | "bot" | "tolangan" | "topilmadi" | "xato" | "muddat" | "qulf";
 
 export function Illustration({ art, size, className }: { art: StudioArt; size?: number; className?: string }) {
   return (
