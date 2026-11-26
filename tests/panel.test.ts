@@ -1289,3 +1289,75 @@ describe("rekvizit", () => {
     assert.equal((await owner.req("/api/panel/props", { body: { name: "Yangi", category: "vazalar", total: 1, code: "VZ-02" } })).status, 201);
   });
 });
+
+describe("jamoa jadvali", () => {
+  test("staff roster, tasks with people, week view, task details with props; tenancy, validation, release on staff delete", async () => {
+    const owner = new Client();
+    await owner.devLogin(tgId(), "Jadval Ega");
+    const studioId = (await owner.req("/api/panel/onboarding", { body: { name: "Jadval Studio", category: "dekor", dailyCapacity: 3 } })).json.studio.id;
+    const day = (n: number) => new Date(Date.now() + 5 * 3600_000 + n * 86_400_000).toISOString().slice(0, 10);
+
+    const empty = await owner.req("/api/panel/schedule");
+    assert.equal(empty.status, 200);
+    assert.equal(empty.json.hasAny, false);
+    assert.equal(empty.json.days.length, 7);
+
+    assert.equal((await owner.req("/api/panel/schedule/staff", { body: { name: "", role: "" } })).status, 422);
+    const badPhone = await owner.req("/api/panel/schedule/staff", { body: { name: "Ali", role: "Florist", phone: "123" } });
+    assert.equal(badPhone.status, 422);
+    const dil = await owner.req("/api/panel/schedule/staff", { body: { name: "Dilshod Rahimov", role: "Bosh dekorator", phone: "+998 90 412 33 21", telegram: "@dilshod" } });
+    assert.equal(dil.status, 201, JSON.stringify(dil.json));
+    assert.equal(dil.json.staff.telegram, "dilshod");
+    const jas = (await owner.req("/api/panel/schedule/staff", { body: { name: "Jasur Normatov", role: "Haydovchi" } })).json.staff;
+
+    const order = (await owner.req("/api/panel/orders", { body: { clientName: "Otabek Nurmatov", clientPhone: "+998901234567", eventDate: day(2), eventType: "toy", venue: "Versal", total: 4_000_000 } })).json.order.id;
+    const prop = (await owner.req("/api/panel/props", { body: { name: "Oltin arka", category: "arkalar", total: 2 } })).json.prop.id;
+    await owner.req(`/api/panel/props/${prop}/book`, { body: { orderId: order, qty: 1 } });
+
+    assert.equal((await owner.req("/api/panel/schedule/tasks", { body: { kind: "montaj", day: day(2), startsAt: "25:00" } })).status, 422);
+    const t = await owner.req("/api/panel/schedule/tasks", { body: { orderId: order, kind: "montaj", day: day(2), startsAt: "07:00", endsAt: "11:00", staffIds: [dil.json.staff.id, jas.id] } });
+    assert.equal(t.status, 201, JSON.stringify(t.json));
+    assert.equal(t.json.task.place, "Versal"); // defaults to the venue
+    assert.deepEqual(t.json.task.staff.map((s: { name: string }) => s.name), ["Dilshod Rahimov", "Jasur Normatov"]);
+    assert.equal(t.json.task.order.balance, 4_000_000);
+    assert.deepEqual(t.json.task.props, [{ name: "Oltin arka", code: "ARK-01", qty: 1 }]);
+    const open = await owner.req("/api/panel/schedule/tasks", { body: { orderId: order, kind: "demontaj", day: day(2), startsAt: "23:00", endsAt: "01:00" } });
+    assert.equal(open.json.task.staff.length, 0);
+
+    const wk = await owner.req(`/api/panel/schedule?week=${day(2)}`);
+    assert.equal(wk.json.hasAny, true);
+    assert.equal(wk.json.staff.length, 2);
+    assert.equal(wk.json.orders[0].id, order);
+    const mine = wk.json.tasks.filter((x: { orderId: string }) => x.orderId === order);
+    assert.equal(mine.length, 2);
+    assert.equal(mine.find((x: { kind: string }) => x.kind === "montaj").eventType, "toy");
+
+    // reassign: replace the crew
+    const p = await owner.req(`/api/panel/schedule/tasks/${open.json.task.id}`, { method: "PATCH", body: { staffIds: [jas.id] } });
+    assert.equal(p.status, 200);
+    assert.deepEqual(p.json.task.staff.map((s: { id: string }) => s.id), [jas.id]);
+
+    // stranger: no access, cannot assign foreign staff
+    const stranger = new Client();
+    await stranger.devLogin(tgId(), "Begona");
+    await stranger.req("/api/panel/onboarding", { body: { name: "Begona", category: "dekor", dailyCapacity: 3 } });
+    assert.equal((await stranger.req(`/api/panel/schedule/tasks/${t.json.task.id}`)).status, 404);
+    const foreign = await stranger.req("/api/panel/schedule/tasks", { body: { kind: "montaj", day: day(2), startsAt: "07:00", staffIds: [jas.id] } });
+    assert.equal(foreign.status, 422);
+    assert.equal(foreign.json.error.fields.staffIds, "Xodim topilmadi");
+    // manager can plan
+    const manager = new Client();
+    const m = (await manager.devLogin(tgId(), "Menejer")).json.user;
+    await pool.query("insert into studio_members (studio_id, user_id, role) values ($1, $2, 'manager')", [studioId, m.id]);
+    assert.equal((await manager.req("/api/panel/schedule", { headers: { "x-studio-id": studioId } })).status, 200);
+    // CSRF
+    assert.equal((await owner.req("/api/panel/schedule/staff", { body: { name: "X Y", role: "Florist" }, origin: "https://evil.example" })).status, 403);
+
+    // deleting staff releases their future jobs
+    assert.equal((await owner.req(`/api/panel/schedule/staff/${jas.id}`, { method: "DELETE", body: {} })).status, 200);
+    const after = (await owner.req(`/api/panel/schedule/tasks/${open.json.task.id}`)).json.task;
+    assert.equal(after.staff.length, 0);
+    assert.equal((await owner.req(`/api/panel/schedule/tasks/${t.json.task.id}`, { method: "DELETE", body: {} })).status, 200);
+    assert.equal((await owner.req(`/api/panel/schedule/tasks/${t.json.task.id}`)).status, 404);
+  });
+});

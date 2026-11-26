@@ -458,3 +458,52 @@ export const propBookings = pgTable(
     check("prop_bookings_counts", sql`${t.qty} > 0 and ${t.back} >= 0 and ${t.broken} >= 0 and ${t.lost} >= 0 and ${t.back} + ${t.broken} + ${t.lost} <= ${t.qty}`),
   ],
 );
+
+/* Jamoa jadvali (Figma 09 · Jamoa jadvali): the studio's field crew — florists, installers, drivers.
+   Staff are a roster, not app users: they don't need to sign in (user_id links one when they are a member). */
+export const staff = pgTable(
+  "staff",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    studioId: uuid("studio_id").notNull().references(() => studios.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    role: text("role").notNull(), // Bosh dekorator · Florist · Montajchi · Haydovchi · Yordamchi (free text)
+    phone: text("phone"),
+    telegram: text("telegram"), // username without @
+    createdBy: uuid("created_by").notNull().references(() => users.id),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    deletedAt: ts("deleted_at"),
+  },
+  (t) => [index("staff_studio_idx").on(t.studioId)],
+);
+
+/* A job on a day: Montaj 10:00 · Oqsaroy. ends_at earlier than starts_at = ends the next day (demontaj 23:00–01:00). */
+export const tasks = pgTable(
+  "tasks",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    studioId: uuid("studio_id").notNull().references(() => studios.id, { onDelete: "cascade" }),
+    orderId: uuid("order_id").references(() => orders.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(), // TASK_KINDS slug
+    day: date("day", { mode: "string" }).notNull(),
+    startsAt: text("starts_at").notNull(), // HH:MM, Tashkent
+    endsAt: text("ends_at"),
+    place: text("place"),
+    note: text("note"),
+    createdBy: uuid("created_by").notNull().references(() => users.id),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    updatedAt: ts("updated_at").notNull().defaultNow(),
+    deletedAt: ts("deleted_at"),
+  },
+  (t) => [index("tasks_studio_day_idx").on(t.studioId, t.day), index("tasks_order_idx").on(t.orderId)],
+);
+
+export const taskStaff = pgTable(
+  "task_staff",
+  {
+    taskId: uuid("task_id").notNull().references(() => tasks.id, { onDelete: "cascade" }),
+    staffId: uuid("staff_id").notNull().references(() => staff.id, { onDelete: "cascade" }),
+    createdAt: ts("created_at").notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.taskId, t.staffId] }), index("task_staff_staff_idx").on(t.staffId)],
+);

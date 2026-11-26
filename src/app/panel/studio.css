@@ -1419,3 +1419,96 @@ button.ds-rk-row:focus-visible { outline: none; box-shadow: var(--ds-focus-ring)
 .ds-rk-sum { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-12); margin-top: var(--ds-space-16); padding: var(--ds-space-12) var(--ds-space-16); border-radius: var(--ds-radius-lg); background: var(--ds-bg-surface); }
 .ds-rk-sum > span:first-child { display: flex; flex-direction: column; }
 .ds-rk-sum b { font: var(--ds-type-heading-h3); font-variant-numeric: tabular-nums; }
+
+/* ═════════ Jamoa jadvali (Figma 09 · Jamoa jadvali, S8 487:8916) ═════════ */
+.ds-xp-split i[data-jj="open"] { background: var(--ds-status-warning-solid); }
+.ds-legend-dots [data-jj="open"] { --dot: var(--ds-status-warning-solid); }
+/* Bu hafta: one bar per weekday + labels */
+.ds-jj-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; align-items: end; }
+.ds-jj-days > span { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.ds-jj-days i { width: 100%; border-radius: 4px; background: var(--ds-chart-1-weak); }
+.ds-jj-days [data-today] i { background: var(--ds-brand-solid); }
+.ds-jj-days b { font: var(--ds-type-label-default); color: var(--ds-text-secondary); }
+.ds-jj-days [data-today] b { font: var(--ds-type-label-strong); color: var(--ds-text-primary); }
+.ds-jj-load { display: flex; align-items: flex-end; gap: 4px; height: 24px; }
+.ds-jj-load i { flex: 1; min-width: 0; max-width: 28px; border-radius: 3px; background: var(--ds-border-strong); }
+.ds-jj-load i[data-top] { background: var(--ds-status-warning-solid); }
+
+/* Grid */
+.ds-jj-grid { gap: var(--ds-space-16); }
+.ds-jj-legend { display: flex; flex-wrap: wrap; gap: var(--ds-space-16); font: var(--ds-type-label-default); color: var(--ds-text-secondary); }
+.ds-jj-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.ds-jj-legend span::before { content: ""; width: 8px; height: 8px; border-radius: var(--ds-radius-full); background: var(--dot); }
+:is(.ds-jj-legend span, .ds-jj-event)[data-tone="wedding"] { --dot: var(--ds-event-wedding-dot); }
+:is(.ds-jj-legend span, .ds-jj-event)[data-tone="engagement"] { --dot: var(--ds-event-engagement-dot); }
+:is(.ds-jj-legend span, .ds-jj-event)[data-tone="birthday"] { --dot: var(--ds-event-birthday-dot); }
+:is(.ds-jj-legend span, .ds-jj-event)[data-tone="other"] { --dot: var(--ds-event-other-dot, var(--ds-icon-muted)); }
+.ds-jj-legend [data-tone="open"] { --dot: var(--ds-money-due); }
+.ds-jj-scroll { overflow-x: auto; margin: 0 calc(-1 * var(--ds-space-8)); padding: 0 var(--ds-space-8); }
+.ds-jj-table { display: flex; flex-direction: column; min-width: 920px; }
+.ds-jj-row { display: grid; grid-template-columns: minmax(200px, 2.4fr) repeat(7, minmax(96px, 1fr)); align-items: start; gap: 8px; padding: var(--ds-space-12) 0; box-shadow: inset 0 -1px 0 var(--ds-border-subtle); }
+.ds-jj-headrow { align-items: center !important; padding: var(--ds-space-8) 0; }
+.ds-jj-day { justify-self: start; display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 var(--ds-space-8); border-radius: var(--ds-radius-sm); font: var(--ds-type-label-caps); letter-spacing: var(--ds-type-label-caps-tracking); color: var(--ds-text-tertiary); white-space: nowrap; }
+.ds-jj-day b { color: var(--ds-text-primary); font-weight: 600; }
+.ds-jj-day[data-today] { background: var(--ds-bg-inverse); color: var(--ds-text-on-inverse); }
+.ds-jj-day[data-today] b { color: inherit; }
+.ds-jj-events-h { padding-top: var(--ds-space-4); }
+.ds-jj-cell { display: flex; flex-direction: column; gap: 6px; min-width: 0; min-height: 44px; border-radius: var(--ds-radius-md); }
+.ds-jj-cell[data-today] { background: var(--ds-bg-subtle); padding: 4px; margin: -4px 0; }
+.ds-jj-event { display: flex; align-items: center; gap: 6px; height: 24px; padding: 0 var(--ds-space-8); border-radius: var(--ds-radius-full); font: var(--ds-type-label-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ds-jj-event::before { content: ""; flex: none; width: 6px; height: 6px; border-radius: var(--ds-radius-full); background: var(--dot); }
+.ds-jj-event[data-tone="wedding"] { background: var(--ds-event-wedding-bg); color: var(--ds-event-wedding-text); }
+.ds-jj-event[data-tone="engagement"] { background: var(--ds-event-engagement-bg); color: var(--ds-event-engagement-text); }
+.ds-jj-event[data-tone="birthday"] { background: var(--ds-event-birthday-bg); color: var(--ds-event-birthday-text); }
+.ds-jj-event[data-tone="other"] { background: var(--ds-event-other-bg); color: var(--ds-event-other-text); }
+.ds-jj-task { display: flex; flex-direction: column; gap: 2px; width: 100%; padding: var(--ds-space-8) 10px; border-radius: var(--ds-radius-md); text-align: left; background: var(--ds-event-other-bg); color: var(--ds-text-secondary); font: var(--ds-type-label-default); }
+.ds-jj-task b { font: var(--ds-type-label-strong); color: var(--ds-event-other-text); }
+.ds-jj-task[data-tone="wedding"] { background: var(--ds-event-wedding-bg); } .ds-jj-task[data-tone="wedding"] b { color: var(--ds-event-wedding-text); }
+.ds-jj-task[data-tone="engagement"] { background: var(--ds-event-engagement-bg); } .ds-jj-task[data-tone="engagement"] b { color: var(--ds-event-engagement-text); }
+.ds-jj-task[data-tone="birthday"] { background: var(--ds-event-birthday-bg); } .ds-jj-task[data-tone="birthday"] b { color: var(--ds-event-birthday-text); }
+.ds-jj-task[data-tone="open"] { background: transparent; border: 1px dashed var(--ds-money-due); }
+.ds-jj-task[data-tone="open"] b { color: var(--ds-money-due); }
+.ds-jj-task:hover { filter: brightness(0.97); }
+.ds-jj-task:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
+.ds-jj-person { display: flex; align-items: center; gap: var(--ds-space-12); min-width: 0; text-align: left; border-radius: var(--ds-radius-sm); }
+button.ds-jj-person:hover > span:last-child > span:first-child { text-decoration: underline; }
+button.ds-jj-person:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
+.ds-jj-person > span:last-child { display: flex; flex-direction: column; min-width: 0; }
+.ds-jj-person > span:last-child > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-jj-person > span:last-child > span:first-child { font: var(--ds-type-body-medium); }
+.ds-jj-person > span:last-child > span:last-child { font: var(--ds-type-body-small); color: var(--ds-text-secondary); }
+.ds-jj-person [data-warn] { color: var(--ds-money-due) !important; }
+.ds-jj-avatar { flex: none; display: grid; place-items: center; width: 32px; height: 32px; border-radius: var(--ds-radius-full); background: var(--ds-brand-subtle); color: var(--ds-text-brand); font: var(--ds-type-label-strong); }
+.ds-jj-avatar[data-open] { background: var(--ds-money-due-bg); color: var(--ds-money-due); }
+.ds-jj-avatar[data-size="l"] { width: 56px; height: 56px; font: var(--ds-type-body-strong); }
+.ds-jj-addrow { box-shadow: none; padding-bottom: 0; }
+.ds-jj-addrow .ds-btn { justify-self: start; color: var(--ds-text-brand); }
+
+/* Odam biriktirish modal */
+.ds-jj-ctx { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--ds-space-12); padding: var(--ds-space-16); border-radius: var(--ds-radius-lg); background: var(--ds-bg-surface); }
+.ds-jj-ctx > span:first-child { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ds-jj-ctx b { font: var(--ds-type-body-medium); }
+.ds-jj-ctx > span:first-child > span { font: var(--ds-type-body-small); color: var(--ds-text-secondary); }
+.ds-jj-times { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr); gap: var(--ds-space-12); }
+.ds-jj-times .ds-input { min-width: 0; padding: 0 var(--ds-space-12); }
+.ds-jj-pick { display: flex; flex-direction: column; }
+.ds-jj-pick > h3 { padding-bottom: var(--ds-space-4); }
+.ds-jj-pickrow { display: flex; align-items: center; gap: var(--ds-space-12); padding: var(--ds-space-12) 0; box-shadow: inset 0 -1px 0 var(--ds-border-subtle); cursor: pointer; }
+.ds-jj-pickrow[data-busy] .r-who > span:first-child { color: var(--ds-text-secondary); }
+.ds-jj-pickrow[data-busy] .ds-jj-avatar { background: var(--ds-bg-subtle); color: var(--ds-text-secondary); }
+.ds-jj-pickrow .r-who { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ds-jj-pickrow .r-who > span:first-child { font: var(--ds-type-body-medium); }
+.ds-jj-pickrow .r-who > span:last-child { font: var(--ds-type-body-small); color: var(--ds-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-jj-pickrow .r-who > span[data-warn] { color: var(--ds-money-due); }
+.ds-jj-free { flex: none; height: 24px; display: inline-flex; align-items: center; padding: 0 var(--ds-space-8); border-radius: var(--ds-radius-full); font: var(--ds-type-label-strong); background: var(--ds-brand-subtle); color: var(--ds-text-brand); }
+.ds-jj-free[data-busy] { background: var(--ds-money-due-bg); color: var(--ds-money-due); }
+
+/* Panels */
+.ds-xp-info dd[data-due] { color: var(--ds-money-due); }
+.ds-jj-listhead { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-12); padding-bottom: var(--ds-space-8); }
+.ds-jj-crew { justify-content: flex-start; }
+.ds-jj-note { display: flex; flex-direction: column; gap: var(--ds-space-8); padding: var(--ds-space-16); border-radius: var(--ds-radius-lg); background: var(--ds-bg-surface); }
+.ds-jj-wrow { justify-content: flex-start; }
+.ds-jj-date { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 40px; height: 44px; border-radius: var(--ds-radius-md); background: var(--ds-bg-surface); }
+.ds-jj-date b { font: var(--ds-type-body-medium); line-height: 1.1; }
+.ds-jj-date span { font: var(--ds-type-label-caps); color: var(--ds-text-tertiary); }
