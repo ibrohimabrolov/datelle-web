@@ -2,13 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { api, ApiError } from "@/lib/api";
-import { addDays, MONTHS, todayISO, WD_FULL, weekdayIdx } from "@/lib/dates";
+import { addDays, todayISO } from "@/lib/dates";
 import { freeSlots, STUDIO_EVENTS } from "@/lib/studio/calendar";
 import { groupThousands } from "@/lib/studio/orders";
 import { FIELD_LABEL, looksLikeOrder, missingKeyFields, parseOrder, type ParsedOrder } from "@/lib/studio/parseOrder";
 import { Button } from "./Button";
 import { dataChanged, fetchMonth, monthCache, monthKey, type OrderFull } from "./data";
-import { Field, formatPhone, MoneyInput, PhoneInput } from "./Fields";
+import { DateInput, Field, formatPhone, MoneyInput, PhoneInput } from "./Fields";
 import { StudioIcon } from "./icons";
 import { ConfirmDialog } from "./Modal";
 import { Overlay } from "./Overlay";
@@ -18,7 +18,6 @@ import { useStudio } from "./PanelProvider";
    capacity of the chosen day, unsaved-changes guard. Server-confirmed save, then every screen refetches. */
 
 const CHIP_EVENTS = ["toy", "qiz-uzatar", "tugilgan-kun", "boshqa"];
-const dateHint = (iso: string) => `${Number(iso.slice(8, 10))}-${MONTHS[Number(iso.slice(5, 7)) - 1]}, ${WD_FULL[weekdayIdx(iso)]}`;
 
 type Form = { clientName: string; clientPhone: string; eventDate: string; eventType: string; guests: string; venue: string; notes: string; total: number | null; advance: number | null };
 
@@ -238,18 +237,8 @@ export function OrderForm({
             Tadbir
           </h3>
           <div className="ds-pair">
-            <Field label="Sana" error={errors.eventDate} hint={dateHint(f.eventDate)}>
-              {(a) => (
-                <input
-                  {...a}
-                  className="ds-input"
-                  type="date"
-                  value={f.eventDate}
-                  min={addDays(todayISO(), -730)}
-                  max={addDays(todayISO(), 730)}
-                  onChange={(e) => e.target.value && set("eventDate", e.target.value)}
-                />
-              )}
+            <Field label="Sana" error={errors.eventDate}>
+              {(a) => <DateInput {...a} value={f.eventDate} min={addDays(todayISO(), -730)} max={addDays(todayISO(), 730)} onChange={(v) => set("eventDate", v)} />}
             </Field>
             <Field label="Mehmonlar · ixtiyoriy" error={errors.guests}>
               {(a) => <input {...a} className="ds-input" inputMode="numeric" value={f.guests} onChange={(e) => set("guests", e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="120" />}
@@ -282,7 +271,7 @@ export function OrderForm({
           <h3 id="f-money" className="ds-caps ds-tertiary">
             Pul
           </h3>
-          <div className="ds-pair">
+          <div className={edit ? undefined : "ds-pair"}>
             <Field label="Summa" error={errors.total}>
               {(a) => <MoneyInput {...a} value={f.total} onChange={(v) => set("total", v)} placeholder="0" />}
             </Field>
