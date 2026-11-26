@@ -36,6 +36,13 @@
       "when": 1795080221426,
       "tag": "0004_order_drafts",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795697219571,
+      "tag": "0005_expenses",
+      "breakpoints": true
     }
   ]
 }

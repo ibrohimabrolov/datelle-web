@@ -381,3 +381,30 @@ export const orderDrafts = pgTable(
   },
   (t) => [index("order_drafts_user_idx").on(t.tgUserId, t.updatedAt), index("order_drafts_expires_idx").on(t.expiresAt)],
 );
+
+/* Xarajatlar (Figma 10 · Xarajatlar): money the studio spent — flowers, wages, transport, rent.
+   order_id null = a general expense ("Umumiy"). Soft delete like payments: profit history stays honest. */
+export const expenseCategory = pgEnum("expense_category", ["gullar", "ish_haqi", "transport", "ijara", "boshqa"]);
+export const expenses = pgTable(
+  "expenses",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    studioId: uuid("studio_id").notNull().references(() => studios.id, { onDelete: "cascade" }),
+    orderId: uuid("order_id").references(() => orders.id, { onDelete: "set null" }),
+    amount: bigint("amount", { mode: "number" }).notNull(),
+    category: expenseCategory("category").notNull(),
+    title: text("title").notNull(), // "Nima uchun": Atirgul, 300 dona
+    spentOn: date("spent_on", { mode: "string" }).notNull(),
+    paidBy: uuid("paid_by").references(() => users.id, { onDelete: "set null" }), // "Kim toʻladi" — a studio member
+    createdBy: uuid("created_by").notNull().references(() => users.id),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    updatedAt: ts("updated_at").notNull().defaultNow(),
+    deletedAt: ts("deleted_at"),
+    deletedBy: uuid("deleted_by").references(() => users.id),
+  },
+  (t) => [
+    index("expenses_studio_spent_idx").on(t.studioId, t.spentOn),
+    index("expenses_order_idx").on(t.orderId),
+    check("expenses_amount_pos", sql`${t.amount} > 0`),
+  ],
+);
