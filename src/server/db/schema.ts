@@ -408,3 +408,53 @@ export const expenses = pgTable(
     check("expenses_amount_pos", sql`${t.amount} > 0`),
   ],
 );
+
+/* Rekvizit (Figma 08 · Rekvizit): the studio's reusable decor stock — vases, arches, candlesticks, cloths.
+   total = units owned; repair = units in repair (not usable). Stock is never a stored counter of "in the warehouse":
+   it is total − repair − units still out on bookings, so it can't drift. */
+export const props = pgTable(
+  "props",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    studioId: uuid("studio_id").notNull().references(() => studios.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    code: text("code").notNull(), // VZ-12 — shown to humans, unique per studio among live items
+    category: text("category").notNull(), // PROP_CATEGORIES slug
+    total: integer("total").notNull(),
+    repair: integer("repair").notNull().default(0),
+    note: text("note"),
+    createdBy: uuid("created_by").notNull().references(() => users.id),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    updatedAt: ts("updated_at").notNull().defaultNow(),
+    deletedAt: ts("deleted_at"),
+  },
+  (t) => [
+    index("props_studio_idx").on(t.studioId),
+    uniqueIndex("props_studio_code").on(t.studioId, t.code).where(sql`deleted_at is null`),
+    check("props_counts", sql`${t.total} >= 0 and ${t.repair} >= 0 and ${t.repair} <= ${t.total}`),
+  ],
+);
+
+/* A prop booked for an order. It leaves on the event day and is outstanding until accounted for:
+   outstanding = qty − back − broken − lost ("Keyin qaytadi" simply leaves it outstanding). */
+export const propBookings = pgTable(
+  "prop_bookings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    studioId: uuid("studio_id").notNull().references(() => studios.id, { onDelete: "cascade" }),
+    propId: uuid("prop_id").notNull().references(() => props.id, { onDelete: "cascade" }),
+    orderId: uuid("order_id").notNull().references(() => orders.id, { onDelete: "cascade" }),
+    qty: integer("qty").notNull(),
+    back: integer("back").notNull().default(0), // returned to the warehouse
+    broken: integer("broken").notNull().default(0), // returned broken → props.repair
+    lost: integer("lost").notNull().default(0), // written off → props.total
+    createdBy: uuid("created_by").notNull().references(() => users.id),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    updatedAt: ts("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("prop_bookings_prop_order").on(t.propId, t.orderId),
+    index("prop_bookings_order_idx").on(t.orderId),
+    check("prop_bookings_counts", sql`${t.qty} > 0 and ${t.back} >= 0 and ${t.broken} >= 0 and ${t.lost} >= 0 and ${t.back} + ${t.broken} + ${t.lost} <= ${t.qty}`),
+  ],
+);

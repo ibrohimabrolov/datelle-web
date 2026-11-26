@@ -1334,3 +1334,88 @@ a.ds-btn[aria-disabled] { pointer-events: none; opacity: 0.5; }
 .ds-xp-info dt { font: var(--ds-type-body-default); color: var(--ds-text-secondary); }
 .ds-xp-info dd { font: var(--ds-type-body-medium); text-align: right; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ds-xp-info dd[data-brand] { color: var(--ds-text-brand); }
+
+/* ═════════ Rekvizit (Figma 08 · Rekvizit, S7 487:8713) ═════════ */
+.ds-xp-split i[data-rk="out"], .ds-legend-dots [data-rk="out"] { background: var(--ds-status-info-solid); --dot: var(--ds-status-info-solid); }
+.ds-legend-dots [data-rk="out"] { background: none; }
+.ds-xp-split i[data-rk="miss"] { background: var(--ds-status-danger-solid); }
+.ds-legend-dots [data-rk="miss"] { --dot: var(--ds-status-danger-solid); }
+.ds-rk-store { gap: var(--ds-space-16); }
+.ds-rk-store .ds-search { width: 200px; }
+.ds-rk-store .ds-search input { background: var(--ds-bg-subtle); box-shadow: none; }
+.ds-rk-store .ds-search input:focus { box-shadow: inset 0 0 0 1.5px var(--ds-border-focus); }
+.ds-rk-chips .ds-chip-btn { background: var(--ds-bg-subtle); }
+.ds-rk-chips .ds-chip-btn[aria-checked="true"] { background: var(--ds-bg-inverse); }
+.ds-rk-count { margin-left: 2px; color: var(--ds-money-due); font: var(--ds-type-label-strong); }
+.ds-chip-btn[aria-checked="true"] .ds-rk-count { color: inherit; }
+.ds-rk-table .r-n { width: 88px; }
+.ds-rk-table .r-st { width: 132px; }
+.ds-rk-table td[data-num] { font: var(--ds-type-body-medium); font-variant-numeric: tabular-nums; }
+.ds-rk-ic { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: var(--ds-radius-md); background: var(--ds-bg-subtle); color: var(--ds-icon-default); }
+.ds-rk-ic[data-size="l"] { width: 56px; height: 56px; border-radius: var(--ds-radius-lg); }
+.ds-rk-pill[data-state="omborda"] { background: var(--ds-brand-subtle); color: var(--ds-text-brand); }
+.ds-rk-pill[data-state="tadbirda"] { background: var(--ds-status-info-bg); color: var(--ds-status-info); }
+.ds-rk-pill[data-state="kam"] { background: var(--ds-status-warning-bg); color: var(--ds-status-warning); }
+.ds-rk-pill[data-state="qaytmagan"] { background: var(--ds-status-danger-bg); color: var(--ds-status-danger); }
+.ds-rk-evpill[data-tone="wedding"] { background: var(--ds-event-wedding-bg); color: var(--ds-event-wedding-text); }
+.ds-rk-evpill[data-tone="engagement"] { background: var(--ds-event-engagement-bg); color: var(--ds-event-engagement-text); }
+.ds-rk-evpill[data-tone="birthday"] { background: var(--ds-event-birthday-bg); color: var(--ds-event-birthday-text); }
+.ds-rk-none { padding: var(--ds-space-32) 0; }
+
+/* Bugun card */
+.ds-rk-today { gap: var(--ds-space-16); }
+.ds-rk-alert { width: 100%; text-align: left; cursor: pointer; }
+.ds-rk-alert:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
+.ds-alert > .ds-rk-tri { background: none !important; color: var(--ds-status-warning-solid) !important; border-radius: 0; }
+.ds-rk-sec { display: flex; flex-direction: column; gap: var(--ds-space-8); }
+.ds-rk-sec > p { display: flex; align-items: center; gap: var(--ds-space-8); font: var(--ds-type-body-small); color: var(--ds-text-secondary); }
+.ds-rk-tag { display: inline-flex; align-items: center; height: 24px; padding: 0 var(--ds-space-8); border-radius: var(--ds-radius-full); font: var(--ds-type-label-strong); background: var(--ds-status-info-bg); color: var(--ds-status-info); }
+.ds-rk-tag[data-k="back"] { background: var(--ds-brand-subtle); color: var(--ds-text-brand); }
+.ds-rk-group { display: flex; flex-direction: column; gap: var(--ds-space-12); width: 100%; padding: var(--ds-space-16); border-radius: var(--ds-radius-lg); background: var(--ds-bg-canvas); text-align: left; }
+button.ds-rk-group:hover { background: var(--ds-bg-surface-hover, var(--ds-bg-canvas)); filter: brightness(0.98); }
+button.ds-rk-group:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
+.ds-rk-group .r-top { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--ds-space-8); padding-bottom: var(--ds-space-12); box-shadow: inset 0 -1px 0 var(--ds-border-subtle); }
+.ds-rk-group .r-top > span:first-child { display: flex; flex-direction: column; min-width: 0; }
+.ds-rk-group .r-top > span:first-child > span:first-child { font: var(--ds-type-body-medium); }
+.ds-rk-group .r-top > span:first-child > span:last-child { font: var(--ds-type-label-default); color: var(--ds-text-secondary); }
+.ds-rk-late { flex: none; font: var(--ds-type-label-strong); color: var(--ds-status-danger); }
+.ds-rk-group .r-lines { display: flex; flex-direction: column; gap: var(--ds-space-4); }
+.ds-rk-group .r-lines > span { display: flex; justify-content: space-between; gap: var(--ds-space-8); font: var(--ds-type-body-default); color: var(--ds-text-secondary); }
+.ds-rk-group .r-lines b { font: var(--ds-type-body-medium); color: var(--ds-text-primary); font-variant-numeric: tabular-nums; }
+
+/* Buyum paneli */
+.ds-rk-dhead { display: flex; align-items: center; gap: var(--ds-space-16); }
+.ds-rk-dhead > div { min-width: 0; }
+.ds-rk-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--ds-space-8); }
+.ds-rk-stats > div { display: flex; flex-direction: column; gap: 2px; padding: var(--ds-space-12) var(--ds-space-12); border-radius: var(--ds-radius-md); background: var(--ds-bg-surface); }
+.ds-rk-stats b { font: var(--ds-type-heading-h2); font-variant-numeric: tabular-nums; }
+.ds-rk-stats span { font: var(--ds-type-label-default); color: var(--ds-text-secondary); }
+.ds-rk-stats > div[data-k="out"] { background: var(--ds-status-info-bg); }
+.ds-rk-stats > div[data-k="out"] b { color: var(--ds-status-info); }
+.ds-rk-list { display: flex; flex-direction: column; }
+.ds-rk-list > h3, .ds-rk-listhead { padding-bottom: var(--ds-space-8); }
+.ds-rk-row { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-12); width: 100%; padding: var(--ds-space-12) 0; text-align: left; box-shadow: inset 0 -1px 0 var(--ds-border-subtle); }
+.ds-rk-row:last-child { box-shadow: none; }
+button.ds-rk-row { border-radius: var(--ds-radius-sm); }
+button.ds-rk-row:hover > span > span:first-child { text-decoration: underline; }
+button.ds-rk-row:focus-visible { outline: none; box-shadow: var(--ds-focus-ring); }
+.ds-rk-row > span { display: flex; flex-direction: column; min-width: 0; }
+.ds-rk-row > span > span:first-child { font: var(--ds-type-body-medium); }
+.ds-rk-row > span > span:last-child { font: var(--ds-type-body-small); color: var(--ds-text-secondary); }
+.ds-rk-row > span > span[data-alert] { color: var(--ds-money-due); }
+.ds-rk-row > b { flex: none; font: var(--ds-type-body-medium); font-variant-numeric: tabular-nums; }
+.ds-rk-row > b[data-tone="plus"] { color: var(--ds-text-success); }
+.ds-rk-row > b[data-tone="minus"] { color: var(--ds-status-danger); }
+
+/* Qaytarishni qabul qilish */
+.ds-rk-ret { display: flex; flex-direction: column; gap: var(--ds-space-12); padding: var(--ds-space-12) 0; box-shadow: inset 0 -1px 0 var(--ds-border-subtle); }
+.ds-rk-ret .r-line { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-12); }
+.ds-rk-ret .r-line > span { display: flex; flex-direction: column; min-width: 0; }
+.ds-rk-ret .r-line > span > span:last-child { color: var(--ds-text-success); }
+.ds-rk-ret .r-line > span > span[data-short] { color: var(--ds-status-danger); }
+.ds-rk-stepper { background: none; padding: 0; }
+.ds-rk-stepper button { box-shadow: inset 0 0 0 1px var(--ds-border-default); background: var(--ds-bg-elevated, var(--ds-bg-surface)); }
+.ds-rk-stepper output { width: 64px; }
+.ds-rk-sum { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-12); margin-top: var(--ds-space-16); padding: var(--ds-space-12) var(--ds-space-16); border-radius: var(--ds-radius-lg); background: var(--ds-bg-surface); }
+.ds-rk-sum > span:first-child { display: flex; flex-direction: column; }
+.ds-rk-sum b { font: var(--ds-type-heading-h3); font-variant-numeric: tabular-nums; }

@@ -1203,3 +1203,89 @@ describe("xarajatlar", () => {
     assert.deepEqual(rows.map((r) => r.action), ["create", "create", "update", "create", "delete", "restore"]);
   });
 });
+
+describe("rekvizit", () => {
+  test("stock, bookings, shortage, overdue return with broken/lost; manager allowed, stranger 404, CSRF", async () => {
+    const owner = new Client();
+    await owner.devLogin(tgId(), "Rekvizit Ega");
+    const studioId = (await owner.req("/api/panel/onboarding", { body: { name: "Rekvizit Studio", category: "dekor", dailyCapacity: 3 } })).json.studio.id;
+    const day = (n: number) => new Date(Date.now() + 5 * 3600_000 + n * 86_400_000).toISOString().slice(0, 10);
+    const order = async (name: string, date: string) =>
+      (await owner.req("/api/panel/orders", { body: { clientName: name, clientPhone: "+998901234567", eventDate: date, eventType: "toy", venue: "Oqsaroy", total: 1_000_000 } })).json.order.id;
+
+    assert.equal((await owner.req("/api/panel/props")).json.hasAny, false);
+    const bad = await owner.req("/api/panel/props", { body: { name: "", category: "x", total: -1 } });
+    assert.equal(bad.status, 422);
+    assert.ok(bad.json.error.fields.name && bad.json.error.fields.category && bad.json.error.fields.total);
+
+    const vase = await owner.req("/api/panel/props", { body: { name: "Shisha vaza, 40 sm", category: "vazalar", total: 60 } });
+    assert.equal(vase.status, 201, JSON.stringify(vase.json));
+    assert.equal(vase.json.prop.code, "VZ-01"); // auto code
+    const v2 = await owner.req("/api/panel/props", { body: { name: "Kichik vaza", category: "vazalar", total: 10 } });
+    assert.equal(v2.json.prop.code, "VZ-02");
+    assert.equal((await owner.req("/api/panel/props", { body: { name: "Dup", category: "vazalar", total: 1, code: "vz-01" } })).json.error.fields.code, "Bu kod boshqa buyumda bor");
+    const vaseId = vase.json.prop.id;
+
+    // past event (overdue), two events on the same future day → shortage
+    const past = await order("Bekzod Karimov", day(-4));
+    const f1 = await order("Malika Karimova", day(4));
+    const f2 = await order("Javlon Aliyev", day(4));
+    assert.equal((await owner.req(`/api/panel/props/${vaseId}/book`, { body: { orderId: past, qty: 36 } })).status, 200);
+    await owner.req(`/api/panel/props/${vaseId}/book`, { body: { orderId: f1, qty: 40 } });
+    const b2 = await owner.req(`/api/panel/props/${vaseId}/book`, { body: { orderId: f2, qty: 26 } });
+    // day+4: 66 booked, 60 owned (outstanding units are expected back by then) → 6 missing
+    assert.deepEqual(b2.json.warnings, ["6 ta yetishmaydi"]);
+    assert.equal(b2.json.prop.overdue, 36);
+    assert.equal(b2.json.prop.stock, 24);
+    assert.equal(b2.json.prop.state, "qaytmagan");
+
+    const ov = await owner.req("/api/panel/props");
+    assert.equal(ov.json.kpi.out, 36);
+    assert.equal(ov.json.kpi.missing, 6);
+    assert.equal(ov.json.kpi.next.name, "Shisha vaza, 40 sm");
+    assert.equal(ov.json.returning[0].orderId, past);
+    assert.equal(ov.json.returning[0].overdue, true);
+    assert.equal(ov.json.counts.vazalar, 2);
+
+    // return: 33 back, 2 broken (→ repair), 1 lost (→ written off)
+    const ret = await owner.req(`/api/panel/props/returns/${past}`);
+    const line = ret.json.lines[0];
+    assert.equal(line.outstanding, 36);
+    assert.equal((await owner.req(`/api/panel/props/returns/${past}`, { body: { lines: [{ bookingId: line.id, back: 40, broken: 0, lost: 0 }] } })).status, 422);
+    assert.equal((await owner.req(`/api/panel/props/returns/${past}`, { body: { lines: [{ bookingId: line.id, back: 33, broken: 2, lost: 1 }] } })).status, 200);
+    const after = (await owner.req(`/api/panel/props/${vaseId}`)).json.prop;
+    assert.equal(after.total, 59);
+    assert.equal(after.repair, 2);
+    assert.equal(after.overdue, 0);
+    assert.equal(after.stock, 57);
+    assert.equal(after.shortages[0].missing, 9); // 66 booked, now 59 owned − 2 in repair
+    assert.deepEqual(after.history.slice(0, 1).map((h: { action: string }) => h.action), ["return"]);
+
+    // repaired → back to stock; cannot repair more than in repair
+    assert.equal((await owner.req(`/api/panel/props/${vaseId}/repair`, { body: { fixed: 5 } })).status, 422);
+    assert.equal((await owner.req(`/api/panel/props/${vaseId}/repair`, { body: { fixed: 2 } })).json.prop.repair, 0);
+    // total can't drop below what's out/in repair; booking qty 0 removes it
+    assert.equal((await owner.req(`/api/panel/props/${vaseId}`, { method: "PATCH", body: { total: 59 } })).status, 200);
+    const removed = (await owner.req(`/api/panel/props/${vaseId}/book`, { body: { orderId: f2, qty: 0 } })).json.prop;
+    assert.equal(removed.bookings.length, 1);
+    assert.equal(removed.shortages.length, 0);
+
+    // manager can book and return, cannot delete; stranger sees nothing; CSRF
+    const manager = new Client();
+    const m = (await manager.devLogin(tgId(), "Menejer")).json.user;
+    await pool.query("insert into studio_members (studio_id, user_id, role) values ($1, $2, 'manager')", [studioId, m.id]);
+    const h = { "x-studio-id": studioId };
+    assert.equal((await manager.req("/api/panel/props", { headers: h })).status, 200);
+    assert.equal((await manager.req(`/api/panel/props/${vaseId}`, { method: "DELETE", body: {}, headers: h })).status, 403);
+    const stranger = new Client();
+    await stranger.devLogin(tgId(), "Begona");
+    await stranger.req("/api/panel/onboarding", { body: { name: "Begona", category: "dekor", dailyCapacity: 3 } });
+    assert.equal((await stranger.req(`/api/panel/props/${vaseId}`)).status, 404);
+    assert.equal((await stranger.req(`/api/panel/props/returns/${past}`)).status, 404);
+    assert.equal((await owner.req("/api/panel/props", { body: { name: "X vaza", category: "vazalar", total: 1 }, origin: "https://evil.example" })).status, 403);
+
+    // delete (owner): soft, frees the code for reuse
+    assert.equal((await owner.req(`/api/panel/props/${v2.json.prop.id}`, { method: "DELETE", body: {} })).status, 200);
+    assert.equal((await owner.req("/api/panel/props", { body: { name: "Yangi", category: "vazalar", total: 1, code: "VZ-02" } })).status, 201);
+  });
+});

@@ -43,6 +43,13 @@
       "when": 1795697219571,
       "tag": "0005_expenses",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795698679014,
+      "tag": "0006_props",
+      "breakpoints": true
     }
   ]
 }
