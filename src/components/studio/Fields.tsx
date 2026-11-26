@@ -1,6 +1,7 @@
 "use client";
 
-import { useId, type InputHTMLAttributes, type ReactNode } from "react";
+import { useId, useRef, type InputHTMLAttributes, type ReactNode } from "react";
+import { dayLabel, dayShort, todayISO } from "@/lib/dates";
 import { groupThousands, parseMoney } from "@/lib/studio/orders";
 
 /* Figma Input: label 13/18 · field 48 · helper/error 13/18. Wires label, error and aria for every field. */
@@ -73,5 +74,35 @@ export function PhoneInput({ value, onChange, ...rest }: Base & { value: string;
       value={value}
       onChange={(e) => onChange(formatPhone(e.target.value))}
     />
+  );
+}
+
+/* Figma Input with a date: the field reads "13-may, chorshanba" (today: "Bugun, 12-may") instead of the
+   browser's own format (mm/dd/yyyy in an en-US Chrome). A native date input sits on top, transparent, so the
+   system picker, keyboard entry and the label/aria wiring all stay native. */
+export const dateText = (iso: string, today = todayISO()) => (iso === today ? `Bugun, ${dayShort(iso)}` : dayLabel(iso));
+export function DateInput({ value, onChange, ...rest }: Base & { value: string; onChange(v: string): void }) {
+  const ref = useRef<HTMLInputElement>(null);
+  return (
+    <div className="ds-datefield">
+      <input
+        {...rest}
+        ref={ref}
+        className="ds-input"
+        type="date"
+        value={value}
+        onClick={() => {
+          try {
+            ref.current?.showPicker?.();
+          } catch {
+            /* not allowed (e.g. cross-origin iframe) — the native control still works */
+          }
+        }}
+        onChange={(e) => e.target.value && onChange(e.target.value)}
+      />
+      <span className="ds-datefield-text" aria-hidden>
+        {value ? dateText(value) : ""}
+      </span>
+    </div>
   );
 }

@@ -8,7 +8,7 @@ const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),textarea
 
 /* One modal surface, two shapes (CSS): side panel 480 on desktop, bottom sheet on mobile.
    Modal semantics: focus moves in and is trapped, Esc / scrim / Telegram BackButton close, focus returns to the opener. */
-export function Overlay({ title, actions, onClose, children }: { title: string; actions?: ReactNode; onClose(): void; children: ReactNode }) {
+export function Overlay({ title, actions, onBack, onClose, children }: { title: string; actions?: ReactNode; onBack?(): void; onClose(): void; children: ReactNode }) {
   const { tg } = usePanel();
   const ref = useRef<HTMLDivElement>(null);
   const titleId = useId();
@@ -62,7 +62,12 @@ export function Overlay({ title, actions, onClose, children }: { title: string; 
       <div className="ds-scrim" onClick={onClose} aria-hidden />
       <div ref={ref} className="ds-overlay" role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}>
         <span className="ds-grabber" aria-hidden />
-        <div className="ds-panelhead" data-actions={actions ? "" : undefined}>
+        <div className="ds-panelhead" data-actions={actions ? "" : undefined} data-back={onBack ? "" : undefined}>
+          {onBack && (
+            <button className="ds-iconbtn" data-style="ghost" onClick={onBack} aria-label="Orqaga" data-autofocus>
+              <StudioIcon name="chevron-left" />
+            </button>
+          )}
           <h2 id={titleId} className="ds-h3">
             {title}
           </h2>

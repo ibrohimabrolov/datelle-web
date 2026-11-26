@@ -8,7 +8,7 @@ import { groupThousands, isOverdue, methodLabel, PAYMENT_METHODS, STATUS_LABEL, 
 import { Button } from "./Button";
 import { reminderLine, RemindDialog, SmetaDialog } from "./ClientDocs";
 import { dataChanged, useDataVersion, type OrderFull } from "./data";
-import { Field, MoneyInput } from "./Fields";
+import { DateInput, Field, MoneyInput } from "./Fields";
 import { StudioIcon } from "./icons";
 import { ConfirmDialog, Menu, Modal } from "./Modal";
 import { OrderForm } from "./OrderForm";
@@ -106,23 +106,11 @@ export function OrderDetail({ id, onClose, toast }: { id: string; onClose(): voi
     ...(order.status === "active" ? [{ label: "Bekor qilish", icon: <StudioIcon name="cross" />, danger: true, onSelect: () => setLayer("cancel") }] : []),
   ];
 
-  if (layer === "history") return <History id={id} onBack={() => setLayer(null)} onClose={onClose} />;
+  if (layer === "history") return <History order={order} onBack={() => setLayer(null)} onClose={onClose} />;
 
   return (
     <Overlay title="Buyurtma" onClose={onClose} actions={<Menu label="Amallar" items={menu} />}>
-      <div className="ds-dayhead">
-        <b>{Number(order.date.slice(8, 10))}</b>
-        <div>
-          <span className="ds-h3">{whenLabel(order.date)}</span>
-          <span className="ds-body-sm ds-secondary">
-            {eventLabel(order.eventType)}
-            {order.guests ? ` · ${order.guests} mehmon` : ""}
-          </span>
-        </div>
-        <span className="ds-status" data-status={order.status}>
-          {STATUS_LABEL[order.status]}
-        </span>
-      </div>
+      <OrderHead order={order} />
 
       <div className="ds-client">
         <h3>{order.client}</h3>
@@ -259,8 +247,8 @@ export function OrderDetail({ id, onClose, toast }: { id: string; onClose(): voi
       {layer === "cancel" && (
         <ConfirmDialog
           title="Buyurtmani bekor qilasizmi?"
-          description="Kun boʻshaydi. Toʻlovlar tarixi saqlanib qoladi, istalgan payt tiklaysiz."
-          confirm="Bekor qilish"
+          description={`${dayLabel(order.date)} boʻshaydi. Toʻlovlar tarixda qoladi.`}
+          confirm="Ha, bekor qilish"
           tone="destructive"
           onClose={() => setLayer(null)}
           onConfirm={async () => {
@@ -324,10 +312,10 @@ function PaymentDialog({ order, onClose, onSaved }: { order: OrderFull; onClose(
         <Field label="Summa" error={errors.amount}>
           {(a) => <MoneyInput {...a} value={amount} onChange={setAmount} data-autofocus placeholder="0" />}
         </Field>
-        {order.balance > 0 && amount !== order.balance && (
+        {order.balance > 0 && (
           <div>
-            <button type="button" className="ds-chip-btn" onClick={() => setAmount(order.balance)}>
-              Toʻliq qoldiq · {groupThousands(order.balance)}
+            <button type="button" className="ds-chip-btn" aria-pressed={amount === order.balance} onClick={() => setAmount(order.balance)}>
+              Toʻliq qoldiq
             </button>
           </div>
         )}
@@ -345,7 +333,7 @@ function PaymentDialog({ order, onClose, onSaved }: { order: OrderFull; onClose(
             </div>
           </div>
           <Field label="Sana" error={errors.paidOn}>
-            {(a) => <input {...a} className="ds-input" type="date" value={paidOn} max={todayISO()} onChange={(e) => e.target.value && setPaidOn(e.target.value)} />}
+            {(a) => <DateInput {...a} value={paidOn} max={todayISO()} onChange={setPaidOn} />}
           </Field>
         </div>
         {amount != null && amount > 0 && (
@@ -372,62 +360,131 @@ function PaymentDialog({ order, onClose, onSaved }: { order: OrderFull; onClose(
   );
 }
 
-/* Figma S5 · Tarix — who changed what, newest first */
-function History({ id, onBack, onClose }: { id: string; onBack(): void; onClose(): void }) {
+function OrderHead({ order }: { order: OrderFull }) {
+  return (
+    <div className="ds-dayhead">
+      <b>{Number(order.date.slice(8, 10))}</b>
+      <div>
+        <span className="ds-h3">{whenLabel(order.date)}</span>
+        <span className="ds-label ds-secondary">
+          {eventLabel(order.eventType)}
+          {order.guests ? ` · ${order.guests} mehmon` : ""}
+        </span>
+      </div>
+      <span className="ds-status" data-status={order.status}>
+        {STATUS_LABEL[order.status]}
+      </span>
+    </div>
+  );
+}
+
+/* Figma S5 · Tarix (panel): PanelHeader with Back, the order's day head, events grouped by day (newest first):
+   avatar · "<b>Sardor</b> toʻlov qoʻshdi" · detail · time */
+const tashkent = (at: string) => new Date(new Date(at).getTime() + 5 * 3_600_000).toISOString(); // shift to UTC+5, read as UTC
+function History({ order, onBack, onClose }: { order: OrderFull; onBack(): void; onClose(): void }) {
   const [events, setEvents] = useState<Ev[] | null>(null);
   useEffect(() => {
     let alive = true;
-    api<{ events: Ev[] }>(`/api/panel/orders/${id}/events`).then((r) => alive && setEvents(r.events)).catch(() => alive && setEvents([]));
+    api<{ events: Ev[] }>(`/api/panel/orders/${order.id}/events`).then((r) => alive && setEvents(r.events)).catch(() => alive && setEvents([]));
     return () => {
       alive = false;
     };
-  }, [id]);
+  }, [order.id]);
+  const groups: { day: string; items: Ev[] }[] = [];
+  for (const e of events ?? []) {
+    const day = tashkent(e.at).slice(0, 10);
+    if (groups.at(-1)?.day === day) groups.at(-1)!.items.push(e);
+    else groups.push({ day, items: [e] });
+  }
   return (
-    <Overlay title="Tarix" onClose={onClose}>
-      <div>
-        <Button variant="ghost" icon={<StudioIcon name="chevron-left" />} onClick={onBack} data-autofocus>
+    <Overlay title="Tarix" onBack={onBack} onClose={onClose}>
+      <div className="ds-mobile-only">
+        <Button variant="ghost" icon={<StudioIcon name="chevron-left" />} onClick={onBack}>
           Buyurtmaga qaytish
         </Button>
       </div>
+      <OrderHead order={order} />
       {!events ? (
         <span className="ds-skeleton" style={{ height: 200 }} />
+      ) : !events.length ? (
+        <p className="ds-body ds-secondary">Hali oʻzgarish yoʻq</p>
       ) : (
-        <ol className="ds-timeline">
-          {events.map((e) => (
-            <li key={e.id}>
-              <div>
-                <span className="ds-body-medium">{describe(e)}</span>
-                <span className="ds-body-sm ds-secondary">
-                  {new Date(e.at).toLocaleString("uz-UZ", { timeZone: "Asia/Tashkent", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
-                  {e.actor ? ` · ${e.actor}` : ""}
-                </span>
-              </div>
-            </li>
+        <div className="ds-history">
+          {groups.map((g) => (
+            <section key={g.day} aria-label={dayLabel(g.day)}>
+              <h3 className="ds-caps ds-tertiary">{dayLabel(g.day)}</h3>
+              {g.items.map((e) => {
+                const { verb, detail } = describe(e);
+                const who = e.actor?.trim().split(/\s+/)[0] || "Tizim";
+                return (
+                  <div className="ds-hrow" key={e.id}>
+                    <span className="ds-avatar" aria-hidden>
+                      {initials(e.actor ?? "Tizim")}
+                    </span>
+                    <div>
+                      <p>
+                        <b>{who}</b> {verb}
+                      </p>
+                      {detail && <p className="ds-body-sm ds-secondary">{detail}</p>}
+                    </div>
+                    <time dateTime={e.at}>{tashkent(e.at).slice(11, 16)}</time>
+                  </div>
+                );
+              })}
+            </section>
           ))}
-        </ol>
+        </div>
       )}
     </Overlay>
   );
 }
 
-const FIELD: Record<string, string> = { clientName: "ism", clientPhone: "telefon", eventDate: "sana", eventType: "tadbir turi", venue: "joy", guests: "mehmonlar", total: "summa", notes: "izoh" };
-function describe(e: Ev) {
+const initials = (name: string) =>
+  name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? "")
+    .join("");
+
+const FIELD: Record<string, string> = { clientName: "ismni", clientPhone: "telefonni", eventDate: "sanani", eventType: "tadbir turini", venue: "joyni", guests: "mehmonlar sonini", total: "summani", notes: "izohni" };
+const som = (n: unknown) => `${groupThousands(Number(n ?? 0))} soʻm`;
+const fieldValue = (k: string, v: unknown) =>
+  v == null || v === ""
+    ? "—"
+    : k === "eventDate"
+      ? dayLabel(String(v))
+      : k === "total"
+        ? som(v)
+        : k === "eventType"
+          ? eventLabel(String(v))
+          : k === "guests"
+            ? `${v} mehmon`
+            : String(v);
+function describe(e: Ev): { verb: string; detail?: string } {
   const d = e.diff ?? {};
   if (e.entity === "payment") {
-    const amt = groupThousands(Number(d.amount ?? 0));
-    return e.action === "delete" ? `Toʻlov oʻchirildi · ${amt}` : `Toʻlov · ${amt} (${methodLabel(String(d.method ?? "")).toLowerCase()})`;
+    const detail = `${som(d.amount)} · ${methodLabel(String(d.method ?? "")).toLowerCase()}`;
+    return e.action === "delete" ? { verb: "toʻlovni oʻchirdi", detail } : { verb: "toʻlov qoʻshdi", detail };
   }
   if (e.action === "create") {
     const adv = (d.advance as { amount?: number } | null)?.amount;
-    return adv ? `Buyurtma yaratildi · avans ${groupThousands(adv)}` : "Buyurtma yaratildi";
+    const parts = [d.eventType ? eventLabel(String(d.eventType)) : null, d.venue ? String(d.venue) : null, adv ? `avans ${som(adv)}` : null, d.source === "telegram" ? "Telegram yozishmasidan" : null];
+    return { verb: "buyurtma yaratdi", detail: parts.filter(Boolean).join(" · ") || undefined };
   }
-  if (e.action === "remind") return `Qoldiq eslatildi · ${groupThousands(Number(d.balance ?? 0))} (${d.channel === "sms" ? "SMS" : d.channel === "copy" ? "nusxa" : "Telegram"})`;
-  if (e.action === "smeta") return `Smeta yuborildi · ${d.lang === "ru" ? "ruscha" : "oʻzbekcha"}`;
-  if (e.action === "create" && d.source === "telegram") return "Buyurtma yaratildi · Telegram yozishmasidan";
-  if (e.action === "status") return `Holat: ${STATUS_LABEL[d.to as OrderStatus] ?? d.to}`;
+  if (e.action === "remind") return { verb: "qoldiqni eslatdi", detail: `${som(d.balance)} · ${d.channel === "sms" ? "SMS" : d.channel === "copy" ? "nusxa" : "Telegram"}` };
+  if (e.action === "smeta") return { verb: "smeta yubordi", detail: d.lang === "ru" ? "ruscha" : "oʻzbekcha" };
+  if (e.action === "status")
+    return { verb: d.to === "done" ? "bajarildi deb belgiladi" : d.to === "cancelled" ? "buyurtmani bekor qildi" : d.from === "cancelled" ? "buyurtmani tikladi" : "faolga qaytardi" };
   if (e.action === "update") {
-    const keys = Object.keys(d).map((k) => FIELD[k] ?? k);
-    return `Oʻzgartirildi: ${keys.join(", ")}`;
+    const keys = Object.keys(d);
+    if (keys.length === 1) {
+      const [k] = keys;
+      const [from, to] = (d[k] as [unknown, unknown]) ?? [];
+      const sensitive = k === "clientPhone" || k === "notes";
+      return { verb: `${FIELD[k] ?? k} oʻzgartirdi`, detail: sensitive ? undefined : `${fieldValue(k, from)} → ${fieldValue(k, to)}` };
+    }
+    return { verb: "buyurtmani tahrirladi", detail: keys.map((k) => (FIELD[k] ?? k).replace(/ni$/, "")).join(", ") };
   }
-  return e.action;
+  return { verb: e.action };
 }

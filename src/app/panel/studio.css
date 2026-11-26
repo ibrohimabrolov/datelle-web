@@ -1218,3 +1218,49 @@ a.ds-btn[aria-disabled] { pointer-events: none; opacity: 0.5; }
 .ds-doc-preview b { font: var(--ds-type-label-strong); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ds-doc-preview:hover { background: var(--ds-state-hover); }
 .ds-doc-preview:focus-visible { outline: 2px solid var(--ds-border-focus); outline-offset: 2px; }
+
+/* ── Figma 05 · Buyurtma + 03 · Kalendar side panels (2026-11-26) ── */
+/* Secondary in a panel/sheet = Figma Button Secondary default: grey pill, no stroke; hover = white + border */
+.ds-overlay .ds-btn[data-style="secondary"] { background: var(--ds-bg-surface); box-shadow: none; }
+.ds-overlay .ds-btn[data-style="secondary"]:hover { background: var(--ds-bg-elevated); box-shadow: inset 0 0 0 1px var(--ds-border-default); }
+.ds-overlay .ds-btn[data-style="secondary"]:focus-visible { box-shadow: var(--ds-focus-ring); }
+@media (min-width: 1024px) {
+  /* Figma Side panel: body pt 20 · px 24 · gap 24; the scrim behind a side panel is light (bg/inverse 12%) —
+     the page stays readable next to the panel. Modals keep the darker scrim. */
+  .ds-overlay { padding-top: var(--ds-space-20); gap: var(--ds-space-24); }
+  .studio[data-theme="light"] .ds-scrim { background: var(--ds-alpha-black-12); }
+}
+
+/* StatusPill (Figma DataDisplay/StatusPill: h24 · px 8 · pill · Label/Strong) */
+.ds-status { height: 24px; border-radius: var(--ds-radius-full); }
+.ds-status[data-status="active"] { background: var(--ds-brand-subtle); color: var(--ds-text-brand); }
+.ds-status[data-status="done"] { background: var(--ds-bg-subtle); color: var(--ds-text-secondary); }
+.ds-status[data-status="cancelled"] { background: var(--ds-status-danger-bg); color: var(--ds-status-danger); }
+.ds-balance dd { margin-top: var(--ds-space-4); }
+
+/* Date field: reads "13-may, chorshanba"; the native date input lies on top, transparent */
+.ds-datefield { position: relative; }
+.ds-datefield .ds-input { color: transparent; cursor: pointer; }
+.ds-datefield .ds-input::-webkit-datetime-edit { opacity: 0; }
+.ds-datefield .ds-input::-webkit-calendar-picker-indicator { position: absolute; inset: 0; width: auto; height: auto; opacity: 0; cursor: pointer; }
+.ds-datefield-text { position: absolute; left: var(--ds-space-16); right: var(--ds-space-16); top: 50%; transform: translateY(-50%); font: var(--ds-type-body-default); color: var(--ds-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
+
+/* Panel header with Back (Figma PanelHeader: Back → Title → ⋯ → ✕) */
+.ds-panelhead > .ds-iconbtn[data-back] + h2 { flex: 1; }
+.ds-panelhead[data-back] { justify-content: flex-start; }
+.ds-panelhead[data-back] > h2 { flex: 1; }
+
+/* History (Figma S5 · Tarix): day groups 24 · caps + rows gap 12 · avatar 40 · name + action · meta · time */
+.ds-history { display: flex; flex-direction: column; gap: var(--ds-space-24); }
+.ds-history section { display: flex; flex-direction: column; gap: var(--ds-space-12); }
+.ds-hrow { display: flex; align-items: flex-start; gap: var(--ds-space-12); }
+.ds-hrow .ds-avatar { width: 40px; height: 40px; flex: none; }
+.ds-hrow > div { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--ds-space-4); }
+.ds-hrow > div > p:first-child { font: var(--ds-type-body-default); color: var(--ds-text-primary); }
+.ds-hrow > div > p:first-child b { font: var(--ds-type-body-strong); }
+.ds-hrow time { font: var(--ds-type-label-default); color: var(--ds-text-tertiary); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ds-chip-btn[aria-pressed="true"] { background: var(--ds-bg-inverse); color: var(--ds-text-on-inverse); font: var(--ds-type-label-strong); }
+.ds-overlay .ds-form section { gap: var(--ds-space-12); } /* Figma: section caps → fields → capacity → chips, 12 apart */
+/* the panel itself takes focus when it opens before its content loads — keep its shadow, no focus ring around the whole panel */
+.ds-overlay:focus-visible { box-shadow: var(--ds-elevation-sheet); }
+@media (min-width: 1024px) { .ds-overlay:focus-visible { box-shadow: var(--ds-elevation-panel); } }
